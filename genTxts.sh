@@ -1,0 +1,17 @@
+node d3dl.js GROUP.VVR > out_GROUP.txt
+node d3dl.js JUST8.VVR > out_JUST8.txt
+node d3dl.js JUST16.VVR > out_JUST16.txt
+node d3dl.js JUSTCUB2.VVR > out_JUSTCUB2.txt
+node d3dl.js JUSTCUB3.VVR > out_JUSTCUB3.txt
+node d3dl.js JUSTCUBE.VVR > out_JUSTCUBE.txt
+node d3dl.js JUSTCUBS.VVR > out_JUSTCUBS.txt
+node d3dl.js JUSTCUBT.VVR > out_JUSTCUBT.txt
+node d3dl.js JUSTHEX.VVR > out_JUSTHEX.txt
+node d3dl.js LOTSJUNK.VVR > out_LOTSJUNK.txt
+node d3dl.js TEST_A.VVR > out_TEST_A.txt
+node d3dl.js TRI_1.VVR > out_TRI_1.txt
+node d3dl.js TRI_2.VVR > out_TRI_2.txt
+node d3dl.js TRI_3G.VVR > out_TRI_3G.txt
+node d3dl.js TRI_3G2G.VVR > out_TRI_3G2G.txt
+node d3dl.js TRIMID.VVR > out_TRIMID.txt
+node d3dl.js LOCKTEST.VVR > out_LOCKTEST.txt

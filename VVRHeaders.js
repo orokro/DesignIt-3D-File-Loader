@@ -55,5 +55,14 @@ const vvrHeaders = [
 	"VRIF",
 ];
 
+// headers that don't seem to ave any data associated with them
+const vvrNoDataHeaders = [
+	"VMDL",
+	"VPRF",	
+];
+
 // export the array
-module.exports = vvrHeaders;
+module.exports = {
+	vvrHeaders,
+	vvrNoDataHeaders
+};
