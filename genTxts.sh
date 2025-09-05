@@ -15,3 +15,8 @@ node d3dl.js TRI_3G.VVR > out_TRI_3G.txt
 node d3dl.js TRI_3G2G.VVR > out_TRI_3G2G.txt
 node d3dl.js TRIMID.VVR > out_TRIMID.txt
 node d3dl.js LOCKTEST.VVR > out_LOCKTEST.txt
+node d3dl.js ROT_1.VVR > out_ROT_1.txt
+node d3dl.js ROT_2.VVR > out_ROT_2.txt
+node d3dl.js ROT_3.VVR > out_ROT_3.txt
+node d3dl.js MOD_1.VVR > out_MOD_1.txt
+node d3dl.js MOD_2.VVR > out_MOD_2.txt
