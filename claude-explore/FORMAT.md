@@ -105,7 +105,7 @@ PRSM
   COLR (8)      colour
   POLY (var)    the 2D cross-section + sweep parameters
   POSN (48)     transform
-  [SLIC] [ESLC] optional per-slice profile data  ❓
+  [SLIC] [ESLC] optional cutting planes -- see 4.6         ✅
   [PLGR (2)]    came-from-a-library flag
   [SURF …]      2D decorations applied to faces
   [PLTX (32)]   texture assignment (Key Design 3-D)  ❓
@@ -187,6 +187,18 @@ These are pure cyclic permutations (determinant +1), so winding is preserved.
 Composed as `T · Rz · Ry · Rx · S`. Fields 6–8 are rare enough that ignoring
 them is visually harmless; they may be shear, or a second rotation.
 
+### 4.6 `SLIC` / `ESLC` — cutting planes ✅
+
+`SLIC` holds N planes `(a, b, c, d)` as fp16.16; `ESLC` holds N matching records
+of two points lying on each plane plus three angles. The prism keeps the
+half-space `n·p + d ≥ 0`; cuts apply in order. Planes are in **object space**,
+after the axis permutation.
+
+This is how the program makes wedges (a slab cut corner to corner — the
+`PC, Compaq` keyboard) and, far more often, **frusta**: a pointed prism with its
+taper truncated. Hence 61 % of pointed prisms carry a `SLIC` against 6 % of
+straight ones. Full derivation in `findings/slic.md`.
+
 ### 4.5 `COLR` (8 bytes)
 
 Two 4-byte records, `00 RR GG BB` then `FF RR GG BB`, RGB identical in every
@@ -257,8 +269,8 @@ Counts across all 767 files.
 | `SURF` | 18060 | PRSM | container | face decoration set ✅ |
 | `PLGR` | 13027 | PRSM | 2 | from-library flag |
 | `PGRP` | 5673 | PGRP, FORM, PRSM | container | group ✅ |
-| `SLIC` | 5063 | PRSM | 2 + 16N | per-slice data ❓ |
-| `ESLC` | 5063 | PRSM | 2 + 40N | per-slice data, same N ❓ |
+| `SLIC` | 5063 | PRSM | 2 + 16N | cutting plane ✅ |
+| `ESLC` | 5063 | PRSM | 2 + 40N | two points on that plane + angles, same N ✅ |
 | `UNIT` | 3439 | FORM, PGRP, ROOT | 8 | metres per unit ✅ |
 | `NAME` | 3035 | FORM | pstring | clip name ✅ |
 | `VRIF` | 3008 | FORM | 4554 | preview thumbnail ✅ *(decoded — see `findings/oracle.md`)* |
@@ -283,8 +295,8 @@ unrelated to `nseg`.
 
 | # | Question | Priority |
 |---|---|---|
-| 1 | `SLIC` / `ESLC` record semantics — plane + two points on it are decoded, but their geometric role is not (see `findings/slic.md`) | High |
-| 2 | `SURF` / `FEAT` placement: which face, and the 2D-on-3D projection | High |
+| 1 | `SURF` / `FEAT` placement: which face, and the 2D-on-3D projection | High |
+| 2 | `ESLC[3..5]` angles — not needed for geometry (see `findings/slic.md`) | Low |
 | 3 | `POSN` fields 6–8 | Medium |
 | 4 | Sweep-bound ordering flip | Medium |
 | 5 | `PLTX` / `SFTX` / `TXTB` — the Key Design 3-D texture system | Medium |

@@ -6,9 +6,9 @@ import numpy as np
 import clip as _clip
 
 # POLY byte 3 -> extrusion profile
-SLIC_MODE = 'off'   # 'off' | 'clip' | 'hinge'
+SLIC_MODE = 'clip'  # 'off' | 'clip' | 'hinge' -- see findings/slic.md
 SLIC_FILTER = None  # optional fn(index, nrec, eslc_row) -> bool
-SLIC_KEEP_NEG = True
+SLIC_KEEP_NEG = False
 
 STRAIGHT, POINTED, DIAMOND, ROUNDED, SPHERE = 1, 2, 3, 4, 5
 PROFILE_NAME = {1: 'straight', 2: 'pointed', 3: 'diamond', 4: 'rounded', 5: 'sphere'}
