@@ -35,7 +35,17 @@ class Poly:
         self.verts = [(iff.fp(b, 32 + i * 8), iff.fp(b, 36 + i * 8)) for i in range(n)]
 
     def rings(self):
-        """(z, scale) pairs from one end of the extrusion to the other."""
+        """(z, scale) pairs along the sweep, ordered from the HIGH end to the low.
+
+        The order matters because it fixes the face numbering that SURF's
+        2-byte header indexes into. Verified against decorated caps whose
+        correct side is unambiguous: the Safe's front panel, the Tractor's
+        hubcap and the `PC, Compaq` monitor screen all land correctly this way
+        and on the wrong face under the opposite order.
+        """
+        return list(reversed(self._rings_low_to_high()))
+
+    def _rings_low_to_high(self):
         z0, z1 = min(self.za, self.zb), max(self.za, self.zb)
         p, n = self.profile, max(1, self.nseg)
         if p == STRAIGHT:
@@ -88,7 +98,15 @@ def posn_matrix(chunk):
     if len(d) < 48:                       # 2D (FEAT) POSN, not a 3D transform
         return np.eye(4), None
     v = [iff.fp(d, i * 4) for i in range(12)]
-    pos, rot, scl = v[0:3], v[3:6], v[9:12]
+    # The rotation triple is stored (ry, rx, rz), NOT (rx, ry, rz). The Fax
+    # Machine settles it: its control panel carries 0.157 rad in field 4 and
+    # its body is cut at a 9.03 deg slope in Y (plane normal 0, 2.323, -14.61,
+    # atan = 0.1576). Only reading field 4 as rotation-about-X makes the panel
+    # lie flush on that slope instead of cutting through it. Across the 87
+    # gallery items that use fields 3 or 4 this lifts mean silhouette IoU from
+    # 0.754 to 0.779, better on 54 items and worse on 24.
+    pos, scl = v[0:3], v[9:12]
+    rot = [v[4], v[3], v[5]]
     cx, cy, cz = (math.cos(a) for a in rot)
     sx, sy, sz = (math.sin(a) for a in rot)
     Rx = np.array([[1, 0, 0], [0, cx, -sx], [0, sx, cx]])
@@ -164,30 +182,52 @@ def prsm_mesh(prsm):
                 verts.append(np.array([x * s, y * s, z]))
             ringidx.append(list(range(start, start + len(base))))
 
-    faces = []
+    # Face numbering that SURF indexes into:
+    #     0                    cap at the HIGH end of the sweep
+    #     1 .. bands*n         side faces, band-major, edges traversed BACKWARDS
+    #     bands*n + 1          cap at the LOW end of the sweep
+    #     bands*n + 2 + k      face created by SLIC cut k
+    # Derived from four objects whose correct face is unambiguous: the Paper
+    # Shredder's paper tray and the Fax Machine's button panel (both must be
+    # the top cap), the PC Compaq base (front panel + its two chamfers), and
+    # the Compaq monitor screen (the front cap).
+    faces, fids = [], []
     n = len(base)
-    for r in range(len(rings) - 1):
+    nband = len(rings) - 1
+
+    def side_id(r, i):
+        return 1 + r * n + (n - 1 - i)
+
+    for r in range(nband):
         lo, hi = ringidx[r], ringidx[r + 1]
         if len(lo) == 1:                       # fan from apex up to ring
             for i in range(n):
-                faces.append((lo[0], hi[i], hi[(i + 1) % n]))
+                faces.append((lo[0], hi[i], hi[(i + 1) % n])); fids.append(side_id(r, i))
         elif len(hi) == 1:                     # fan from ring to apex
             for i in range(n):
-                faces.append((lo[i], lo[(i + 1) % n], hi[0]))
+                faces.append((lo[i], lo[(i + 1) % n], hi[0])); fids.append(side_id(r, i))
         else:
             for i in range(n):
                 j = (i + 1) % n
-                faces.append((lo[i], lo[j], hi[j]))
-                faces.append((lo[i], hi[j], hi[i]))
+                faces.append((lo[i], lo[j], hi[j])); fids.append(side_id(r, i))
+                faces.append((lo[i], hi[j], hi[i])); fids.append(side_id(r, i))
     # caps
     tris = triangulate(base)
+    cap0, cap1 = 0, nband * n + 1
     if len(ringidx[0]) > 1:
         for (a, b, c) in tris:
-            faces.append((ringidx[0][a], ringidx[0][c], ringidx[0][b]))
+            faces.append((ringidx[0][a], ringidx[0][c], ringidx[0][b])); fids.append(cap0)
     if len(ringidx[-1]) > 1:
         for (a, b, c) in tris:
-            faces.append((ringidx[-1][a], ringidx[-1][b], ringidx[-1][c]))
-    verts = (A @ np.array(verts).T).T     # local (u,v,w) -> object space
+            faces.append((ringidx[-1][a], ringidx[-1][b], ringidx[-1][c])); fids.append(cap1)
+    verts = np.array(verts)
+    ctr = verts.mean(0)
+    for k, (i0, i1, i2) in enumerate(faces):
+        a, b, c = verts[i0], verts[i1], verts[i2]
+        nrm = np.cross(b - a, c - a)
+        if float(nrm @ ((a + b + c) / 3.0 - ctr)) < 0:
+            faces[k] = (i0, i2, i1)          # keep winding outward
+    verts = (A @ verts.T).T               # local (u,v,w) -> object space
 
     # SLIC planes are expressed in OBJECT space, not the polygon's local frame:
     # they intersect the prism 96.7% of the time there versus 76.2% locally.
@@ -205,8 +245,9 @@ def prsm_mesh(prsm):
             if SLIC_FILTER is not None and not SLIC_FILTER(i, nrec, erow):
                 continue
             if SLIC_MODE == 'clip':
-                verts, faces = _clip.clip_mesh(verts, faces, nn, dd,
-                                               keep_negative=SLIC_KEEP_NEG)
+                verts, faces, fids = _clip.clip_mesh(
+                    verts, faces, nn, dd, keep_negative=SLIC_KEEP_NEG,
+                    ids=fids, new_id=cap1 + 1 + i)
                 if not faces:
                     break
             elif SLIC_MODE == 'hinge' and es is not None:
@@ -225,7 +266,7 @@ def prsm_mesh(prsm):
                 if m.any():
                     verts = verts.copy()
                     verts[m] = (R @ (verts[m] - pivot).T).T + pivot
-    return verts, faces, poly
+    return verts, faces, poly, fids
 
 
 def color_of(prsm):
@@ -250,10 +291,12 @@ def collect(node, M, out):
         if k.tag == 'PRSM':
             m = prsm_mesh(k)
             if m:
-                v, f, poly = m
+                v, f, poly, fids = m
                 vh = np.hstack([v, np.ones((len(v), 1))])
                 wv = (W @ vh.T).T[:, :3]
                 out.append((wv, f, color_of(k), poly))
+                if DRAW_SURF:
+                    out.extend(surface_features(k, v, f, fids, W))
         collect(k, W, out)
 
 
@@ -266,4 +309,121 @@ def scene_meshes(path_or_chunk):
             collect(root, np.eye(4), out)
     else:
         collect(r, np.eye(4), out)
+    return out
+
+
+# ---------------------------------------------------------------------------
+# SURF / FEAT -- 2D vector decorations placed on a prism face
+# ---------------------------------------------------------------------------
+
+DRAW_SURF = True
+SURF_OFFSET = 0.05      # inches to lift a decoration off its face, to beat z-fighting
+
+# FEAT's 2-byte header selects which side of the surface is decorated.
+FEAT_OUTSIDE, FEAT_INSIDE, FEAT_BOTH = 0, 1, 2
+
+
+def face_frame(verts, tris):
+    """A 2D coordinate frame for one face of a prism.
+
+    Drop the axis the face normal is most aligned with and keep the other two
+    in ascending axis order; the origin is the minimum corner of the face in
+    that projection. Verified against `PC, Compaq`: the keyboard's two key
+    panels and the monitor's screen land in the right places under this rule.
+    """
+    idx = sorted({i for t in tris for i in t})
+    P = verts[idx]
+    # use the largest triangle of the face -- clipping can leave slivers whose
+    # cross product is numerically useless
+    best, nrm = 0.0, None
+    for t in tris:
+        a, b, c = verts[t[0]], verts[t[1]], verts[t[2]]
+        cr = np.cross(b - a, c - a)
+        ln = float(np.linalg.norm(cr))
+        if ln > best:
+            best, nrm = ln, cr / ln
+    if nrm is None or best < 1e-9:
+        return None
+    # point the normal away from the solid so decorations sit on the outside
+    if float(nrm @ (P.mean(0) - verts.mean(0))) < 0:
+        nrm = -nrm
+    drop = int(np.argmax(np.abs(nrm)))
+    ax = [i for i in range(3) if i != drop]          # ascending order
+    u = np.zeros(3); u[ax[0]] = 1.0
+    v = np.zeros(3); v[ax[1]] = 1.0
+    # keep the frame in the face plane
+    u = u - nrm * (u @ nrm)
+    nu = np.linalg.norm(u)
+    if nu < 1e-9:
+        return None
+    u /= nu
+    v = v - nrm * (v @ nrm) - u * (v @ u)
+    nv = np.linalg.norm(v)
+    if nv < 1e-9:
+        return None
+    v /= nv
+    uu, vv = P @ u, P @ v
+    origin = u * uu.min() + v * vv.min() + nrm * float(P[0] @ nrm)
+    return origin, u, v, nrm
+
+
+def feat_polygon(feat):
+    """2D FEAT outline: 4-byte header (0, class, 0, vertexCount) then N x (x,y)."""
+    pl = feat.kid('POLY')
+    if pl is None or len(pl.data) < 4:
+        return None
+    b = pl.data
+    n = b[3]
+    if len(b) < 4 + n * 8:
+        return None
+    return [(iff.fp(b, 4 + i * 8), iff.fp(b, 8 + i * 8)) for i in range(n)]
+
+
+def feat_transform(feat):
+    """2D FEAT POSN: 6 x fp16.16 = (x, y, ?, ?, sx, sy)."""
+    ps = feat.kid('POSN')
+    if ps is None or len(ps.data) < 24:
+        return (0.0, 0.0, 1.0, 1.0)
+    d = ps.data
+    return (iff.fp(d, 0), iff.fp(d, 4), iff.fp(d, 16) or 1.0, iff.fp(d, 20) or 1.0)
+
+
+def surface_features(prsm, verts, faces, fids, W):
+    """Build overlay meshes for every SURF decoration on this prism."""
+    out = []
+    if fids is None:
+        return out
+    byface = {}
+    for t, fid in zip(faces, fids):
+        byface.setdefault(fid, []).append(t)
+
+    for surf in prsm.kids('SURF'):
+        fid = iff.u16(surf.hdr, 0)
+        tris = byface.get(fid)
+        if not tris:
+            continue
+        fr = face_frame(verts, tris)
+        if fr is None:
+            continue
+        origin, u, v, nrm = fr
+
+        for feat in surf.kids('FEAT'):
+            side = iff.u16(feat.hdr, 0) if feat.hdr else FEAT_OUTSIDE
+            poly = feat_polygon(feat)
+            if not poly or len(poly) < 3:
+                continue
+            tx, ty, sx, sy = feat_transform(feat)
+            col = feat.kid('COLR')
+            rgb = (col.data[1], col.data[2], col.data[3]) if col and len(col.data) >= 4 else (0, 0, 0)
+
+            pts2 = [((x * sx) + tx, (y * sy) + ty) for (x, y) in poly]
+            for sgn in ((1, -1) if side == FEAT_BOTH else (1,) if side != FEAT_INSIDE else (-1,)):
+                off = nrm * (SURF_OFFSET * sgn)
+                pv = np.array([origin + u * a + v * b + off for (a, b) in pts2])
+                tri = triangulate([(p @ u, p @ v) for p in pv])
+                if not tri:
+                    continue
+                vh = np.hstack([pv, np.ones((len(pv), 1))])
+                wv = (W @ vh.T).T[:, :3]
+                out.append((wv, tri, rgb, None))
     return out

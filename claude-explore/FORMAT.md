@@ -180,12 +180,21 @@ These are pure cyclic permutations (determinant +1), so winding is preserved.
 | Index | Field | Status |
 |---|---|---|
 | 0–2 | translation (x, y, z) in inches | ✅ |
-| 3–5 | rotation (rx, ry, rz) in radians | ✅ |
+| 3–5 | rotation, stored **(ry, rx, rz)** — note the first two are swapped | ✅ |
 | 6–8 | unknown; non-zero in only 1.8 % / 0.6 % / 0.5 % of objects, always small angle-like values | ❓ |
 | 9–11 | scale (sx, sy, sz); **may be negative** (mirroring) | ✅ |
 
-Composed as `T · Rz · Ry · Rx · S`. Fields 6–8 are rare enough that ignoring
-them is visually harmless; they may be shear, or a second rotation.
+Composed as `T · Rz · Ry · Rx · S`.
+
+**The rotation triple is stored `(ry, rx, rz)`, not `(rx, ry, rz)`.** The Fax
+Machine settles it: its control panel carries 0.157 rad in field 4 while its
+body is cut at a 9.03° slope in Y (`atan(2.323 / 14.61) = 0.1576`). Only reading
+field 4 as rotation-about-X lays the panel flush on that slope instead of
+driving it through the body. Across the 87 gallery items that use fields 3 or 4,
+this lifts mean silhouette IoU from 0.754 to 0.779 — better on 54, worse on 24.
+
+Fields 6–8 are rare enough that ignoring them is visually harmless; they may be
+shear, or a second rotation.
 
 ### 4.6 `SLIC` / `ESLC` — cutting planes ✅
 
@@ -198,6 +207,23 @@ This is how the program makes wedges (a slab cut corner to corner — the
 `PC, Compaq` keyboard) and, far more often, **frusta**: a pointed prism with its
 taper truncated. Hence 61 % of pointed prisms carry a `SLIC` against 6 % of
 straight ones. Full derivation in `findings/slic.md`.
+
+### 4.7 `SURF` / `FEAT` — per-face overrides ✅
+
+`SURF` carries a 2-byte face index and then a `COLR` (recolour that face), any
+number of `FEAT` records (2D shapes on it), or both. Face numbering is
+`side quads (band-major)`, then the two caps, then one face per `SLIC` cut —
+99.84 % of indices in the corpus fall in that range.
+
+Rings run from the **high** end of the sweep to the low end, which is why
+`POLY`'s two sweep bounds are stored in an order that flips between objects.
+Face 0 is the cap at that high end, faces `1 .. bands*n` are the sides (polygon
+edges traversed backwards within each band), face `bands*n + 1` is the low cap,
+and cut faces follow.
+
+`FEAT`'s 2-byte header is the Outside / Inside / Both selector (values 0, 1, 2).
+Its coordinates live in a 2D frame local to the face. Full details in
+`findings/surf.md`.
 
 ### 4.5 `COLR` (8 bytes)
 
@@ -295,10 +321,8 @@ unrelated to `nseg`.
 
 | # | Question | Priority |
 |---|---|---|
-| 1 | `SURF` / `FEAT` placement: which face, and the 2D-on-3D projection | High |
-| 2 | `ESLC[3..5]` angles — not needed for geometry (see `findings/slic.md`) | Low |
+| 1 | `ESLC[3..5]` angles — not needed for geometry (see `findings/slic.md`) | Low |
 | 3 | `POSN` fields 6–8 | Medium |
-| 4 | Sweep-bound ordering flip | Medium |
 | 5 | `PLTX` / `SFTX` / `TXTB` — the Key Design 3-D texture system | Medium |
 | 6 | `COLR` two-record meaning; `FEAT` alpha semantics | Medium |
 | 8 | `CONN` snap points | Low |
