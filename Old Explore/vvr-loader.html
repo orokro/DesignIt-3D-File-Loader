@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Design-It! 3D — VVR Scene Viewer</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #1a1a2e; color: #eee; font-family: monospace; overflow: hidden; }
+  #canvas-container { width: 100vw; height: 100vh; }
+  #ui {
+    position: fixed; top: 0; left: 0; right: 0;
+    display: flex; align-items: center; gap: 12px;
+    padding: 8px 14px;
+    background: rgba(0,0,0,0.65); backdrop-filter: blur(4px);
+    z-index: 10;
+  }
+  #ui h1 { font-size: 13px; color: #adf; white-space: nowrap; }
+  #file-btn {
+    padding: 5px 12px; background: #2a5298; border: none; color: #fff;
+    border-radius: 4px; cursor: pointer; font: inherit; font-size: 12px;
+  }
+  #file-btn:hover { background: #3a6ac8; }
+  #file-input { display: none; }
+  #stats {
+    font-size: 11px; color: #8af; flex: 1;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  #help { font-size: 11px; color: #888; white-space: nowrap; }
+  #overlay {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    text-align: center; pointer-events: none;
+  }
+  #overlay h2 { font-size: 22px; color: #4af; margin-bottom: 8px; }
+  #overlay p { font-size: 13px; color: #888; }
+  .hidden { display: none !important; }
+  #error {
+    position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%);
+    background: #600; color: #faa; padding: 8px 18px; border-radius: 6px;
+    font-size: 12px; display: none;
+  }
+</style>
+</head>
+<body>
+
+<div id="ui">
+  <h1>Design-It! 3D Viewer</h1>
+  <button id="file-btn" onclick="document.getElementById('file-input').click()">Open .VVR</button>
+  <input type="file" id="file-input" accept=".VVR,.vvr">
+  <div id="stats">No file loaded</div>
+  <div id="help">Orbit: drag · Zoom: scroll · Pan: right-drag</div>
+</div>
+
+<div id="canvas-container"></div>
+
+<div id="overlay">
+  <h2>Design-It! 3D Viewer</h2>
+  <p>Open a .VVR scene file to get started</p>
+</div>
+
+<div id="error" id="error"></div>
+
+<!-- Three.js r128 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+// ─────────────────────────────────────────────
+//  VVR BINARY PARSER
+// ─────────────────────────────────────────────
+
+const VVR_HEADERS = new Set([
+  'BMAP','COLR','CONN','CPRF','DATA','ELGT','ESLC','FEAT','FORM','LAYR','LGHT','LNUM',
+  'LOCK','NAME','PDEF','PEDT','PGRP','PLGR','PMOD','PNAV','POLY','POSN','PREF','PRND',
+  'PRSM','PUNT','PWIN','ROOT','SLIC','SURF','SUTX','TATR','TRNS','TXID','TXOD','TXTB',
+  'UNIT','VERS','VGER','VGRS','VMDL','VPRF','VRIF'
+]);
+
+function parseVVR(arrayBuffer) {
+  const buf = new DataView(arrayBuffer);
+  const bytes = new Uint8Array(arrayBuffer);
+
+  function readTag(offset) {
+    return String.fromCharCode(bytes[offset], bytes[offset+1], bytes[offset+2], bytes[offset+3]);
+  }
+  function readU32(offset) {
+    return buf.getUint32(offset, false); // big-endian
+  }
+  function readI32(offset) {
+    return buf.getInt32(offset, false);
+  }
+  function readI16(offset) {
+    return buf.getInt16(offset, false);
+  }
+  function fp(offset) {
+    return buf.getInt32(offset, false) / 65536;
+  }
+
+  // Parse a flat list of chunks within [start, start+length)
+  function parseChunks(start, length) {
+    const chunks = [];
+    let pos = start;
+    const end = start + length;
+    while (pos < end - 8) {
+      const tag = readTag(pos);
+      if (!VVR_HEADERS.has(tag)) { pos++; continue; }
+      const len = readU32(pos + 4);
+      if (pos + 8 + len > end) { pos++; continue; }
+      chunks.push({ tag, offset: pos + 8, length: len });
+      pos += 8 + len + (len % 2); // IFF word-align
+    }
+    return chunks;
+  }
+
+  function findChunk(chunks, tag) {
+    return chunks.find(c => c.tag === tag);
+  }
+  function findChunks(chunks, tag) {
+    return chunks.filter(c => c.tag === tag);
+  }
+
+  // Decode POSN (48 bytes = 12 × fp16.16)
+  function decodePOSN(offset) {
+    return {
+      x:  fp(offset),      y:  fp(offset+4),   z:  fp(offset+8),
+      rx: fp(offset+12),   ry: fp(offset+16),   rz: fp(offset+20),
+      // bytes 24-35: derived rotation components (ignored)
+      sx: fp(offset+36),   sy: fp(offset+40),   sz: fp(offset+44),
+    };
+  }
+
+  // Decode POLY
+  function decodePOLY(offset, length) {
+    if (length < 12) return null;
+    const b1 = bytes[offset+1]; // class: 1=custom 2=rect 3=regular
+    const b2 = bytes[offset+2]; // subtype: 0=2D(FEAT), 1=room, 2=floor, 3=object
+    const b3 = bytes[offset+3]; // profile: 1=std 2=pointed 3=diamond 4=rounded 5=sphere
+
+    // 2D POLY (used inside FEAT chunks) has a totally different layout —
+    // vertex count is at b[3], no extrusion bounds. Skip these for now.
+    if (b2 === 0) return null;
+
+    if (length < 32) return null;
+    const lower = readI16(offset+6);       // int16 bottom of extrusion (usually -48)
+    const upper = readI32(offset+8);       // int32 top of extrusion (usually +48)
+    const vertexCount = readU32(offset+28);
+
+    // Sanity-check vertex count before allocating
+    if (vertexCount === 0 || vertexCount > 256) return null;
+    if (length < 32 + vertexCount * 8) return null;
+
+    const vertices = [];
+    for (let i = 0; i < vertexCount; i++) {
+      vertices.push({
+        x: fp(offset + 32 + i * 8),
+        y: fp(offset + 32 + i * 8 + 4)
+      });
+    }
+    return { b1, b2, b3, lower, upper, vertexCount, vertices };
+  }
+
+  // Decode COLR (8 bytes for 3D, pick the second ARGB = inner face)
+  function decodeCOLR(offset, length) {
+    if (length >= 8) {
+      return { r: bytes[offset+5], g: bytes[offset+6], b: bytes[offset+7], a: bytes[offset+4] };
+    } else if (length >= 4) {
+      return { r: bytes[offset+1], g: bytes[offset+2], b: bytes[offset+3], a: bytes[offset] };
+    }
+    return { r: 200, g: 200, b: 200, a: 255 };
+  }
+
+  // Parse a PRSM chunk
+  function parsePRSM(offset, length) {
+    const chunks = parseChunks(offset, length);
+    const polyChunk = findChunk(chunks, 'POLY');
+    const posnChunk = findChunk(chunks, 'POSN');
+    const colrChunk = findChunk(chunks, 'COLR');
+    if (!polyChunk || !posnChunk) return null;
+
+    const poly = decodePOLY(polyChunk.offset, polyChunk.length);
+    if (!poly) return null;
+    const posn = decodePOSN(posnChunk.offset);
+    const colr = colrChunk ? decodeCOLR(colrChunk.offset, colrChunk.length) : { r:200,g:200,b:200,a:255 };
+
+    return { type: 'PRSM', poly, posn, colr };
+  }
+
+  // Parse a PGRP chunk (group with own POSN + child PRSMs/PGRPs)
+  function parsePGRP(offset, length) {
+    const chunks = parseChunks(offset, length);
+    const posnChunk = findChunk(chunks, 'POSN');
+    const posn = posnChunk ? decodePOSN(posnChunk.offset) : null;
+    const children = [];
+
+    for (const c of chunks) {
+      if (c.tag === 'PRSM') {
+        const prsm = parsePRSM(c.offset, c.length);
+        if (prsm) children.push(prsm);
+      } else if (c.tag === 'PGRP') {
+        const pgrp = parsePGRP(c.offset, c.length);
+        if (pgrp) children.push(pgrp);
+      }
+    }
+
+    return { type: 'PGRP', posn, children };
+  }
+
+  // Find ROOT chunk (may be nested inside FORM)
+  function findROOT(start, length) {
+    const chunks = parseChunks(start, length);
+    const root = findChunk(chunks, 'ROOT');
+    if (root) return root;
+    // Try inside FORM
+    const form = findChunk(chunks, 'FORM');
+    if (form && form.length > 4) {
+      return findROOT(form.offset + 4, form.length - 4);
+    }
+    return null;
+  }
+
+  // Top-level parse
+  const fileTag = readTag(0);
+  if (fileTag !== 'FORM') throw new Error('Not a valid VVR file (expected FORM)');
+
+  const fileLen = readU32(4);
+  const rootChunk = findROOT(12, fileLen - 4);
+  if (!rootChunk) throw new Error('No ROOT chunk found in file');
+
+  const rootChunks = parseChunks(rootChunk.offset, rootChunk.length);
+  const objects = [];
+
+  for (const c of rootChunks) {
+    if (c.tag === 'PRSM') {
+      const prsm = parsePRSM(c.offset, c.length);
+      if (prsm) objects.push(prsm);
+    } else if (c.tag === 'PGRP') {
+      const pgrp = parsePGRP(c.offset, c.length);
+      if (pgrp) objects.push(pgrp);
+    }
+  }
+
+  return { objects };
+}
+
+
+// ─────────────────────────────────────────────
+//  THREE.JS GEOMETRY BUILDER
+// ─────────────────────────────────────────────
+
+// Build a pyramid / bipyramid from a polygon cross-section
+function buildApexGeometry(scaledVerts, scaledLo, scaledHi, mode) {
+  // mode: 'top'     → base at scaledLo, single apex at scaledHi centroid (pyramid / hip-roof)
+  //       'diamond' → widest ring at midpoint, apex at both scaledLo and scaledHi (bipyramid)
+  const n = scaledVerts.length;
+  let cx = 0, cy = 0;
+  for (const v of scaledVerts) { cx += v.x; cy += v.y; }
+  cx /= n; cy /= n;
+
+  const pos = [];
+  const idx = [];
+
+  if (mode === 'top') {
+    // Ring of base vertices at z = scaledLo
+    for (const v of scaledVerts) pos.push(v.x, v.y, scaledLo);
+    // Apex at z = scaledHi  (index n)
+    pos.push(cx, cy, scaledHi);
+
+    // Base face — polygon fan from vertex 0
+    for (let i = 1; i < n - 1; i++) idx.push(0, i + 1, i); // CW winding for bottom-facing normal
+
+    // Side faces — each edge → apex
+    for (let i = 0; i < n; i++) {
+      const j = (i + 1) % n;
+      idx.push(i, j, n);
+    }
+
+  } else { // diamond — bipyramid
+    const mid = (scaledLo + scaledHi) / 2;
+    // Middle ring at z = mid
+    for (const v of scaledVerts) pos.push(v.x, v.y, mid);
+    // Bottom apex (index n)
+    pos.push(cx, cy, scaledLo);
+    // Top apex (index n+1)
+    pos.push(cx, cy, scaledHi);
+
+    // Bottom pyramid sides
+    for (let i = 0; i < n; i++) {
+      const j = (i + 1) % n;
+      idx.push(i, n, j);
+    }
+    // Top pyramid sides
+    for (let i = 0; i < n; i++) {
+      const j = (i + 1) % n;
+      idx.push(i, j, n + 1);
+    }
+  }
+
+  const geom = new THREE.BufferGeometry();
+  geom.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geom.setIndex(idx);
+  geom.computeVertexNormals();
+  return geom;
+}
+
+function buildPrismGeometry(poly, posn) {
+  const { lower, upper, vertices, b3 } = poly;
+  const { sx, sy, sz } = posn;
+
+  // Clamp extrusion to sane values
+  const lo = Math.max(lower, -2000);
+  const hi = Math.min(upper, 2000);
+  const scaledLo = lo * sz;
+  const scaledHi = hi * sz;
+
+  if (vertices.length < 3) return null;
+  const extrudeDepth = scaledHi - scaledLo;
+  if (extrudeDepth <= 0) return null;
+
+  // Scale vertices by posn sx/sy
+  const sv = vertices.map(v => ({ x: v.x * sx, y: v.y * sy }));
+
+  // b3=2 Pointed: taper to centroid apex at top (pyramid, hip-roof)
+  if (b3 === 2) return buildApexGeometry(sv, scaledLo, scaledHi, 'top');
+
+  // b3=3 Diamond: taper to apex at both top and bottom (bipyramid / diamond column)
+  if (b3 === 3) return buildApexGeometry(sv, scaledLo, scaledHi, 'diamond');
+
+  // b3=1 Standard, b3=4 Rounded (approx), b3=5 Sphere (approx) — flat extrusion
+  const shape = new THREE.Shape();
+  shape.moveTo(sv[0].x, sv[0].y);
+  for (let i = 1; i < sv.length; i++) shape.lineTo(sv[i].x, sv[i].y);
+  shape.closePath();
+
+  const geometry = new THREE.ExtrudeGeometry(shape, {
+    depth: extrudeDepth,
+    bevelEnabled: false,
+    steps: 1,
+  });
+
+  // Shift geometry so bottom face is at scaledLo
+  geometry.translate(0, 0, scaledLo);
+
+  return geometry;
+}
+
+function colorFromCOLR(colr) {
+  return new THREE.Color(colr.r / 255, colr.g / 255, colr.b / 255);
+}
+
+function buildSceneObject(obj, parentGroup) {
+  if (obj.type === 'PRSM') {
+    const geom = buildPrismGeometry(obj.poly, obj.posn);
+    if (!geom) return;
+
+    const color = colorFromCOLR(obj.colr);
+    const mat = new THREE.MeshLambertMaterial({
+      color,
+      side: THREE.DoubleSide,
+    });
+    const mesh = new THREE.Mesh(geom, mat);
+
+    // Apply POSN transform
+    // VVR axes: X=right, Y=forward(into screen in top view), Z=up
+    // We rotate the whole scene -90° around X at scene root to map Z→Y for Three.js
+    // So here we apply POSN as-is in VVR space.
+    mesh.position.set(obj.posn.x, obj.posn.y, obj.posn.z);
+    mesh.rotation.order = 'ZYX';
+    mesh.rotation.set(obj.posn.rx, obj.posn.ry, obj.posn.rz);
+
+    // Add wireframe overlay
+    const edges = new THREE.EdgesGeometry(geom);
+    const lineMat = new THREE.LineBasicMaterial({
+      color: new THREE.Color(0.15, 0.15, 0.15),
+      transparent: true,
+      opacity: 0.4,
+    });
+    const wireframe = new THREE.LineSegments(edges, lineMat);
+    mesh.add(wireframe);
+
+    parentGroup.add(mesh);
+
+  } else if (obj.type === 'PGRP') {
+    const group = new THREE.Group();
+    if (obj.posn) {
+      group.position.set(obj.posn.x, obj.posn.y, obj.posn.z);
+      group.rotation.order = 'ZYX';
+      group.rotation.set(obj.posn.rx, obj.posn.ry, obj.posn.rz);
+      group.scale.set(obj.posn.sx, obj.posn.sy, obj.posn.sz);
+    }
+    for (const child of obj.children) {
+      buildSceneObject(child, group);
+    }
+    parentGroup.add(group);
+  }
+}
+
+
+// ─────────────────────────────────────────────
+//  THREE.JS SETUP
+// ─────────────────────────────────────────────
+
+const container = document.getElementById('canvas-container');
+const W = () => container.clientWidth;
+const H = () => container.clientHeight;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setSize(W(), H());
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+container.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x1a1a2e);
+scene.fog = new THREE.FogExp2(0x1a1a2e, 0.0008);
+
+const camera = new THREE.PerspectiveCamera(55, W() / H(), 0.5, 50000);
+camera.position.set(0, -800, 600);
+camera.up.set(0, 0, 1); // Z is up in our coordinate system
+camera.lookAt(0, 0, 0);
+
+// Lights
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.45);
+scene.add(ambientLight);
+
+const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+dirLight.position.set(200, -400, 600);
+dirLight.castShadow = true;
+scene.add(dirLight);
+
+const fillLight = new THREE.DirectionalLight(0x8899ff, 0.25);
+fillLight.position.set(-300, 200, 100);
+scene.add(fillLight);
+
+// Ground grid
+let groundGrid = null;
+function buildGrid(size) {
+  const grid = new THREE.GridHelper(size, Math.floor(size/96), 0x334466, 0x223355);
+  // GridHelper defaults to XZ plane; for Z-up we need the floor in XY — rotate 90° around X
+  grid.rotation.x = Math.PI / 2;
+  scene.add(grid);
+  return grid;
+}
+
+// ─────────────────────────────────────────────
+//  ORBIT CONTROLS (manual, no import needed)
+// ─────────────────────────────────────────────
+let isOrbiting = false, isPanning = false;
+let lastMouse = { x: 0, y: 0 };
+let spherical = { theta: 0.4, phi: 1.1, radius: 1200 };
+let target = new THREE.Vector3(0, 0, 60);
+
+function updateCamera() {
+  const { theta, phi, radius } = spherical;
+  camera.position.set(
+    target.x + radius * Math.sin(phi) * Math.sin(theta),
+    target.y + radius * Math.sin(phi) * Math.cos(theta),
+    target.z + radius * Math.cos(phi)
+  );
+  camera.lookAt(target);
+}
+updateCamera();
+
+renderer.domElement.addEventListener('mousedown', e => {
+  if (e.button === 0) isOrbiting = true;
+  if (e.button === 2) isPanning = true;
+  lastMouse = { x: e.clientX, y: e.clientY };
+});
+window.addEventListener('mouseup', () => { isOrbiting = false; isPanning = false; });
+window.addEventListener('mousemove', e => {
+  const dx = e.clientX - lastMouse.x;
+  const dy = e.clientY - lastMouse.y;
+  lastMouse = { x: e.clientX, y: e.clientY };
+
+  if (isOrbiting) {
+    spherical.theta -= dx * 0.005;
+    spherical.phi = Math.max(0.05, Math.min(Math.PI - 0.05, spherical.phi + dy * 0.005));
+    updateCamera();
+  }
+  if (isPanning) {
+    const right = new THREE.Vector3();
+    const up = new THREE.Vector3(0, 0, 1);
+    right.crossVectors(camera.getWorldDirection(new THREE.Vector3()), up).normalize();
+    const panUp = new THREE.Vector3();
+    panUp.crossVectors(right, camera.getWorldDirection(new THREE.Vector3())).normalize();
+    const speed = spherical.radius * 0.001;
+    target.addScaledVector(right, -dx * speed);
+    target.addScaledVector(panUp, dy * speed);
+    updateCamera();
+  }
+});
+renderer.domElement.addEventListener('wheel', e => {
+  spherical.radius = Math.max(50, Math.min(20000, spherical.radius * (1 + e.deltaY * 0.001)));
+  updateCamera();
+}, { passive: true });
+renderer.domElement.addEventListener('contextmenu', e => e.preventDefault());
+
+// ─────────────────────────────────────────────
+//  SCENE MANAGEMENT
+// ─────────────────────────────────────────────
+let sceneGroup = null;
+
+function loadVVRScene(arrayBuffer, filename) {
+  try {
+    const parsed = parseVVR(arrayBuffer);
+
+    // Clear old scene
+    if (sceneGroup) scene.remove(sceneGroup);
+    if (groundGrid) scene.remove(groundGrid);
+
+    sceneGroup = new THREE.Group();
+
+    // Build all geometry
+    let prsmCount = 0;
+    function countPRSMs(objs) {
+      for (const o of objs) {
+        if (o.type === 'PRSM') prsmCount++;
+        else if (o.type === 'PGRP') countPRSMs(o.children);
+      }
+    }
+    countPRSMs(parsed.objects);
+
+    let failCount = 0;
+    for (const obj of parsed.objects) {
+      try {
+        buildSceneObject(obj, sceneGroup);
+      } catch(e) {
+        failCount++;
+        console.warn('Skipped object due to error:', e.message, obj);
+      }
+    }
+
+    scene.add(sceneGroup);
+
+    // Auto-fit camera to scene bounds
+    const box = new THREE.Box3().setFromObject(sceneGroup);
+    if (!box.isEmpty()) {
+      const center = box.getCenter(new THREE.Vector3());
+      const size = box.getSize(new THREE.Vector3());
+      const maxDim = Math.max(size.x, size.y, size.z);
+
+      target.copy(center);
+      target.z = Math.max(0, center.z); // keep camera looking at mid-height
+      spherical.radius = maxDim * 1.8;
+      spherical.theta = 0.6;
+      spherical.phi = 1.0;
+      updateCamera();
+
+      // Ground grid
+      const gridSize = Math.ceil(maxDim * 1.5 / 96) * 96 * 2;
+      groundGrid = buildGrid(gridSize);
+      groundGrid.position.set(center.x, center.y, box.min.z - 1);
+    }
+
+    // Update stats
+    const objCount = parsed.objects.length;
+    document.getElementById('stats').textContent =
+      `${filename}  ·  ${objCount} top-level objects  ·  ${prsmCount} prisms` +
+      (failCount ? `  ·  ⚠ ${failCount} skipped` : '');
+
+    document.getElementById('overlay').classList.add('hidden');
+    document.getElementById('error').style.display = 'none';
+
+  } catch (err) {
+    console.error(err);
+    const el = document.getElementById('error');
+    el.textContent = 'Error: ' + err.message;
+    el.style.display = 'block';
+    setTimeout(() => el.style.display = 'none', 5000);
+  }
+}
+
+// ─────────────────────────────────────────────
+//  FILE INPUT
+// ─────────────────────────────────────────────
+document.getElementById('file-input').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => loadVVRScene(ev.target.result, file.name);
+  reader.readAsArrayBuffer(file);
+  e.target.value = '';
+});
+
+// ─────────────────────────────────────────────
+//  RENDER LOOP
+// ─────────────────────────────────────────────
+function animate() {
+  requestAnimationFrame(animate);
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = W() / H();
+  camera.updateProjectionMatrix();
+  renderer.setSize(W(), H());
+});
+</script>
+</body>
+</html>
