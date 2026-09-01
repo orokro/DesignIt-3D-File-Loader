@@ -17,7 +17,7 @@ def look_at(eye, target, up=(0, 0, 1)):
     M[:3, 3] = -M[:3, :3] @ eye
     return M
 
-def render(meshes, size=(560, 440), azim=35.0, elev=22.0, dist=None, outline=True):
+def render(meshes, size=(560, 440), azim=35.0, elev=22.0, dist=None, outline=True, ortho=False, margin=1.12):
     W, H = size
     allv = np.vstack([m[0] for m in meshes]) if meshes else np.zeros((1, 3))
     # Scenes usually contain one enormous ground slab; framing on the raw
@@ -33,7 +33,15 @@ def render(meshes, size=(560, 440), azim=35.0, elev=22.0, dist=None, outline=Tru
     a, e = math.radians(azim), math.radians(elev)
     eye = ctr + dist * np.array([math.cos(e) * math.cos(a), math.cos(e) * math.sin(a), math.sin(e)])
     V = look_at(eye, ctr)
-    fov = math.radians(35.0); fpx = (H / 2) / math.tan(fov / 2)
+    if ortho:
+        # fit the framing box to the viewport
+        corners = np.array([[x, y, z] for x in (lo[0], hi[0]) for y in (lo[1], hi[1]) for z in (lo[2], hi[2])])
+        cc = (V @ np.hstack([corners, np.ones((8, 1))]).T).T[:, :3]
+        ex = max(cc[:, 0].max() - cc[:, 0].min(), 1e-6) * margin
+        ey = max(cc[:, 1].max() - cc[:, 1].min(), 1e-6) * margin
+        fpx = min(W / ex, H / ey)
+    else:
+        fov = math.radians(35.0); fpx = (H / 2) / math.tan(fov / 2)
 
     zbuf = np.full((H, W), np.inf)
     img = np.zeros((H, W, 3), np.uint8); img[:] = BG
@@ -45,11 +53,15 @@ def render(meshes, size=(560, 440), azim=35.0, elev=22.0, dist=None, outline=Tru
         cam = (V @ vh.T).T[:, :3]
         z = -cam[:, 2]
         with np.errstate(divide='ignore', invalid='ignore'):
-            sx = W / 2 + cam[:, 0] * fpx / z
-            sy = H / 2 - cam[:, 1] * fpx / z
+            if ortho:
+                sx = W / 2 + cam[:, 0] * fpx
+                sy = H / 2 - cam[:, 1] * fpx
+            else:
+                sx = W / 2 + cam[:, 0] * fpx / z
+                sy = H / 2 - cam[:, 1] * fpx / z
         base = np.array(rgb, float)
         for (i0, i1, i2) in faces:
-            if z[i0] <= .01 or z[i1] <= .01 or z[i2] <= .01:
+            if not ortho and (z[i0] <= .01 or z[i1] <= .01 or z[i2] <= .01):
                 continue
             p0, p1, p2 = verts[i0], verts[i1], verts[i2]
             nrm = np.cross(p1 - p0, p2 - p0)

@@ -261,7 +261,7 @@ Counts across all 767 files.
 | `ESLC` | 5063 | PRSM | 2 + 40N | per-slice data, same N ❓ |
 | `UNIT` | 3439 | FORM, PGRP, ROOT | 8 | metres per unit ✅ |
 | `NAME` | 3035 | FORM | pstring | clip name ✅ |
-| `VRIF` | 3008 | FORM | 4554 | preview thumbnail ❓ |
+| `VRIF` | 3008 | FORM | 4554 | preview thumbnail ✅ *(decoded — see `findings/oracle.md`)* |
 | `TXTB` | 2520 | FORM | 0 … 123144 | texture bank ❓ |
 | `CONN` | 1807 | PGRP, PRSM, ROOT | var | snap/connection points ❓ |
 | `LGHT` / `ELGT` | 616 each | ROOT, PRSM | var | lighting ❓ |
@@ -283,12 +283,27 @@ unrelated to `nseg`.
 
 | # | Question | Priority |
 |---|---|---|
-| 1 | `SLIC` / `ESLC` record semantics (bent, tapered, sliced prisms) | High |
+| 1 | `SLIC` / `ESLC` record semantics — plane + two points on it are decoded, but their geometric role is not (see `findings/slic.md`) | High |
 | 2 | `SURF` / `FEAT` placement: which face, and the 2D-on-3D projection | High |
 | 3 | `POSN` fields 6–8 | Medium |
 | 4 | Sweep-bound ordering flip | Medium |
 | 5 | `PLTX` / `SFTX` / `TXTB` — the Key Design 3-D texture system | Medium |
 | 6 | `COLR` two-record meaning; `FEAT` alpha semantics | Medium |
-| 7 | `VRIF` 4554-byte thumbnail encoding | Low |
 | 8 | `CONN` snap points | Low |
 | 9 | `LGHT` / `ELGT` | Low |
+
+---
+
+## 9. Validation
+
+`tools/score.py` measures reconstruction fidelity objectively against the
+application's own `VRIF` previews — 3,008 ground-truth images. See
+`findings/oracle.md` for how the metric works and why a fixed camera gives
+misleading numbers.
+
+Current baseline: **mean best-view silhouette IoU 0.766** over the 157 gallery
+items containing sliced prisms. Treat that as the regression bar.
+
+`tools/clip.py` (plane clipping) is verified watertight: the two complementary
+half-cuts of a cube sum back to the exact original volume for every plane
+tested, including oblique ones.
