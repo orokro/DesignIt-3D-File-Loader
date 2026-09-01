@@ -35,38 +35,40 @@ class Poly:
         self.verts = [(iff.fp(b, 32 + i * 8), iff.fp(b, 36 + i * 8)) for i in range(n)]
 
     def rings(self):
-        """(z, scale) pairs along the sweep, ordered from the HIGH end to the low.
+        """(z, scale) pairs along the sweep.
 
-        The order matters because it fixes the face numbering that SURF's
-        2-byte header indexes into. Verified against decorated caps whose
-        correct side is unambiguous: the Safe's front panel, the Tractor's
-        hubcap and the `PC, Compaq` monitor screen all land correctly this way
-        and on the wrong face under the opposite order.
+        Two independent things are encoded here:
+
+        * The taper direction. A profile's SMALL end sits at `za` -- the first
+          of the two stored sweep bounds -- not at whichever end happens to be
+          higher. 124 of 213 pointed prisms have za < zb, and treating the apex
+          as always-uppermost turns those upside down (the Basketball Goal, the
+          Toilet and the Barbecue Grill all have one).
+        * The ring ORDER, which fixes the face numbering SURF indexes into.
+          Rings are emitted from the HIGH end of the sweep to the low one.
         """
-        return list(reversed(self._rings_low_to_high()))
-
-    def _rings_low_to_high(self):
-        z0, z1 = min(self.za, self.zb), max(self.za, self.zb)
+        za, zb = self.za, self.zb
         p, n = self.profile, max(1, self.nseg)
-        if p == STRAIGHT:
-            return [(z0, 1.0), (z1, 1.0)]
         if p == POINTED:
-            return [(z0, 1.0), (z1, 0.0)]
-        if p == DIAMOND:
-            return [(z0, 0.0), ((z0 + z1) / 2, 1.0), (z1, 0.0)]
-        if p == ROUNDED:
+            out = [(za, 0.0), (zb, 1.0)]
+        elif p == DIAMOND:
+            out = [(za, 0.0), ((za + zb) / 2, 1.0), (zb, 0.0)]
+        elif p == ROUNDED:
             out = []
             for k in range(n + 1):
                 th = (k / n) * (math.pi / 2)
-                out.append((z0 + (z1 - z0) * math.sin(th), math.cos(th)))
-            return out
-        if p == SPHERE:
+                out.append((za + (zb - za) * (1 - math.cos(th)), math.sin(th)))
+        elif p == SPHERE:
             out = []
             for k in range(n + 1):
                 th = (k / n) * math.pi
-                out.append((z0 + (z1 - z0) * (1 - math.cos(th)) / 2, math.sin(th)))
-            return out
-        return [(z0, 1.0), (z1, 1.0)]
+                out.append((za + (zb - za) * (1 - math.cos(th)) / 2, math.sin(th)))
+        else:
+            out = [(za, 1.0), (zb, 1.0)]
+        if out[0][0] < out[-1][0]:
+            out.reverse()
+        return out
+
 
 
 def axis_matrix(axis):
@@ -194,39 +196,56 @@ def prsm_mesh(prsm):
     faces, fids = [], []
     n = len(base)
     nband = len(rings) - 1
+    # winding of the stored polygon decides which way the side quads face
+    sarea = sum(base[i][0] * base[(i + 1) % n][1] - base[(i + 1) % n][0] * base[i][1]
+                for i in range(n))
+    ccw = sarea > 0
 
     def side_id(r, i):
         return 1 + r * n + (n - 1 - i)
 
     for r in range(nband):
-        lo, hi = ringidx[r], ringidx[r + 1]
-        if len(lo) == 1:                       # fan from apex up to ring
+        lo, hi = ringidx[r], ringidx[r + 1]      # lo is the HIGHER end of the sweep
+        if len(lo) == 1:
             for i in range(n):
-                faces.append((lo[0], hi[i], hi[(i + 1) % n])); fids.append(side_id(r, i))
-        elif len(hi) == 1:                     # fan from ring to apex
+                j = (i + 1) % n
+                t = (lo[0], hi[j], hi[i]) if ccw else (lo[0], hi[i], hi[j])
+                faces.append(t); fids.append(side_id(r, i))
+        elif len(hi) == 1:
             for i in range(n):
-                faces.append((lo[i], lo[(i + 1) % n], hi[0])); fids.append(side_id(r, i))
+                j = (i + 1) % n
+                t = (lo[i], hi[0], lo[j]) if ccw else (lo[i], lo[j], hi[0])
+                faces.append(t); fids.append(side_id(r, i))
         else:
             for i in range(n):
                 j = (i + 1) % n
-                faces.append((lo[i], lo[j], hi[j])); fids.append(side_id(r, i))
-                faces.append((lo[i], hi[j], hi[i])); fids.append(side_id(r, i))
-    # caps
-    tris = triangulate(base)
+                t1 = (lo[i], hi[j], lo[j]) if ccw else (lo[i], lo[j], hi[j])
+                t2 = (lo[i], hi[i], hi[j]) if ccw else (lo[i], hi[j], hi[i])
+                faces.append(t1); fids.append(side_id(r, i))
+                faces.append(t2); fids.append(side_id(r, i))
+
     cap0, cap1 = 0, nband * n + 1
+    # triangulate() normalises to CCW in polygon space, so the high cap faces
+    # +sweep as written and the low cap is the reverse
+    tris = triangulate(base)
     if len(ringidx[0]) > 1:
-        for (a, b, c) in tris:
-            faces.append((ringidx[0][a], ringidx[0][c], ringidx[0][b])); fids.append(cap0)
+        for (x, y, z) in tris:
+            faces.append((ringidx[0][x], ringidx[0][y], ringidx[0][z])); fids.append(cap0)
     if len(ringidx[-1]) > 1:
-        for (a, b, c) in tris:
-            faces.append((ringidx[-1][a], ringidx[-1][b], ringidx[-1][c])); fids.append(cap1)
+        for (x, y, z) in tris:
+            faces.append((ringidx[-1][x], ringidx[-1][z], ringidx[-1][y])); fids.append(cap1)
+
     verts = np.array(verts)
-    ctr = verts.mean(0)
-    for k, (i0, i1, i2) in enumerate(faces):
-        a, b, c = verts[i0], verts[i1], verts[i2]
-        nrm = np.cross(b - a, c - a)
-        if float(nrm @ ((a + b + c) / 3.0 - ctr)) < 0:
-            faces[k] = (i0, i2, i1)          # keep winding outward
+    # Consistent winding by construction; a negative signed volume just means
+    # the whole shell came out inside-out, so flip it wholesale. This replaces
+    # a per-face centroid test, which mis-orients faces on long or concave
+    # prisms -- the escalator side panel in DEPARTME.VVR was one.
+    vol = 0.0
+    for (i0, i1, i2) in faces:
+        vol += float(np.dot(verts[i0], np.cross(verts[i1], verts[i2]))) / 6.0
+    if vol < 0:
+        faces = [(i0, i2, i1) for (i0, i1, i2) in faces]
+
     verts = (A @ verts.T).T               # local (u,v,w) -> object space
 
     # SLIC planes are expressed in OBJECT space, not the polygon's local frame:

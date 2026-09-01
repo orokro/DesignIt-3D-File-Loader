@@ -139,6 +139,12 @@ their *order* flips between variants but `min`/`max` is what matters for
 geometry. Default gallery primitives use ±48 (a 96-inch, 8-foot object). The
 ordering flip is ❓ — possibly a normal-direction hint.
 
+**Winding.** The stored polygon's signed area determines which way side quads
+face; caps follow from the ring order; a final signed-volume check flips the
+shell if it came out inside-out. A per-face "does the normal point away from
+the mesh centroid" test is *not* good enough — it mis-orients faces on long or
+concave prisms, such as the escalator side panels in `scenes/DEPARTME.VVR`.
+
 **Vertices** are a regular N-gon of circumradius 48, wound clockwise. For
 even-sided polygons the centroid is at the origin; for the triangle the
 *bounding box* is centred instead, so the centroid sits at y = −12. ✅
@@ -323,6 +329,7 @@ unrelated to `nseg`.
 |---|---|---|
 | 1 | `ESLC[3..5]` angles — not needed for geometry (see `findings/slic.md`) | Low |
 | 3 | `POSN` fields 6–8 | Medium |
+| 4 | A few clipped prisms are not perfectly watertight (`scenes/REEVES.VVR`), so their volume depends on cap tessellation | Low |
 | 5 | `PLTX` / `SFTX` / `TXTB` — the Key Design 3-D texture system | Medium |
 | 6 | `COLR` two-record meaning; `FEAT` alpha semantics | Medium |
 | 8 | `CONN` snap points | Low |

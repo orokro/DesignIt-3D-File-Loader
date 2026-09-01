@@ -41,33 +41,41 @@ export class Poly {
   }
 
   /**
-   * (z, scale) pairs along the sweep, ordered HIGH end first.
-   * The order fixes the face numbering that SURF indexes into.
+   * (z, scale) pairs along the sweep.
+   *
+   * Two independent things are encoded here:
+   *  - The taper direction. A profile's SMALL end sits at `za`, the first of
+   *    the two stored sweep bounds, not at whichever end is higher. 124 of 213
+   *    pointed prisms have za < zb; treating the apex as always-uppermost turns
+   *    those upside down (Basketball Goal, Toilet, Barbecue Grill).
+   *  - The ring ORDER, which fixes the face numbering SURF indexes into.
+   *    Rings run from the HIGH end of the sweep to the low one.
    */
   rings() {
-    const z0 = Math.min(this.za, this.zb), z1 = Math.max(this.za, this.zb);
+    const za = this.za, zb = this.zb;
     const n = Math.max(1, this.nseg);
-    let r;
+    let out;
     switch (this.profile) {
-      case POINTED: r = [[z0, 1], [z1, 0]]; break;
-      case DIAMOND: r = [[z0, 0], [(z0 + z1) / 2, 1], [z1, 0]]; break;
+      case POINTED: out = [[za, 0], [zb, 1]]; break;
+      case DIAMOND: out = [[za, 0], [(za + zb) / 2, 1], [zb, 0]]; break;
       case ROUNDED:
-        r = [];
+        out = [];
         for (let k = 0; k <= n; k++) {
           const th = (k / n) * (Math.PI / 2);
-          r.push([z0 + (z1 - z0) * Math.sin(th), Math.cos(th)]);
+          out.push([za + (zb - za) * (1 - Math.cos(th)), Math.sin(th)]);
         }
         break;
       case SPHERE:
-        r = [];
+        out = [];
         for (let k = 0; k <= n; k++) {
           const th = (k / n) * Math.PI;
-          r.push([z0 + (z1 - z0) * (1 - Math.cos(th)) / 2, Math.sin(th)]);
+          out.push([za + (zb - za) * (1 - Math.cos(th)) / 2, Math.sin(th)]);
         }
         break;
-      default: r = [[z0, 1], [z1, 1]];
+      default: out = [[za, 1], [zb, 1]];
     }
-    return r.reverse();
+    if (out[0][0] < out[out.length - 1][0]) out.reverse();
+    return out;
   }
 }
 
@@ -198,37 +206,53 @@ export function prismMesh(prsm) {
     }
   }
 
+  // winding of the stored polygon decides which way the side quads face
+  let sarea = 0;
+  for (let i = 0; i < n; i++) {
+    const j = (i + 1) % n;
+    sarea += base[i][0] * base[j][1] - base[j][0] * base[i][1];
+  }
+  const ccw = sarea > 0;
+
   const sideId = (r, i) => 1 + r * n + (n - 1 - i);
   const faces = [], fids = [];
   for (let r = 0; r < nband; r++) {
-    const lo = ringIdx[r], hi = ringIdx[r + 1];
+    const lo = ringIdx[r], hi = ringIdx[r + 1];   // lo is the HIGHER end
     if (lo.length === 1) {
-      for (let i = 0; i < n; i++) { faces.push([lo[0], hi[i], hi[(i + 1) % n]]); fids.push(sideId(r, i)); }
+      for (let i = 0; i < n; i++) {
+        const j = (i + 1) % n;
+        faces.push(ccw ? [lo[0], hi[j], hi[i]] : [lo[0], hi[i], hi[j]]); fids.push(sideId(r, i));
+      }
     } else if (hi.length === 1) {
-      for (let i = 0; i < n; i++) { faces.push([lo[i], lo[(i + 1) % n], hi[0]]); fids.push(sideId(r, i)); }
+      for (let i = 0; i < n; i++) {
+        const j = (i + 1) % n;
+        faces.push(ccw ? [lo[i], hi[0], lo[j]] : [lo[i], lo[j], hi[0]]); fids.push(sideId(r, i));
+      }
     } else {
       for (let i = 0; i < n; i++) {
         const j = (i + 1) % n;
-        faces.push([lo[i], lo[j], hi[j]]); fids.push(sideId(r, i));
-        faces.push([lo[i], hi[j], hi[i]]); fids.push(sideId(r, i));
+        faces.push(ccw ? [lo[i], hi[j], lo[j]] : [lo[i], lo[j], hi[j]]); fids.push(sideId(r, i));
+        faces.push(ccw ? [lo[i], hi[i], hi[j]] : [lo[i], hi[j], hi[i]]); fids.push(sideId(r, i));
       }
     }
   }
   const cap0 = 0, cap1 = nband * n + 1;
+  // triangulate() normalises to CCW in polygon space: the high cap faces
+  // +sweep as written, the low cap is the reverse
   const tris = triangulate(base);
-  if (ringIdx[0].length > 1) for (const [a, b, c] of tris) { faces.push([ringIdx[0][a], ringIdx[0][c], ringIdx[0][b]]); fids.push(cap0); }
+  if (ringIdx[0].length > 1) for (const [x, y, z] of tris) { faces.push([ringIdx[0][x], ringIdx[0][y], ringIdx[0][z]]); fids.push(cap0); }
   const last = ringIdx[ringIdx.length - 1];
-  if (last.length > 1) for (const [a, b, c] of tris) { faces.push([last[a], last[b], last[c]]); fids.push(cap1); }
+  if (last.length > 1) for (const [x, y, z] of tris) { faces.push([last[x], last[z], last[y]]); fids.push(cap1); }
 
-  // keep every winding outward
-  const ctr = [0, 0, 0];
-  for (const v of verts) { ctr[0] += v[0] / verts.length; ctr[1] += v[1] / verts.length; ctr[2] += v[2] / verts.length; }
-  for (let k = 0; k < faces.length; k++) {
-    const [i0, i1, i2] = faces[k];
-    const nr = cross(sub(verts[i1], verts[i0]), sub(verts[i2], verts[i0]));
-    const mid = [(verts[i0][0] + verts[i1][0] + verts[i2][0]) / 3, (verts[i0][1] + verts[i1][1] + verts[i2][1]) / 3, (verts[i0][2] + verts[i1][2] + verts[i2][2]) / 3];
-    if (dot(nr, sub(mid, ctr)) < 0) faces[k] = [i0, i2, i1];
+  // Winding is consistent by construction; a negative signed volume just means
+  // the shell came out inside-out, so flip it wholesale. This replaces a
+  // per-face centroid test, which mis-orients faces on long or concave prisms.
+  let vol = 0;
+  for (const [i0, i1, i2] of faces) {
+    const A = verts[i0], B = verts[i1], C = verts[i2];
+    vol += (A[0] * (B[1] * C[2] - B[2] * C[1]) + A[1] * (B[2] * C[0] - B[0] * C[2]) + A[2] * (B[0] * C[1] - B[1] * C[0])) / 6;
   }
+  if (vol < 0) for (let k = 0; k < faces.length; k++) { const f = faces[k]; faces[k] = [f[0], f[2], f[1]]; }
 
   let V = verts.map(([u, v, w]) => axisMap(poly.axis, u, v, w));
   let F = faces, ids = fids;
