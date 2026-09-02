@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Design-It! 3-D explorer</title>
+<style>
+  :root{--ink:#e9f0f8;--dim:#93a5ba;--panel:rgba(16,22,29,.9);--line:#2a3543;--accent:#5aa9e6}
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;overflow:hidden;background:#0e1319;color:var(--ink);
+    font:13px/1.45 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  canvas{display:block}
+  .card{position:absolute;background:var(--panel);border:1px solid var(--line);border-radius:8px;
+    padding:10px 12px;backdrop-filter:blur(6px)}
+  #modes{left:14px;top:14px;display:flex;gap:6px;align-items:center}
+  #modes button{background:transparent;border:1px solid var(--line);color:var(--dim);
+    border-radius:5px;padding:5px 11px;font:inherit;cursor:pointer}
+  #modes button[aria-pressed=true]{background:#2d5f85;border-color:var(--accent);color:#fff}
+  #hud{right:14px;top:14px;min-width:210px}
+  #hud b{color:var(--accent);font-weight:600}
+  #hud div{color:var(--dim);font-size:11.5px}
+  #help{left:14px;bottom:14px;color:var(--dim);font-size:11.5px;line-height:1.7}
+  #help kbd{background:#0c1117;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;
+    padding:1px 5px;color:var(--ink);font:11px ui-monospace,monospace}
+  #here{left:50%;transform:translateX(-50%);bottom:16px;padding:6px 14px;font-size:12.5px;
+    opacity:0;transition:opacity .18s}
+  #here.on{opacity:1}
+  #splash{position:absolute;inset:0;display:grid;place-items:center;background:#0e1319;z-index:9;
+    text-align:center}
+  #splash .inner{max-width:440px}
+  #splash h1{margin:0 0 6px;font-size:19px}
+  #splash p{margin:0 0 16px;color:var(--dim)}
+  #bar{height:5px;background:#1b2530;border-radius:3px;overflow:hidden}
+  #bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .15s}
+  #splash small{display:block;margin-top:9px;color:var(--dim);font-size:11.5px;min-height:1.4em}
+  #crosshair{position:absolute;left:50%;top:50%;width:3px;height:3px;margin:-1.5px 0 0 -1.5px;
+    background:#fff;border-radius:50%;opacity:.55;pointer-events:none}
+</style>
+</head>
+<body>
+<div id="modes" class="card">
+  <button id="mGallery" aria-pressed="true">Gallery grid</button>
+  <button id="mScenes" aria-pressed="false">Scenes</button>
+</div>
+<div id="hud" class="card">
+  <b id="modeName">Gallery grid</b>
+  <div id="counts"></div>
+  <div id="pos"></div>
+  <div id="mv"></div>
+</div>
+<div id="help" class="card">
+  <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move &nbsp; mouse look &nbsp; <kbd>Shift</kbd> sprint<br>
+  <kbd>Space</kbd> up / jump &nbsp; <kbd>C</kbd> down &nbsp; <kbd>Tab</kbd> fly ↔ walk &nbsp; <kbd>Esc</kbd> release
+</div>
+<div id="here" class="card"></div>
+<div id="crosshair"></div>
+<div id="splash"><div class="inner">
+  <h1>Design-It! 3-D explorer</h1>
+  <p>Building the world from the original 1993 files&hellip;</p>
+  <div id="bar"><i></i></div>
+  <small id="progress"></small>
+</div></div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "./vendor/three/three.module.js",
+  "three/addons/": "./vendor/three/addons/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { parse, wlbItems } from './src/iff.js';
+import { sceneMeshes, collect, options } from './src/geometry.js';
+import { shelfPack } from './src/pack.js';
+import { Explorer } from './src/controls.js';
+
+THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
+options.applySlic = true; options.slicKeepNeg = false; options.drawSurf = true;
+
+const DATA = '../data/';
+const $ = (id) => document.getElementById(id);
+const url = (p) => DATA + p.split('/').map(encodeURIComponent).join('/');
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x8fb8dc);
+scene.fog = new THREE.Fog(0x8fb8dc, 4000, 42000);
+const camera = new THREE.PerspectiveCamera(70, 1, 1, 60000);
+
+scene.add(new THREE.HemisphereLight(0xdfeaf6, 0x4a4438, 1.35));
+const sun = new THREE.DirectionalLight(0xfff4e0, 1.6);
+sun.position.set(0.4, -0.8, 1);
+scene.add(sun);
+const fill = new THREE.DirectionalLight(0xbcd4ee, 0.45);
+fill.position.set(-0.7, 0.5, 0.3);
+scene.add(fill);
+
+const explorer = new Explorer(camera, renderer.domElement);
+explorer.onModeChange = (walk) => { $('mv').textContent = walk ? 'walking' : 'flying'; };
+$('mv').textContent = 'flying';
+
+let world = null;          // { group, ground, items: [{name,x,y,mesh,box}] }
+function resize() {
+  renderer.setSize(innerWidth, innerHeight, false);
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize);
+resize();
+
+// ---- building ----
+function meshesToGroup(meshes) {
+  const solids = new Map(), feats = new Map();
+  for (const m of meshes) {
+    const bucket = m.isFeature ? feats : solids;
+    const k = m.isFeature ? `${m.color.join(',')}/${m.layer ?? 0}` : m.color.join(',');
+    if (!bucket.has(k)) bucket.set(k, { pos: [], rgb: m.color, layer: m.layer ?? 0, alpha: m.alpha ?? 255 });
+    const b = bucket.get(k);
+    for (const [a, c, d] of m.faces) {
+      const A = m.verts[a], B = m.verts[c], C = m.verts[d];
+      b.pos.push(A[0], A[1], A[2], B[0], B[1], B[2], C[0], C[1], C[2]);
+    }
+  }
+  const g = new THREE.Group();
+  let tris = 0;
+  const mk = (e, isFeature) => {
+    if (!e.pos.length) return;
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(e.pos, 3));
+    geo.computeVertexNormals();
+    const mat = new THREE.MeshLambertMaterial({
+      color: new THREE.Color(e.rgb[0] / 255, e.rgb[1] / 255, e.rgb[2] / 255),
+      side: THREE.DoubleSide, flatShading: true });
+    if (isFeature) {
+      mat.polygonOffset = true;
+      mat.polygonOffsetFactor = -1 - e.layer;
+      mat.polygonOffsetUnits = -4 * (e.layer + 1);
+      mat.depthWrite = false;
+    }
+    const mesh = new THREE.Mesh(geo, mat);
+    if (isFeature) { mesh.renderOrder = 1 + e.layer; mesh.userData.isFeature = true; }
+    tris += e.pos.length / 9;
+    g.add(mesh);
+  };
+  for (const e of solids.values()) mk(e, false);
+  for (const e of feats.values()) mk(e, true);
+  return { group: g, triangles: tris };
+}
+
+const bufCache = new Map();
+async function fetchBuf(p) {
+  if (!bufCache.has(p)) bufCache.set(p, fetch(url(p)).then((r) => r.arrayBuffer()));
+  return bufCache.get(p);
+}
+const sleep = () => new Promise((r) => setTimeout(r, 0));
+function progress(frac, text) {
+  $('bar').firstElementChild.style.width = `${Math.round(frac * 100)}%`;
+  $('progress').textContent = text;
+}
+
+async function buildGallery(manifest) {
+  const files = manifest.files.filter((f) => f.bucket === 'galleries3d' && !f.path.split('/').pop().startsWith('ID'));
+  const raw = [];
+  for (let i = 0; i < files.length; i++) {
+    const f = files[i];
+    progress(i / files.length * 0.85, `Reading ${f.path.split('/').pop()} — ${raw.length} objects`);
+    await sleep();
+    try {
+      const root = parse(await fetchBuf(f.path));
+      for (const { name, chunk } of wlbItems(root)) {
+        const meshes = collect(chunk, []);
+        if (!meshes.length) continue;
+        const built = meshesToGroup(meshes);
+        const box = new THREE.Box3().setFromObject(built.group);
+        const s = box.getSize(new THREE.Vector3());
+        if (!isFinite(s.x) || s.x > 4000 || s.y > 4000) continue;   // stray oversize clips
+        raw.push({ name, built, box, size: [s.x, s.y, s.z] });
+      }
+    } catch (e) { /* skip unreadable gallery */ }
+  }
+  progress(0.9, `Packing ${raw.length} objects…`);
+  await sleep();
+  const { placed, extent } = shelfPack(raw, { gap: 30, aisle: 70 });
+  const group = new THREE.Group();
+  const items = [];
+  for (const p of placed) {
+    const it = p.ref;
+    const c = it.box.getCenter(new THREE.Vector3());
+    // centre on the cell and sit the bounding box ON the ground
+    it.built.group.position.set(p.x - c.x - extent[0] / 2, p.y - c.y - extent[1] / 2, -it.box.min.z);
+    group.add(it.built.group);
+    items.push({ name: it.name, x: p.x - extent[0] / 2, y: p.y - extent[1] / 2, group: it.built.group, size: it.size });
+  }
+  const ground = makeGround(Math.max(extent[0], extent[1]) * 3.2, 0x6f7d5a);
+  group.add(ground);
+  return { group, ground, items, extent, label: 'Gallery grid' };
+}
+
+async function buildScenes(manifest) {
+  // Scenes only. The `models` bucket holds single subjects, some sitting on
+  // enormous decorative pads -- APOLLO's is 34,000 inches across, which would
+  // dominate the packing and push the spawn point miles away.
+  const files = manifest.files.filter((f) => f.bucket === 'scenes' && f.bounds);
+  const raw = [];
+  for (let i = 0; i < files.length; i++) {
+    const f = files[i];
+    progress(i / files.length * 0.85, `Reading ${f.path.split('/').pop()} — ${raw.length} scenes`);
+    await sleep();
+    try {
+      const meshes = sceneMeshes(parse(await fetchBuf(f.path)));
+      if (!meshes.length) continue;
+      const built = meshesToGroup(meshes);
+      const box = new THREE.Box3().setFromObject(built.group);
+      const s = box.getSize(new THREE.Vector3());
+      if (!isFinite(s.x) || Math.max(s.x, s.y) > 12000) continue;   // runaway ground slab
+      raw.push({ name: f.path.split('/').pop().replace(/\.VVR$/i, ''), built, box, size: [s.x, s.y, s.z] });
+    } catch (e) { /* skip */ }
+  }
+  progress(0.9, `Packing ${raw.length} scenes…`);
+  await sleep();
+  const { placed, extent } = shelfPack(raw, { gap: 160, aisle: 320 });
+  const group = new THREE.Group();
+  const items = [];
+  for (const p of placed) {
+    const it = p.ref;
+    const c = it.box.getCenter(new THREE.Vector3());
+    it.built.group.position.set(p.x - c.x - extent[0] / 2, p.y - c.y - extent[1] / 2, -it.box.min.z);
+    group.add(it.built.group);
+    items.push({ name: it.name, x: p.x - extent[0] / 2, y: p.y - extent[1] / 2, group: it.built.group, size: it.size });
+  }
+  const ground = makeGround(Math.max(extent[0], extent[1]) * 2.6, 0x5d6b4c);
+  group.add(ground);
+  return { group, ground, items, extent, label: 'Scenes' };
+}
+
+function makeGround(size, color) {
+  const g = new THREE.Mesh(
+    new THREE.PlaneGeometry(size, size),
+    new THREE.MeshLambertMaterial({ color }));
+  g.position.z = 0;
+  g.userData.isGround = true;
+  return g;
+}
+
+// Raycasting against every mesh in the world each frame is far too slow, so
+// walk mode only tests the objects whose cell is near the player.
+function nearbyPicker(w) {
+  return (pos) => {
+    const out = [w.ground];
+    for (const it of w.items) {
+      if (Math.abs(it.x - pos.x) < 260 && Math.abs(it.y - pos.y) < 260) {
+        it.group.traverse((o) => { if (o.isMesh && !o.userData.isFeature) out.push(o); });
+      }
+    }
+    return out;
+  };
+}
+
+async function setMode(which) {
+  $('splash').style.display = 'grid';
+  progress(0, 'Loading manifest…');
+  const manifest = await (await fetch(DATA + 'manifest.json')).json();
+  if (world) { scene.remove(world.group); }
+  world = which === 'scenes' ? await buildScenes(manifest) : await buildGallery(manifest);
+  scene.add(world.group);
+  explorer.pickNearby = nearbyPicker(world);
+  // spawn back and above the grid so the first view is an overview, not the
+  // inside of whatever ended up in the front row
+  // Spawn just outside the FIRST object rather than outside the whole world:
+  // the scene grid is tens of thousands of inches across, and framing all of
+  // it puts everything below the horizon.
+  // Stand off by the MEDIAN item size. Neither the world span nor the first
+  // item's own box works: the world is tens of thousands of inches wide, and
+  // individual scenes carry decorative ground pads an order of magnitude
+  // larger than the building on them. The median shrugs those outliers off.
+  const span = Math.max(world.extent[0], world.extent[1]);
+  // ...and land beside a median-SIZED item too. Items are packed largest
+  // first, so spawning at the front of the grid drops the camera inside a
+  // whole-room clip.
+  const diag = world.items.map((i) => Math.hypot(i.size[0], i.size[1]));
+  const med = [...diag].sort((a, b) => a - b)[Math.floor(diag.length / 2)] || 400;
+  let pick = 0, bestErr = Infinity;
+  world.items.forEach((it, i) => {
+    const e = Math.abs(diag[i] - med);
+    if (e < bestErr) { bestErr = e; pick = i; }
+  });
+  const home = world.items[pick];
+  explorer.teleport(home.x, home.y - med * 1.3, Math.max(70, med * 0.5));
+  explorer.yaw = 0; explorer.pitch = -0.18;
+  scene.fog.near = span * 0.12;
+  scene.fog.far = Math.max(24000, span * 1.6);
+  camera.far = Math.max(60000, span * 4);
+  camera.updateProjectionMatrix();
+  explorer.speed = Math.max(260, span / 40);
+  let tris = 0;
+  world.group.traverse((o) => { if (o.isMesh && o.geometry.attributes.position) tris += o.geometry.attributes.position.count / 3; });
+  $('modeName').textContent = world.label;
+  $('counts').textContent = `${world.items.length} objects · ${Math.round(tris).toLocaleString()} triangles`;
+  $('mGallery').setAttribute('aria-pressed', which !== 'scenes');
+  $('mScenes').setAttribute('aria-pressed', which === 'scenes');
+  progress(1, 'Ready — click to look around');
+  setTimeout(() => { $('splash').style.display = 'none'; }, 220);
+}
+$('mGallery').onclick = () => setMode('gallery');
+$('mScenes').onclick = () => setMode('scenes');
+
+// ---- loop ----
+let last = performance.now(), acc = 0;
+function tick(now) {
+  requestAnimationFrame(tick);
+  const dt = (now - last) / 1000; last = now;
+  explorer.update(dt);
+  if (world && (acc += dt) > 0.15) {
+    acc = 0;
+    const p = camera.position;
+    $('pos').textContent = `x ${p.x.toFixed(0)}  y ${p.y.toFixed(0)}  z ${p.z.toFixed(0)} in`;
+    let best = null, bd = 1e9;
+    for (const it of world.items) {
+      const d = (it.x - p.x) ** 2 + (it.y - p.y) ** 2;
+      if (d < bd) { bd = d; best = it; }
+    }
+    const near = best && bd < 240 * 240;
+    $('here').textContent = near ? best.name : '';
+    $('here').classList.toggle('on', !!near);
+  }
+  renderer.render(scene, camera);
+}
+requestAnimationFrame(tick);
+setMode('gallery').catch((e) => { $('progress').textContent = 'Failed: ' + e.message; });
+</script>
+</body>
+</html>
