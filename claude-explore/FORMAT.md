@@ -186,18 +186,30 @@ These are pure cyclic permutations (determinant +1), so winding is preserved.
 | Index | Field | Status |
 |---|---|---|
 | 0–2 | translation (x, y, z) in inches | ✅ |
-| 3–5 | rotation, stored **(ry, rx, rz)** — note the first two are swapped | ✅ |
+| 3–5 | an axis-angle **rotation vector**, components ordered **(y, x, z)** | ✅ |
 | 6–8 | unknown; non-zero in only 1.8 % / 0.6 % / 0.5 % of objects, always small angle-like values | ❓ |
 | 9–11 | scale (sx, sy, sz); **may be negative** (mirroring) | ✅ |
 
-Composed as `T · Rz · Ry · Rx · S`.
+**Fields 3–5 are a rotation vector, not three Euler angles.** The direction is
+the axis and the magnitude is the angle in radians, so the matrix is Rodrigues
+of `(v[4], v[3], v[5])`.
 
-**The rotation triple is stored `(ry, rx, rz)`, not `(rx, ry, rz)`.** The Fax
-Machine settles it: its control panel carries 0.157 rad in field 4 while its
-body is cut at a 9.03° slope in Y (`atan(2.323 / 14.61) = 0.1576`). Only reading
-field 4 as rotation-about-X lays the panel flush on that slope instead of
-driving it through the body. Across the 87 gallery items that use fields 3 or 4,
-this lifts mean silhouette IoU from 0.754 to 0.779 — better on 54, worse on 24.
+Single-axis rotations come out identical under either reading, which is why
+most of the corpus renders correctly either way and why this was invisible for
+so long. Compound rotations are where they diverge, and they are exactly the
+objects that looked broken — flailing limbs on the human figures.
+
+`Make My Day Brutus` settles it. His two arms carry `(1.397, -1.0405, 1.7211)`
+and `(-1.3652, -1.126, -1.7567)`: `v[3]` and `v[5]` are negated between them
+while `v[4]` is not. That is precisely how a **pseudovector** transforms under a
+mirror in X, and not how Euler angles behave. Read as rotation vectors, the two
+magnitudes agree (140.3° against 142.9°), both arms come out horizontal (6.0°
+and 5.4° from level), both point forward, and mirroring one across X lands it
+within **4.5°** of the other — the pose the application draws.
+
+Measured on the 36 gallery items containing a compound rotation, this lifts
+mean silhouette IoU from **0.669 to 0.715**; the best of the six Euler orders
+only reaches 0.688.
 
 Fields 6–8 are rare enough that ignoring them is visually harmless; they may be
 shear, or a second rotation.
@@ -330,6 +342,7 @@ unrelated to `nseg`.
 | 1 | `ESLC[3..5]` angles — not needed for geometry (see `findings/slic.md`) | Low |
 | 3 | `POSN` fields 6–8 | Medium |
 | 4 | A few clipped prisms are not perfectly watertight (`scenes/REEVES.VVR`), so their volume depends on cap tessellation | Low |
+| 5 | Parts with **all three scale components negative** (34 in the corpus) still misplace — `Printer w/stand` pages, `Jersey Cow`. Negative scale only ever appears all-three-at-once, i.e. a point inversion | Medium |
 | 5 | `PLTX` / `SFTX` / `TXTB` — the Key Design 3-D texture system | Medium |
 | 6 | `COLR` two-record meaning; `FEAT` alpha semantics | Medium |
 | 8 | `CONN` snap points | Low |

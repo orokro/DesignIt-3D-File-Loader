@@ -89,24 +89,45 @@ export function axisMap(axis, u, v, w) {
   return [w, u, v];
 }
 
-/** POSN: 12 x fp16.16. The rotation triple is stored (ry, rx, rz). */
+/**
+ * POSN -> a 3x4 affine matrix.
+ *
+ * Fields 3-5 are an axis-angle ROTATION VECTOR, not three Euler angles: the
+ * direction is the axis, the magnitude is the angle in radians. Its components
+ * are ordered (y, x, z), so the vector is (v[4], v[3], v[5]).
+ *
+ * Single-axis rotations are identical under either reading, which is why most
+ * of the corpus looks right either way. Compound rotations diverge.
+ * `Make My Day Brutus` settles it: his arms carry (1.397, -1.0405, 1.7211) and
+ * (-1.3652, -1.126, -1.7567) -- v[3] and v[5] negated between them while v[4]
+ * is not, exactly how a pseudovector behaves under a mirror in X and not how
+ * Euler angles behave. Read as rotation vectors the magnitudes agree (140.3 vs
+ * 142.9 deg), both arms come out horizontal and forward, and mirroring one
+ * across X lands it within 4.5 deg of the other.
+ */
 export function posnMatrix(chunk) {
   if (!chunk || chunk.data.byteLength < 48) return identity();
   const d = chunk.data;
   const v = [];
   for (let i = 0; i < 12; i++) v.push(fp(d, i * 4));
-  const rx = v[4], ry = v[3], rz = v[5];
-  const cx = Math.cos(rx), sx = Math.sin(rx);
-  const cy = Math.cos(ry), sy = Math.sin(ry);
-  const cz = Math.cos(rz), sz = Math.sin(rz);
-  const Rz = [[cz, -sz, 0], [sz, cz, 0], [0, 0, 1]];
-  const Ry = [[cy, 0, sy], [0, 1, 0], [-sy, 0, cy]];
-  const Rx = [[1, 0, 0], [0, cx, -sx], [0, sx, cx]];
-  const R = mat3(mat3(Rz, Ry), Rx);
+  const R = rotationVector([v[4], v[3], v[5]]);
   const S = [v[9], v[10], v[11]];
   const M = [[0, 0, 0, v[0]], [0, 0, 0, v[1]], [0, 0, 0, v[2]]];
   for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) M[r][c] = R[r][c] * S[c];
   return M;
+}
+
+/** Rodrigues: rotate by |rv| radians about the axis rv. */
+export function rotationVector(rv) {
+  const th = Math.hypot(rv[0], rv[1], rv[2]);
+  if (th < 1e-12) return [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+  const k = [rv[0] / th, rv[1] / th, rv[2] / th];
+  const c = Math.cos(th), s = Math.sin(th), t = 1 - c;
+  return [
+    [t * k[0] * k[0] + c,        t * k[0] * k[1] - s * k[2], t * k[0] * k[2] + s * k[1]],
+    [t * k[0] * k[1] + s * k[2], t * k[1] * k[1] + c,        t * k[1] * k[2] - s * k[0]],
+    [t * k[0] * k[2] - s * k[1], t * k[1] * k[2] + s * k[0], t * k[2] * k[2] + c],
+  ];
 }
 
 const identity = () => [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0]];

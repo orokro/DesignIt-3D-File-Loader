@@ -96,29 +96,44 @@ def axis_matrix(axis):
 
 
 def posn_matrix(chunk):
+    """POSN -> a 3x4 affine matrix.
+
+    Fields 3-5 are an axis-angle ROTATION VECTOR, not three Euler angles: the
+    direction is the axis, the magnitude is the angle in radians. Its
+    components are ordered (y, x, z), so the vector is (v[4], v[3], v[5]).
+
+    Single-axis rotations are identical under either reading, which is why most
+    of the corpus looks correct either way and why this took so long to see.
+    Compound rotations are where they diverge. `Make My Day Brutus` settles it:
+    his two arms carry (1.397, -1.0405, 1.7211) and (-1.3652, -1.126, -1.7567)
+    -- v[3] and v[5] negated between them while v[4] is not, which is exactly
+    how a pseudovector behaves under a mirror in X and not how Euler angles
+    behave. Read as rotation vectors, the magnitudes agree (140.3 deg vs
+    142.9 deg), both arms come out horizontal (6.0 and 5.4 deg), both point
+    forward, and mirroring one across X lands it within 4.5 deg of the other --
+    the pose the application actually draws.
+    """
     d = chunk.data
     if len(d) < 48:                       # 2D (FEAT) POSN, not a 3D transform
         return np.eye(4), None
     v = [iff.fp(d, i * 4) for i in range(12)]
-    # The rotation triple is stored (ry, rx, rz), NOT (rx, ry, rz). The Fax
-    # Machine settles it: its control panel carries 0.157 rad in field 4 and
-    # its body is cut at a 9.03 deg slope in Y (plane normal 0, 2.323, -14.61,
-    # atan = 0.1576). Only reading field 4 as rotation-about-X makes the panel
-    # lie flush on that slope instead of cutting through it. Across the 87
-    # gallery items that use fields 3 or 4 this lifts mean silhouette IoU from
-    # 0.754 to 0.779, better on 54 items and worse on 24.
     pos, scl = v[0:3], v[9:12]
-    rot = [v[4], v[3], v[5]]
-    cx, cy, cz = (math.cos(a) for a in rot)
-    sx, sy, sz = (math.sin(a) for a in rot)
-    Rx = np.array([[1, 0, 0], [0, cx, -sx], [0, sx, cx]])
-    Ry = np.array([[cy, 0, sy], [0, 1, 0], [-sy, 0, cy]])
-    Rz = np.array([[cz, -sz, 0], [sz, cz, 0], [0, 0, 1]])
-    R = Rz @ Ry @ Rx
+    rv = np.array([v[4], v[3], v[5]])
+    R = rotation_vector(rv)
     M = np.eye(4)
     M[:3, :3] = R @ np.diag(scl)
     M[:3, 3] = pos
     return M, v
+
+
+def rotation_vector(rv):
+    """Rodrigues: rotate by |rv| radians about the axis rv."""
+    th = float(np.linalg.norm(rv))
+    if th < 1e-12:
+        return np.eye(3)
+    k = rv / th
+    K = np.array([[0, -k[2], k[1]], [k[2], 0, -k[0]], [-k[1], k[0], 0]])
+    return np.eye(3) + math.sin(th) * K + (1 - math.cos(th)) * (K @ K)
 
 
 def triangulate(poly2d):
