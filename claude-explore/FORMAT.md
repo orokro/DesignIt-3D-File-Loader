@@ -179,40 +179,66 @@ Derived from the Dining Chair and Coffee Table, where leg, stretcher and
 armrest extents only reconcile under this mapping, then confirmed by rendering.
 These are pure cyclic permutations (determinant +1), so winding is preserved.
 
-### 4.4 `POSN` (48 bytes) — transform
+### 4.4 `POSN` (24 or 48 bytes) — transform
 
-12 × fp16.16:
+Up to 12 × fp16.16:
 
 | Index | Field | Status |
 |---|---|---|
 | 0–2 | translation (x, y, z) in inches | ✅ |
-| 3–5 | an axis-angle **rotation vector**, components ordered **(y, x, z)** | ✅ |
-| 6–8 | unknown; non-zero in only 1.8 % / 0.6 % / 0.5 % of objects, always small angle-like values | ❓ |
+| 3–5 | **Euler angles** in radians, stored **(ry, rx, rz)** and applied in that order | ✅ |
+| 6–8 | unknown; non-zero in only 2.3 % of parts, always small angle-like values | ❓ |
 | 9–11 | scale (sx, sy, sz); **may be negative** (mirroring) | ✅ |
 
-**Fields 3–5 are a rotation vector, not three Euler angles.** The direction is
-the axis and the magnitude is the angle in radians, so the matrix is Rodrigues
-of `(v[4], v[3], v[5])`.
+**A POSN is 24 bytes when the scale is identity.** The writer simply stops after
+the rotation. 1003 records across the corpus are this short form (789 `PRSM`,
+214 `PGRP`), and 131 of them carry a real rotation as well as a real position.
+This is easy to get catastrophically wrong, because a 2D `FEAT` `POSN` is *also*
+24 bytes — guarding with `len < 48` throws away every short 3D record and drops
+those parts at the model origin. Distinguish by context, not by length: only
+`PRSM`/`PGRP` reach this code path. Fixing it took the detached-part count from
+165 to 49 and is what put Brutus's arms back on his shoulders.
 
-Single-axis rotations come out identical under either reading, which is why
-most of the corpus renders correctly either way and why this was invisible for
-so long. Compound rotations are where they diverge, and they are exactly the
-objects that looked broken — flailing limbs on the human figures.
+**Fields 3–5 are three Euler angles, not an axis-angle rotation vector.** The
+first two are swapped relative to the obvious order, and the composition order
+matches the storage order: `R = Ry(v[3]) · Rx(v[4]) · Rz(v[5])`.
 
-`Make My Day Brutus` settles it. His two arms carry `(1.397, -1.0405, 1.7211)`
-and `(-1.3652, -1.126, -1.7567)`: `v[3]` and `v[5]` are negated between them
-while `v[4]` is not. That is precisely how a **pseudovector** transforms under a
-mirror in X, and not how Euler angles behave. Read as rotation vectors, the two
-magnitudes agree (140.3° against 142.9°), both arms come out horizontal (6.0°
-and 5.4° from level), both point forward, and mirroring one across X lands it
-within **4.5°** of the other — the pose the application draws.
+This is genuinely hard to pin down, and a first pass got it wrong. A single-axis
+rotation reads identically under either model, and a mirrored pair negates the
+same two components under both — `Make My Day Brutus`'s two arms carry
+`(1.397, -1.0405, 1.7211)` and `(-1.3652, -1.126, -1.7567)`, `v[3]` and `v[5]`
+negated while `v[4]` is not, which looks like pseudovector behaviour but is
+equally what Euler angles do when the middle field is the rotation about the
+mirror axis. Neither the common case nor the obvious mirror test discriminates.
 
-Measured on the 36 gallery items containing a compound rotation, this lifts
-mean silhouette IoU from **0.669 to 0.715**; the best of the six Euler orders
-only reaches 0.688.
+What discriminates is the **distribution of compound values**. 159 parts carry
+exactly `(180°, 0, 180°)`, and a whole family carries `(180°, 0, θ)` for θ in
+{−175, −135, −90, −65, −45, 45, 56, 90, 135, 170, …}; `(−90°, 0, 180°)` and
+`(−90°, 0, −90°)` appear too. 58 % of compound parts have *every* non-zero
+component within half a degree of a 45° multiple — the same rate as single-axis
+parts. A rotation vector composed from two round turns does not land on round
+components, and certainly does not pin one field at exactly 180° across a
+family; "flip it over, then turn it" does, and that is what a modelling UI
+offers. Under this reading `(180, 0, 180)` with scale `(−1, −1, −1)` is exactly
+a mirror in X, which is what those `ID*` furniture variants are.
 
-Fields 6–8 are rare enough that ignoring them is visually harmless; they may be
-shear, or a second rotation.
+Two independent measurements agree:
+
+| model | detached parts (of 4083) | mean IoU, compound items |
+|---|---|---|
+| Euler `yxz`, order `Ry·Rx·Rz` | **26** | **0.7882** |
+| Euler `yxz`, order `Rx·Ry·Rz` | 26 | 0.7837 |
+| Euler `yxz`, order `Ry·Rz·Rx` | 30 | 0.7858 |
+| axis-angle rotation vector | 40 | — |
+| every other field→axis map | 62–167 | — |
+
+Sign flips on individual angles, and applying scale after the rotation instead
+of before, both make it worse; `R · diag(scale)` with the angles as stored is
+the floor.
+
+Fields 6–8 remain unexplained. They are rare enough that ignoring them is
+visually harmless everywhere except `Printer w/stand`, whose paper path is the
+one object they might explain.
 
 ### 4.6 `SLIC` / `ESLC` — cutting planes ✅
 
@@ -225,6 +251,14 @@ This is how the program makes wedges (a slab cut corner to corner — the
 `PC, Compaq` keyboard) and, far more often, **frusta**: a pointed prism with its
 taper truncated. Hence 61 % of pointed prisms carry a `SLIC` against 6 % of
 straight ones. Full derivation in `findings/slic.md`.
+
+> **Compact the vertex array after clipping.** The clipper appends the vertices
+> it creates and simply stops referencing the ones it removed. Nothing indexes
+> them, so drawing is unaffected — but a clipped prism's vertex array still holds
+> the geometry that was cut away, so its bounding box is the box of the *uncut*
+> prism. That quietly inflated the manifest bounds, the detached-part oracle, and
+> the explorer's ground placement, which is why cut objects hovered above the
+> floor instead of resting on it.
 
 ### 4.7 `SURF` / `FEAT` — per-face overrides ✅
 
@@ -342,7 +376,8 @@ unrelated to `nseg`.
 | 1 | `ESLC[3..5]` angles — not needed for geometry (see `findings/slic.md`) | Low |
 | 3 | `POSN` fields 6–8 | Medium |
 | 4 | A few clipped prisms are not perfectly watertight (`scenes/REEVES.VVR`), so their volume depends on cap tessellation | Low |
-| 5 | Parts with **all three scale components negative** (34 in the corpus) still misplace — `Printer w/stand` pages, `Jersey Cow`. Negative scale only ever appears all-three-at-once, i.e. a point inversion | Medium |
+| 2 | **11.8 % of `FEAT` decals land outside the prism they decorate** (346 of 2932, non-`ID` galleries). Worst: `Tiled Bedroom` 72 in, `Red Bedroom` 60 in, `Jersey Cow` 34 in, `Bar Sink` 20 in. The containment test in section 9 is a sharp oracle for this — face-index selection is the likely culprit | **High** |
+| 5 | `Printer w/stand`'s paper path: four identical sheets whose `POSN` differs only in `v[3]` and position, all carrying scale `(-0.112, -1.0, -0.585)` and fields 6–8 `(0, -0.174, 0)`. The `VRIF` preview draws them as one continuous curled ribbon, so they are probably chained rather than independent — note the `CONN` chunk on that clip | Medium |
 | 5 | `PLTX` / `SFTX` / `TXTB` — the Key Design 3-D texture system | Medium |
 | 6 | `COLR` two-record meaning; `FEAT` alpha semantics | Medium |
 | 8 | `CONN` snap points | Low |
@@ -359,6 +394,18 @@ misleading numbers.
 
 Current baseline: **mean best-view silhouette IoU 0.766** over the 157 gallery
 items containing sliced prisms. Treat that as the regression bar.
+
+`tools/detach.py` is a second, sharper oracle: it counts prisms whose world AABB
+touches no other prism's. Silhouette IoU forgives a part rotated into the wrong
+place — a 50×50 preview simply cannot see it — but real assemblies are connected,
+so "floating detached piece" is directly measurable. It is what settled Euler vs
+axis-angle when IoU could not, and what showed the short-`POSN` bug at a glance.
+Current baseline: **49 isolated of 6487** gallery parts (0.76 %), and a good
+share of those are legitimately separate objects (`Cannisters`, `Patio
+Ensemble`). Treat it as the regression bar alongside IoU.
+
+A third check, worth building out: every `FEAT` decal's world box should sit
+inside the box of the prism it decorates. 11.8 % currently do not.
 
 `tools/clip.py` (plane clipping) is verified watertight: the two complementary
 half-cuts of a cube sum back to the exact original volume for every plane

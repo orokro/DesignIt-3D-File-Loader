@@ -92,42 +92,46 @@ export function axisMap(axis, u, v, w) {
 /**
  * POSN -> a 3x4 affine matrix.
  *
- * Fields 3-5 are an axis-angle ROTATION VECTOR, not three Euler angles: the
- * direction is the axis, the magnitude is the angle in radians. Its components
- * are ordered (y, x, z), so the vector is (v[4], v[3], v[5]).
+ * Fields 3-5 are three EULER ANGLES in radians, stored (ry, rx, rz) and applied
+ * in that same order: R = Ry @ Rx @ Rz.
  *
- * Single-axis rotations are identical under either reading, which is why most
- * of the corpus looks right either way. Compound rotations diverge.
- * `Make My Day Brutus` settles it: his arms carry (1.397, -1.0405, 1.7211) and
- * (-1.3652, -1.126, -1.7567) -- v[3] and v[5] negated between them while v[4]
- * is not, exactly how a pseudovector behaves under a mirror in X and not how
- * Euler angles behave. Read as rotation vectors the magnitudes agree (140.3 vs
- * 142.9 deg), both arms come out horizontal and forward, and mirroring one
- * across X lands it within 4.5 deg of the other.
+ * They are NOT an axis-angle rotation vector. A single-axis rotation reads the
+ * same either way and a mirrored pair negates the same two components under
+ * both, so the common case cannot tell them apart. The distribution of the
+ * COMPOUND values can: 159 parts carry exactly (180, 0, 180) degrees and a whole
+ * family carries (180, 0, theta) for a dozen different theta. A rotation vector
+ * built from two round turns does not land on round components, let alone pin
+ * one field at exactly 180 across a family; "flip it, then turn it" does.
+ *
+ * A POSN is 48 bytes with all twelve fields but 24 bytes -- 1003 across the
+ * corpus -- when the scale is identity and was omitted. Those short records
+ * still carry a real position and often a real rotation; rejecting them as if
+ * they were 2D FEAT POSNs dropped every one of those parts at the model origin.
  */
 export function posnMatrix(chunk) {
-  if (!chunk || chunk.data.byteLength < 48) return identity();
+  if (!chunk || chunk.data.byteLength < 24) return identity();
   const d = chunk.data;
   const v = [];
-  for (let i = 0; i < 12; i++) v.push(fp(d, i * 4));
-  const R = rotationVector([v[4], v[3], v[5]]);
+  const n = Math.min(d.byteLength >> 2, 12);
+  for (let i = 0; i < n; i++) v.push(fp(d, i * 4));
+  while (v.length < 9) v.push(0);      // short form: position + rotation only,
+  while (v.length < 12) v.push(1);     // scale omitted because it is identity
+  const R = eulerMatrix(v[3], v[4], v[5]);
   const S = [v[9], v[10], v[11]];
   const M = [[0, 0, 0, v[0]], [0, 0, 0, v[1]], [0, 0, 0, v[2]]];
   for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) M[r][c] = R[r][c] * S[c];
   return M;
 }
 
-/** Rodrigues: rotate by |rv| radians about the axis rv. */
-export function rotationVector(rv) {
-  const th = Math.hypot(rv[0], rv[1], rv[2]);
-  if (th < 1e-12) return [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
-  const k = [rv[0] / th, rv[1] / th, rv[2] / th];
-  const c = Math.cos(th), s = Math.sin(th), t = 1 - c;
-  return [
-    [t * k[0] * k[0] + c,        t * k[0] * k[1] - s * k[2], t * k[0] * k[2] + s * k[1]],
-    [t * k[0] * k[1] + s * k[2], t * k[1] * k[1] + c,        t * k[1] * k[2] - s * k[0]],
-    [t * k[0] * k[2] - s * k[1], t * k[1] * k[2] + s * k[0], t * k[2] * k[2] + c],
-  ];
+/** Ry @ Rx @ Rz, angles in radians -- the POSN field order. */
+export function eulerMatrix(ry, rx, rz) {
+  const cx = Math.cos(rx), sx = Math.sin(rx);
+  const cy = Math.cos(ry), sy = Math.sin(ry);
+  const cz = Math.cos(rz), sz = Math.sin(rz);
+  const X = [[1, 0, 0], [0, cx, -sx], [0, sx, cx]];
+  const Y = [[cy, 0, sy], [0, 1, 0], [-sy, 0, cy]];
+  const Z = [[cz, -sz, 0], [sz, cz, 0], [0, 0, 1]];
+  return mat3(mat3(Y, X), Z);
 }
 
 const identity = () => [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0]];
@@ -292,7 +296,27 @@ export function prismMesh(prsm) {
       if (!F.length) break;
     }
   }
+  ({ verts: V, faces: F } = compact(V, F));
   return { verts: V, faces: F, faceIds: ids, poly };
+}
+
+/**
+ * Drop vertices no face refers to.
+ *
+ * The clipper appends the vertices it creates and stops referencing the ones it
+ * cut away. Harmless for drawing -- nothing indexes them -- but poisonous for
+ * anything that measures: a clipped prism's array still held the geometry that
+ * was removed, so its bounding box was the box of the UNCUT prism. That inflated
+ * the manifest bounds and the explorer's ground placement, which is why cut
+ * objects hovered above the floor instead of resting on it.
+ */
+function compact(verts, faces) {
+  const used = new Set();
+  for (const f of faces) for (const i of f) used.add(i);
+  if (used.size === verts.length) return { verts, faces };
+  const order = [...used].sort((a, b) => a - b);
+  const remap = new Map(order.map((o, n) => [o, n]));
+  return { verts: order.map((i) => verts[i]), faces: faces.map((f) => f.map((i) => remap.get(i))) };
 }
 
 export function colorOf(prsm) {

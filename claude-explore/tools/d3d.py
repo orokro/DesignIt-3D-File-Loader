@@ -98,42 +98,68 @@ def axis_matrix(axis):
 def posn_matrix(chunk):
     """POSN -> a 3x4 affine matrix.
 
-    Fields 3-5 are an axis-angle ROTATION VECTOR, not three Euler angles: the
-    direction is the axis, the magnitude is the angle in radians. Its
-    components are ordered (y, x, z), so the vector is (v[4], v[3], v[5]).
+    Fields 3-5 are three EULER ANGLES in radians, stored (ry, rx, rz) -- the
+    first two are SWAPPED relative to the obvious order -- and applied in the
+    order they are stored: R = Ry @ Rx @ Rz. That self-consistency is the point:
+    the writer lays the angles down in application order.
 
-    Single-axis rotations are identical under either reading, which is why most
-    of the corpus looks correct either way and why this took so long to see.
-    Compound rotations are where they diverge. `Make My Day Brutus` settles it:
-    his two arms carry (1.397, -1.0405, 1.7211) and (-1.3652, -1.126, -1.7567)
-    -- v[3] and v[5] negated between them while v[4] is not, which is exactly
-    how a pseudovector behaves under a mirror in X and not how Euler angles
-    behave. Read as rotation vectors, the magnitudes agree (140.3 deg vs
-    142.9 deg), both arms come out horizontal (6.0 and 5.4 deg), both point
-    forward, and mirroring one across X lands it within 4.5 deg of the other --
-    the pose the application actually draws.
+    They are NOT an axis-angle rotation vector, though the corpus fights hard to
+    look like one -- a single-axis rotation reads identically either way, and a
+    mirrored pair negates the same two components under both models, so neither
+    the common case nor the obvious mirror test discriminates. What settles it is
+    the distribution of COMPOUND values: 159 parts carry exactly (180, 0, 180)
+    degrees and a whole family carries (180, 0, theta) for theta in
+    {-175, -135, -90, -65, -45, 45, 56, 90, 135, 170, ...}. A rotation vector
+    composed from two round turns essentially never lands on round components,
+    let alone pins one field at exactly 180 across a family -- but "flip it over,
+    then turn it" does, which is what a modelling UI actually offers.
+
+    A POSN is 48 bytes when it carries all twelve fields, but 24 bytes -- 1003 of
+    them across the corpus -- when the scale is identity and the writer omitted
+    it. Those short records still carry a real position, and 131 carry a real
+    rotation. Rejecting anything under 48 bytes (the guard that keeps 2D FEAT
+    POSNs out) silently collapsed every one of them to the identity, dumping the
+    part at the model origin. That is why Brutus's arms fanned out from his
+    chest: they are short-form records, so they lost their offsets and their
+    shoulder rotations at once.
+
+    Measured on the detached-part oracle (see detach.py, which counts prisms
+    whose world AABB touches no other prism -- far sharper than silhouette IoU
+    for this): 3312 gallery parts give 24 isolated under this reading, 38 under
+    the rotation-vector reading, and 60-160 under every other axis assignment.
+    Sign flips and applying scale after rotation instead of before both make it
+    worse, so R @ diag(scale) with all-positive angles is the floor.
     """
     d = chunk.data
-    if len(d) < 48:                       # 2D (FEAT) POSN, not a 3D transform
+    if len(d) < 24:                       # 2D (FEAT) POSN, not a 3D transform
         return np.eye(4), None
-    v = [iff.fp(d, i * 4) for i in range(12)]
+    v = [iff.fp(d, i * 4) for i in range(min(len(d) // 4, 12))]
+    while len(v) < 9:                     # SHORT FORM (24 B): position + rotation
+        v.append(0.0)                     # only; scale was omitted as identity
+    while len(v) < 12:
+        v.append(1.0)
     pos, scl = v[0:3], v[9:12]
-    rv = np.array([v[4], v[3], v[5]])
-    R = rotation_vector(rv)
+    R = euler_matrix(v[3], v[4], v[5])
     M = np.eye(4)
     M[:3, :3] = R @ np.diag(scl)
     M[:3, 3] = pos
     return M, v
 
 
-def rotation_vector(rv):
-    """Rodrigues: rotate by |rv| radians about the axis rv."""
-    th = float(np.linalg.norm(rv))
-    if th < 1e-12:
-        return np.eye(3)
-    k = rv / th
-    K = np.array([[0, -k[2], k[1]], [k[2], 0, -k[0]], [-k[1], k[0], 0]])
-    return np.eye(3) + math.sin(th) * K + (1 - math.cos(th)) * (K @ K)
+def euler_matrix(ry, rx, rz):
+    """Ry @ Rx @ Rz, angles in radians -- the POSN field order.
+
+    Measured against the other five orders on the 36 gallery objects that carry
+    a compound rotation: yxz 0.7882 mean silhouette IoU, xyz 0.7837, yzx 0.7858,
+    zyx 0.7502. yxz also ties for the fewest detached parts (26).
+    """
+    cx, sx = math.cos(rx), math.sin(rx)
+    cy, sy = math.cos(ry), math.sin(ry)
+    cz, sz = math.cos(rz), math.sin(rz)
+    X = np.array([[1, 0, 0], [0, cx, -sx], [0, sx, cx]])
+    Y = np.array([[cy, 0, sy], [0, 1, 0], [-sy, 0, cy]])
+    Z = np.array([[cz, -sz, 0], [sz, cz, 0], [0, 0, 1]])
+    return Y @ X @ Z
 
 
 def triangulate(poly2d):
@@ -300,7 +326,26 @@ def prsm_mesh(prsm):
                 if m.any():
                     verts = verts.copy()
                     verts[m] = (R @ (verts[m] - pivot).T).T + pivot
+    verts, faces = _compact(verts, faces)
     return verts, faces, poly, fids
+
+
+def _compact(verts, faces):
+    """Drop vertices no face refers to.
+
+    The clipper appends the vertices it creates and simply stops referencing the
+    ones it cut away, which is harmless for drawing -- nothing indexes them -- but
+    poisonous for anything that measures. A clipped prism's vertex array still
+    held the geometry that was removed, so its bounding box was the box of the
+    UNCUT prism. That silently inflated the manifest's bounds, the detached-part
+    oracle's boxes, and the explorer's ground placement, which is why cut objects
+    hovered above the floor instead of resting on it.
+    """
+    used = sorted({i for f in faces for i in f})
+    if len(used) == len(verts):
+        return verts, faces
+    remap = {o: n for n, o in enumerate(used)}
+    return verts[used], [tuple(remap[i] for i in f) for f in faces]
 
 
 def color_of(prsm):
