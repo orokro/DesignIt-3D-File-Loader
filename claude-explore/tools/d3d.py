@@ -453,7 +453,14 @@ DRAW_SURF = True
 SURF_OFFSET = 0.05      # inches to lift a decoration off its face, to beat z-fighting
 
 # FEAT's 2-byte header selects which side of the surface is decorated.
-FEAT_OUTSIDE, FEAT_INSIDE, FEAT_BOTH = 0, 1, 2
+#
+# The value 1 is OUTSIDE, not inside. It accounts for 2048 of the 2520 gallery
+# decorations; 2 is both (412) and 0 is rare (60). Reading 1 as "inside" pushes
+# four decorations in five 0.05 in INTO their own prism, where the depth buffer
+# hides them -- a bug that stayed invisible for as long as the placement bug
+# above kept decals hanging off their faces in open air, and only surfaced the
+# moment placement was fixed and they landed flush.
+FEAT_INSIDE, FEAT_OUTSIDE, FEAT_BOTH = 0, 1, 2
 
 
 def face_frame(verts, tris):
@@ -520,24 +527,39 @@ def feat_polygon(feat):
 
 
 def feat_transform(feat):
-    """2D FEAT POSN: 6 x fp16.16 = (x, y, ROTATION, ~0, sx, sy).
+    """2D FEAT POSN -> (tx, ty, rotation, sx, sy).
 
-    Field 2 is a rotation in radians about the decoration's own origin, and it
-    was ignored for a long time. It is non-zero on 4.3 % of decals (134 of 3113)
-    and the values are unmistakable: pi, pi/2, -pi/2, pi/4, 5.359 (307 deg),
-    -0.2618 (-15 deg). Field 3 is zero on 99.7 % of records and has no known
-    meaning. Fields 4 and 5 really are scale -- exactly 1.0 on 94 % of them.
+    Two lengths, and the SHORT one is a trap that cost most of a session:
 
-    Drawing a rotated decal unrotated leaves it the right size in the right
-    place but facing the wrong way, which reads as a misprinted panel rather
-    than a misplaced one, so it hid behind the louder placement bugs.
+        24 B   (x, y, rotation, ~0, sx, sy)      2194 records
+        12 B   (x, y, rotation)                   338 records, scale implied 1
+
+    This is the same omit-the-default trick the 3D POSN plays (see
+    `posn_matrix`), and it bites the same way. Requiring 24 bytes here returned
+    (0, 0) for every short record, so 338 decorations lost their placement and
+    piled up at their face's origin corner -- `Mac LC` and `Mac IIci`'s screens
+    off the side of the monitor, while `Mac Quadra` and the `Computer Desk` Macs,
+    which carry full records, looked perfect. That split -- same object class,
+    some right and some wrong -- is exactly the signature of a short-record bug,
+    and I misread it as evidence for two different coordinate conventions and
+    built an elaborate wrong rule on top of it. There is only ONE convention:
+    the outline is measured from the face's minimum corner, offset by (tx, ty).
+
+    Field 2 is a rotation in radians about the decoration's own origin --
+    non-zero on 4.3 % of decals, with unmistakable values (pi, pi/2, -pi/2, pi/4,
+    5.359, -0.2618). Field 3 is zero on 99.7 % of the long records and has no
+    known meaning. Fields 4 and 5 are scale, exactly 1.0 on 94 % of them.
     """
     ps = feat.kid('POSN')
-    if ps is None or len(ps.data) < 24:
+    if ps is None or len(ps.data) < 12:
         return (0.0, 0.0, 0.0, 1.0, 1.0)
     d = ps.data
-    return (iff.fp(d, 0), iff.fp(d, 4), iff.fp(d, 8),
-            iff.fp(d, 16) or 1.0, iff.fp(d, 20) or 1.0)
+    v = [iff.fp(d, i * 4) for i in range(min(len(d) // 4, 6))]
+    while len(v) < 4:                     # short form: rotation may be absent too
+        v.append(0.0)
+    while len(v) < 6:                     # scale omitted because it is identity
+        v.append(1.0)
+    return (v[0], v[1], v[2], v[4] or 1.0, v[5] or 1.0)
 
 
 def surface_features(prsm, verts, faces, fids, W):
@@ -572,18 +594,17 @@ def surface_features(prsm, verts, faces, fids, W):
             pts2 = [(ct * (x * sx) - st * (y * sy) + tx,
                      st * (x * sx) + ct * (y * sy) + ty) for (x, y) in poly]
 
-            # Two coordinate conventions, and the POSN translation says which.
-            # With a non-zero (tx, ty) the outline is measured from the face's
-            # minimum corner; with (0, 0) it is already in the prism's own local
-            # coordinates and must be laid on the bare face plane instead.
-            # The split is exact across the corpus: of 2182 decorations with a
-            # translation, 2064 fit the corner frame and NONE fit only the
-            # local-coordinate frame; of 338 without one, 309 fit local
-            # coordinates and NONE fit only the corner frame. Using the corner
-            # frame for all of them is what threw the Copy Machine's front panel
-            # ten inches below the machine and left a floating slab beside the
-            # Bar Sink.
-            origin = corner if (abs(tx) > 1e-6 or abs(ty) > 1e-6) else middle
+            # ONE convention: the outline is measured from the face's MINIMUM
+            # CORNER, offset by the FEAT's own (tx, ty).
+            #
+            # This was briefly split into two rules keyed on whether (tx, ty) was
+            # zero, because 338 decorations only fit if placed some other way.
+            # Those 338 turned out to be exactly the 338 short (12-byte) FEAT
+            # POSNs whose translation was being discarded -- see feat_transform.
+            # The lesson: when a rule needs an exception for a specific subset,
+            # check whether the subset is defined by a parsing failure before
+            # inventing semantics for it.
+            origin = corner
             for sgn in ((1, -1) if side == FEAT_BOTH else (1,) if side != FEAT_INSIDE else (-1,)):
                 off = nrm * (SURF_OFFSET * sgn)
                 pv = np.array([origin + u * a + v * b + off for (a, b) in pts2])

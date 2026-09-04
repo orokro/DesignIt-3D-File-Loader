@@ -297,28 +297,49 @@ and cut faces follow.
 `FEAT`'s 2-byte header is the Outside / Inside / Both selector (values 0, 1, 2).
 Full details in `findings/surf.md`.
 
-**A `FEAT`'s own `POSN` is 24 bytes: `(x, y, rotation, ~0, sx, sy)`.** Field 2
-is a rotation in radians about the decoration's origin — non-zero on 4.3 % of
-decals, with values that give it away (π, π/2, −π/2, π/4, 5.359, −0.2618).
-Field 3 is zero on 99.7 % of records. Fields 4 and 5 are scale and are exactly
-1.0 on 94 % of them.
+**A `FEAT`'s own `POSN` comes in two lengths, and the short one is a trap.**
 
-**There are TWO coordinate conventions for the outline, and the `POSN`
-translation says which.** The 2D frame is built by dropping the axis the face
-normal is most aligned with and keeping the other two in ascending order. Then:
+```
+24 B   (x, y, rotation, ~0, sx, sy)      2194 records
+12 B   (x, y, rotation)                   338 records, scale implied (1, 1)
+```
 
-| `(tx, ty)` | outline coordinates are… | origin |
-|---|---|---|
-| non-zero | relative, offset by `(tx, ty)` | the face's **minimum corner** |
-| `(0, 0)` | already the prism's own **local coordinates** | the bare face plane, no in-plane shift |
+Exactly the same omit-the-default trick the 3D `POSN` plays (§4.4), and it bites
+the same way: requiring 24 bytes returns `(0, 0)` for every short record, so 338
+decorations lose their placement and pile up at their face's origin corner.
 
-The split is exact. Of the 2182 decorations that carry a translation, 2064 fit
-the corner frame and **none** fit only the local-coordinate frame; of the 338
-without one, 309 fit local coordinates and **none** fit only the corner frame.
-Treating every decal as corner-relative is what threw the `Copy Machine`'s front
-panel ten inches below the machine, left a slab floating beside the `Bar Sink`,
-and turned some of `Jersey Cow`'s spots into black spikes. Applying the split
-took decals-outside-their-prism from **11.8 % to 4.2 %** (`tools/decalfit.py`).
+That is what put `Mac LC`'s and `Mac IIci`'s screens off the side of the
+monitor while `Mac Quadra`, the two `Computer Desk` Macs and the
+`Corner Work Center` Mac — same class of object, full-length records — were
+pixel-perfect. **Same object class, some right and some wrong, is the signature
+of a short-record bug**, and I misread it twice: first as evidence for two
+different coordinate conventions keyed on a zero translation, then as a
+"sentinel" meaning *centre me*. Both were elaborate wrong rules built on a
+parsing failure. The real lesson: when a rule needs an exception for a specific
+subset, check whether that subset is defined by a parsing failure before
+inventing semantics for it.
+
+There is **one** placement convention: the outline is measured from the face's
+minimum corner, offset by `(tx, ty)`.
+
+Field 2 is a **rotation** in radians about the decoration's own origin —
+non-zero on 4.3 % of decals, with unmistakable values (π, π/2, −π/2, π/4, 5.359,
+−0.2618). Field 3 is zero on 99.7 % of the long records. Fields 4 and 5 are
+scale, exactly 1.0 on 94 % of them.
+
+> **`FEAT`'s side selector: 1 is OUTSIDE, not inside.** ✅ It accounts for 2048 of
+> the 2520 gallery decorations; 2 is both (412) and 0 is rare (60). Reading 1 as
+> "inside" pushes four decorations in five 0.05 in *into* their own prism, where
+> the depth buffer hides them. This stayed invisible for as long as the
+> short-record bug kept decals hanging off their faces in open air — they were
+> only visible *because* they were misplaced — and surfaced the instant placement
+> was fixed and they landed flush. Fixing both together is what finally put the
+> `Mac LC` screen on its monitor, the `Bar Sink`'s doors on its cabinet and the
+> `Mac Classic`'s disk slot on its case.
+
+Applying both took decals-outside-their-prism from **11.8 % to 3.2 %**
+(`tools/decalfit.py`) — though note that metric barely moved on the short-record
+fix itself, which is a fair warning about how little it sees (see section 9).
 
 ### 4.5 `COLR` (8 bytes)
 
@@ -419,7 +440,7 @@ unrelated to `nseg`.
 | 1 | `ESLC[3..5]` angles — not needed for geometry (see `findings/slic.md`) | Low |
 | 3 | `POSN` fields 6–8, and `POLY[26:28]` (a small signed int16, non-zero on 72 of the 341 skewed prisms) | Medium |
 | 4 | A few clipped prisms are not perfectly watertight (`scenes/REEVES.VVR`), so their volume depends on cap tessellation | Low |
-| 2 | **4.2 % of `FEAT` decals still land outside the prism they decorate** (124 of 2932). Worst: `Tiled Bedroom` 72 in, `Red Bedroom` 60 in, `Springs Kitchen` 49 in, `Jersey Cow` 34 in, `Bar Sink` 20 in. Both remaining shapes look like a face-index problem on prisms with many `SLIC` cuts: `Bar Sink`'s stray panel is 13.6 × 15.6 in but is assigned to a face that is 19.7 × 0.5 in. Sweeping six face-numbering variants did not beat the current one, so the answer is probably not a global renumbering | **High** |
+| 2 | **3.2 % of `FEAT` decals still land outside the prism they decorate** (94 of 2932). Worst: `Tiled Bedroom` 72 in, `Red Bedroom` 60 in, `Springs Kitchen` 49 in, `Jersey Cow` 34 in, `Bar Sink` 20 in. Both remaining shapes look like a face-index problem on prisms with many `SLIC` cuts: `Bar Sink`'s stray panel is 13.6 × 15.6 in but is assigned to a face that is 19.7 × 0.5 in. Sweeping six face-numbering variants did not beat the current one, so the answer is probably not a global renumbering | **High** |
 | 5 | `Printer w/stand`'s paper path: four identical sheets whose `POSN` differs only in `v[3]` and position, all carrying scale `(-0.112, -1.0, -0.585)` and fields 6–8 `(0, -0.174, 0)`. The `VRIF` preview draws them as one continuous curled ribbon, so they are probably chained rather than independent — note the `CONN` chunk on that clip | Medium |
 | 5 | `PLTX` / `SFTX` / `TXTB` — the Key Design 3-D texture system | Medium |
 | 6 | `COLR` two-record meaning; `FEAT` alpha semantics | Medium |
@@ -450,7 +471,7 @@ Ensemble`). Treat it as the regression bar alongside IoU.
 `tools/decalfit.py` is the third oracle: every `FEAT` decal's world box must sit
 inside the box of the prism it decorates. Neither of the others can see a decal
 at all — IoU because 50×50 hides it, detach.py because it only looks at prisms.
-Current baseline: **124 of 2932 (4.2 %)**, down from 346 (11.8 %). Measured at
+Current baseline: **94 of 2932 (3.2 %)**, down from 346 (11.8 %). Measured at
 the level of the 2D face frame rather than the world box it is 147 of 2520
 (5.8 %); six alternative face numberings were swept against that figure after
 the coordinate-convention and oblique-sweep fixes and none beat the current one,

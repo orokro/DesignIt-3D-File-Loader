@@ -403,21 +403,32 @@ export function featPolygon(feat) {
 }
 
 /**
- * 2D FEAT POSN: 6 x fp16.16 = (x, y, ROTATION, ~0, sx, sy).
+ * 2D FEAT POSN -> [tx, ty, rotation, sx, sy].
  *
- * Field 2 is a rotation in radians about the decoration's own origin, non-zero
- * on 4.3% of decals, with unmistakable values: pi, pi/2, -pi/2, pi/4, 5.359,
- * -0.2618. Field 3 is zero on 99.7% and has no known meaning. Fields 4 and 5
- * are scale -- exactly 1.0 on 94% of records.
+ * Two lengths, and the SHORT one is a trap:
+ *
+ *     24 B   (x, y, rotation, ~0, sx, sy)      2194 records
+ *     12 B   (x, y, rotation)                   338 records, scale implied 1
+ *
+ * Same omit-the-default trick the 3D POSN plays. Requiring 24 bytes returned
+ * (0, 0) for every short record, so 338 decorations lost their placement and
+ * piled up at their face's origin corner -- `Mac LC` and `Mac IIci` screens off
+ * the side of the monitor while `Mac Quadra`, which carries full records, was
+ * perfect. There is only ONE placement convention: the face's minimum corner,
+ * offset by (tx, ty).
  */
 export function featTransform(feat) {
   const ps = feat.kid('POSN');
-  if (!ps || ps.data.byteLength < 24) return [0, 0, 0, 1, 1];
-  return [fp(ps.data, 0), fp(ps.data, 4), fp(ps.data, 8),
-          fp(ps.data, 16) || 1, fp(ps.data, 20) || 1];
+  if (!ps || ps.data.byteLength < 12) return [0, 0, 0, 1, 1];
+  const v = [];
+  const n = Math.min(ps.data.byteLength >> 2, 6);
+  for (let i = 0; i < n; i++) v.push(fp(ps.data, i * 4));
+  while (v.length < 4) v.push(0);   // short form: rotation may be absent too
+  while (v.length < 6) v.push(1);   // scale omitted because it is identity
+  return [v[0], v[1], v[2], v[4] || 1, v[5] || 1];
 }
 
-export const FEAT_OUTSIDE = 0, FEAT_INSIDE = 1, FEAT_BOTH = 2;
+export const FEAT_INSIDE = 0, FEAT_OUTSIDE = 1, FEAT_BOTH = 2;
 
 /** Overlay meshes for the decorations on a prism's faces. */
 export function surfaceFeatures(prsm, mesh) {
@@ -448,13 +459,11 @@ export function surfaceFeatures(prsm, mesh) {
       const ct = Math.cos(th), st = Math.sin(th);
       const pts2 = poly.map(([x, y]) => [ct * (x * sx) - st * (y * sy) + tx,
                                          st * (x * sx) + ct * (y * sy) + ty]);
-      // Two coordinate conventions, and the POSN translation says which. With a
-      // non-zero (tx, ty) the outline is measured from the face's minimum
-      // CORNER; with (0, 0) it is measured from the face's CENTRE. Measured over
-      // the 338 decorations without a translation: centre-origin leaves 19
-      // outside their face, corner-origin 62, and the prism's bare local origin
-      // 29. Over the 2182 with one, corner-origin leaves 118 and centre 1660.
-      const base = (Math.abs(tx) > 1e-6 || Math.abs(ty) > 1e-6) ? fr.origin : fr.middle;
+      // ONE convention: the face's MINIMUM CORNER, offset by the FEAT's own
+      // (tx, ty). A brief two-rule split was chasing 338 decorations that only
+      // fitted some other way -- they were exactly the 338 short (12-byte) FEAT
+      // POSNs whose translation was being discarded. See featTransform.
+      const base = fr.origin;
       const pv = pts2.map(([a, b]) => add(add(base, mul(fr.u, a)), mul(fr.v, b)));
       const tri = triangulate(pv.map((p) => [dot(p, fr.u), dot(p, fr.v)]));
       if (!tri.length) continue;
