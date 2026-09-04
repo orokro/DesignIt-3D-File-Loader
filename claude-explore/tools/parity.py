@@ -3,7 +3,7 @@ import sys, os, json, math
 sys.path.insert(0, os.path.dirname(__file__))
 import numpy as np, iff, d3d, wlb
 
-d3d.SLIC_MODE = 'clip'; d3d.SLIC_KEEP_NEG = False; d3d.SLIC_FILTER = None; d3d.DRAW_SURF = False
+d3d.SLIC_MODE = 'clip'; d3d.SLIC_KEEP_NEG = False; d3d.SLIC_FILTER = None; d3d.DRAW_SURF = os.environ.get('SURF') == '1'
 
 
 def digest(meshes):

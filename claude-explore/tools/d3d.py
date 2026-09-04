@@ -1,5 +1,5 @@
 """Design-It! 3-D geometry model: VVR/WLB chunks -> triangle meshes."""
-import sys, os, math
+import sys, os, math, struct
 sys.path.insert(0, os.path.dirname(__file__))
 import iff
 import numpy as np
@@ -9,6 +9,7 @@ import clip as _clip
 SLIC_MODE = 'clip'  # 'off' | 'clip' | 'hinge' -- see findings/slic.md
 SLIC_FILTER = None  # optional fn(index, nrec, eslc_row) -> bool
 SLIC_KEEP_NEG = False
+SKEW_MODE = 'near'  # 'off' | 'far' | 'near' -- POLY's oblique-sweep offset
 
 STRAIGHT, POINTED, DIAMOND, ROUNDED, SPHERE = 1, 2, 3, 4, 5
 PROFILE_NAME = {1: 'straight', 2: 'pointed', 3: 'diamond', 4: 'rounded', 5: 'sphere'}
@@ -28,6 +29,10 @@ class Poly:
         self.nseg = iff.u16(b, 4)   # curve subdivision (1 for flat profiles)
         self.za = iff.fp(b, 6)
         self.zb = iff.fp(b, 10)
+        # POLY[14:26] -- three fp16.16 that offset the far end of the sweep, so
+        # the extrusion leans instead of running straight. Non-zero on 5.1 % of
+        # prisms. b[26:28] is a small signed int16 whose meaning is unknown.
+        self.skew = (iff.fp(b, 14), iff.fp(b, 18), iff.fp(b, 22))
         self.mid = b[14:28]
         n = iff.u32(b, 28)
         self.declared_n = n
@@ -214,15 +219,29 @@ def prsm_mesh(prsm):
     rings = poly.rings()
     A = axis_matrix(poly.axis)
 
+    # An oblique sweep: POLY's skew vector displaces the far end, and every ring
+    # takes its share in proportion to how far along the sweep it sits.
+    sk = poly.skew if SKEW_MODE != 'off' else (0.0, 0.0, 0.0)
+    span = poly.zb - poly.za
+
+    def shift(z):
+        if span == 0.0 or sk == (0.0, 0.0, 0.0):
+            return 0.0, 0.0, 0.0
+        t = (z - poly.za) / span
+        if SKEW_MODE == 'near':
+            t = 1.0 - t
+        return t * sk[0], t * sk[1], t * sk[2]
+
     verts, ringidx = [], []
     for z, s in rings:
+        dx, dy, dz = shift(z)
         if s == 0.0:
             ringidx.append([len(verts)])
-            verts.append(np.array([0.0, 0.0, z]))
+            verts.append(np.array([dx, dy, z + dz]))
         else:
             start = len(verts)
             for (x, y) in base:
-                verts.append(np.array([x * s, y * s, z]))
+                verts.append(np.array([x * s + dx, y * s + dy, z + dz]))
             ringidx.append(list(range(start, start + len(base))))
 
     # Face numbering that SURF indexes into:
@@ -359,14 +378,49 @@ def color_of(prsm):
 COMPOSE = False   # see findings/hierarchy.md -- child POSN appears to be absolute
 
 
-def collect(node, M, out):
+INCH = 0.0254           # metres, the unit the geometry is normally authored in
+
+
+def unit_scale(node):
+    """UNIT -> how many inches one stored unit is worth.
+
+    UNIT is an 8-byte IEEE-754 double giving METRES PER STORED UNIT, and it is
+    NOT always an inch. 497 clips carry 0.0254 (1 in), but others carry 0.00635
+    (1/4 in), 0.003175 (1/8 in), 0.0025400 (1/10 in), 0.0015875 (1/16 in) or
+    0.01 (1 cm). Ignoring it renders those objects 4x, 8x, 10x or 16x too large.
+
+    The check that it is a scale and not just a UI grid setting: `Bar Stool`
+    carries 0.00635 and measures 48 x 48 x 104 raw, which is 12 x 12 x 26 inches
+    once divided -- a bar stool. `Microwave Oven` gives 24 x 19.5 x 15.5,
+    `Fridge, Vert. Black` 33 x 33 x 65, `Dishwasher, Brown` 30 x 32 x 32,
+    `Queen Anne Desk` 32.5 x 21 x 35, `Pig` 60 x 24 x 35. Every one of those is
+    the right size for the object it depicts, and absurd without the divide.
+
+    UNIT appears on ROOT, VCLP, PGRP and even PRSM, but across 537 nested
+    occurrences a child NEVER disagrees with its ancestor, so one lookup
+    anywhere in the subtree is enough.
+    """
+    u = node.kid('UNIT') if node is not None else None
+    if u is not None and len(u.data) == 8:
+        return struct.unpack('>d', u.data)[0] / INCH
+    return None
+
+
+def collect(node, M, out, unit=None):
     """Walk PRSM/PGRP tree accumulating world-space meshes."""
+    here = unit_scale(node)
+    if here is not None:
+        unit = here
     for k in node.children:
         if k.tag not in ('PRSM', 'PGRP'):
             continue
+        kf = unit_scale(k)
+        u = kf if kf is not None else unit
         ps = k.kid('POSN')
         L, _ = posn_matrix(ps) if ps else (np.eye(4), None)
         W = (M @ L) if COMPOSE else L
+        if u is not None and abs(u - 1.0) > 1e-12:
+            W = np.diag([u, u, u, 1.0]) @ W
         if k.tag == 'PRSM':
             m = prsm_mesh(k)
             if m:
@@ -376,7 +430,7 @@ def collect(node, M, out):
                 out.append((wv, f, color_of(k), poly))
                 if DRAW_SURF:
                     out.extend(surface_features(k, v, f, fids, W))
-        collect(k, W, out)
+        collect(k, W, out, u)
 
 
 def scene_meshes(path_or_chunk):
@@ -442,8 +496,15 @@ def face_frame(verts, tris):
         return None
     v /= nv
     uu, vv = P @ u, P @ v
-    origin = u * uu.min() + v * vv.min() + nrm * float(P[0] @ nrm)
-    return origin, u, v, nrm
+    # `plane` is the face's plane with NO in-plane shift, so a decoration whose
+    # coordinates are already prism-local can be laid down directly on it;
+    # `origin` additionally moves to the face's minimum corner. Which one a
+    # given FEAT wants is decided by its POSN translation -- see
+    # surface_features.
+    plane = nrm * float(P[0] @ nrm)
+    origin = u * uu.min() + v * vv.min() + plane
+    middle = u * ((uu.min() + uu.max()) / 2) + v * ((vv.min() + vv.max()) / 2) + plane
+    return origin, u, v, nrm, middle
 
 
 def feat_polygon(feat):
@@ -459,12 +520,24 @@ def feat_polygon(feat):
 
 
 def feat_transform(feat):
-    """2D FEAT POSN: 6 x fp16.16 = (x, y, ?, ?, sx, sy)."""
+    """2D FEAT POSN: 6 x fp16.16 = (x, y, ROTATION, ~0, sx, sy).
+
+    Field 2 is a rotation in radians about the decoration's own origin, and it
+    was ignored for a long time. It is non-zero on 4.3 % of decals (134 of 3113)
+    and the values are unmistakable: pi, pi/2, -pi/2, pi/4, 5.359 (307 deg),
+    -0.2618 (-15 deg). Field 3 is zero on 99.7 % of records and has no known
+    meaning. Fields 4 and 5 really are scale -- exactly 1.0 on 94 % of them.
+
+    Drawing a rotated decal unrotated leaves it the right size in the right
+    place but facing the wrong way, which reads as a misprinted panel rather
+    than a misplaced one, so it hid behind the louder placement bugs.
+    """
     ps = feat.kid('POSN')
     if ps is None or len(ps.data) < 24:
-        return (0.0, 0.0, 1.0, 1.0)
+        return (0.0, 0.0, 0.0, 1.0, 1.0)
     d = ps.data
-    return (iff.fp(d, 0), iff.fp(d, 4), iff.fp(d, 16) or 1.0, iff.fp(d, 20) or 1.0)
+    return (iff.fp(d, 0), iff.fp(d, 4), iff.fp(d, 8),
+            iff.fp(d, 16) or 1.0, iff.fp(d, 20) or 1.0)
 
 
 def surface_features(prsm, verts, faces, fids, W):
@@ -484,18 +557,33 @@ def surface_features(prsm, verts, faces, fids, W):
         fr = face_frame(verts, tris)
         if fr is None:
             continue
-        origin, u, v, nrm = fr
+        corner, u, v, nrm, middle = fr
 
         for feat in surf.kids('FEAT'):
             side = iff.u16(feat.hdr, 0) if feat.hdr else FEAT_OUTSIDE
             poly = feat_polygon(feat)
             if not poly or len(poly) < 3:
                 continue
-            tx, ty, sx, sy = feat_transform(feat)
+            tx, ty, th, sx, sy = feat_transform(feat)
             col = feat.kid('COLR')
             rgb = (col.data[1], col.data[2], col.data[3]) if col and len(col.data) >= 4 else (0, 0, 0)
 
-            pts2 = [((x * sx) + tx, (y * sy) + ty) for (x, y) in poly]
+            ct, st = math.cos(th), math.sin(th)
+            pts2 = [(ct * (x * sx) - st * (y * sy) + tx,
+                     st * (x * sx) + ct * (y * sy) + ty) for (x, y) in poly]
+
+            # Two coordinate conventions, and the POSN translation says which.
+            # With a non-zero (tx, ty) the outline is measured from the face's
+            # minimum corner; with (0, 0) it is already in the prism's own local
+            # coordinates and must be laid on the bare face plane instead.
+            # The split is exact across the corpus: of 2182 decorations with a
+            # translation, 2064 fit the corner frame and NONE fit only the
+            # local-coordinate frame; of 338 without one, 309 fit local
+            # coordinates and NONE fit only the corner frame. Using the corner
+            # frame for all of them is what threw the Copy Machine's front panel
+            # ten inches below the machine and left a floating slab beside the
+            # Bar Sink.
+            origin = corner if (abs(tx) > 1e-6 or abs(ty) > 1e-6) else middle
             for sgn in ((1, -1) if side == FEAT_BOTH else (1,) if side != FEAT_INSIDE else (-1,)):
                 off = nrm * (SURF_OFFSET * sgn)
                 pv = np.array([origin + u * a + v * b + off for (a, b) in pts2])

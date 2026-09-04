@@ -14,6 +14,7 @@ export const options = {
   applySlic: true,      // SLIC planes cut the prism
   slicKeepNeg: false,   // keep n.p + d >= 0
   drawSurf: true,       // build SURF/FEAT decoration overlays
+  applySkew: true,      // POLY's oblique-sweep offset
 };
 
 // ---- small vector helpers ----
@@ -34,6 +35,10 @@ export class Poly {
     this.nseg = u16(b, 4);         // curve subdivision (1 for flat profiles)
     this.za = fp(b, 6);
     this.zb = fp(b, 10);
+    // POLY[14:26] -- three fp16.16 that displace the `za` end of the sweep, so
+    // the extrusion leans instead of running straight. Non-zero on 5.1% of
+    // prisms; b[26:28] is a small signed int16 of unknown meaning.
+    this.skew = [fp(b, 14), fp(b, 18), fp(b, 22)];
     let n = u32(b, 28);
     n = Math.max(0, Math.min(n, Math.floor((b.byteLength - 32) / 8)));
     this.verts = [];
@@ -221,12 +226,24 @@ export function prismMesh(prsm) {
   const n = base.length;
   const nband = rings.length - 1;
 
+  // An oblique sweep: the skew vector displaces the `za` end, and every ring
+  // takes its share in proportion to how far along the sweep it sits.
+  const sk = options.applySkew === false ? [0, 0, 0] : poly.skew;
+  const span = poly.zb - poly.za;
+  const flat = span === 0 || (sk[0] === 0 && sk[1] === 0 && sk[2] === 0);
+  const shift = (z) => {
+    if (flat) return [0, 0, 0];
+    const t = 1 - (z - poly.za) / span;
+    return [t * sk[0], t * sk[1], t * sk[2]];
+  };
+
   const verts = [], ringIdx = [];
   for (const [z, s] of rings) {
-    if (s === 0) { ringIdx.push([verts.length]); verts.push([0, 0, z]); }
+    const [dx, dy, dz] = shift(z);
+    if (s === 0) { ringIdx.push([verts.length]); verts.push([dx, dy, z + dz]); }
     else {
       const start = verts.length;
-      for (const [x, y] of base) verts.push([x * s, y * s, z]);
+      for (const [x, y] of base) verts.push([x * s + dx, y * s + dy, z + dz]);
       ringIdx.push([...Array(n).keys()].map((i) => start + i));
     }
   }
@@ -358,10 +375,19 @@ export function faceFrame(verts, tris) {
   v = sub(sub(v, mul(nrm, dot(v, nrm))), mul(u, dot(v, u)));
   if (len(v) < 1e-9) return null;
   v = norm(v);
-  let minU = Infinity, minV = Infinity;
-  for (const i of idx) { minU = Math.min(minU, dot(verts[i], u)); minV = Math.min(minV, dot(verts[i], v)); }
-  const origin = add(add(mul(u, minU), mul(v, minV)), mul(nrm, dot(verts[idx[0]], nrm)));
-  return { origin, u, v, nrm };
+  let minU = Infinity, minV = Infinity, maxU = -Infinity, maxV = -Infinity;
+  for (const i of idx) {
+    const du = dot(verts[i], u), dv = dot(verts[i], v);
+    minU = Math.min(minU, du); maxU = Math.max(maxU, du);
+    minV = Math.min(minV, dv); maxV = Math.max(maxV, dv);
+  }
+  // Two in-plane origins: `origin` at the face's minimum corner, `middle` at its
+  // centre. Which one a decoration wants is decided by its POSN translation --
+  // see surfaceFeatures.
+  const plane = mul(nrm, dot(verts[idx[0]], nrm));
+  const origin = add(add(mul(u, minU), mul(v, minV)), plane);
+  const middle = add(add(mul(u, (minU + maxU) / 2), mul(v, (minV + maxV) / 2)), plane);
+  return { origin, u, v, nrm, middle };
 }
 
 /** 2D FEAT polygon: 4-byte header (0, class, 0, vertexCount) then N x (x, y). */
@@ -376,11 +402,19 @@ export function featPolygon(feat) {
   return out;
 }
 
-/** 2D FEAT POSN: 6 x fp16.16 = (x, y, ?, ?, sx, sy). */
+/**
+ * 2D FEAT POSN: 6 x fp16.16 = (x, y, ROTATION, ~0, sx, sy).
+ *
+ * Field 2 is a rotation in radians about the decoration's own origin, non-zero
+ * on 4.3% of decals, with unmistakable values: pi, pi/2, -pi/2, pi/4, 5.359,
+ * -0.2618. Field 3 is zero on 99.7% and has no known meaning. Fields 4 and 5
+ * are scale -- exactly 1.0 on 94% of records.
+ */
 export function featTransform(feat) {
   const ps = feat.kid('POSN');
-  if (!ps || ps.data.byteLength < 24) return [0, 0, 1, 1];
-  return [fp(ps.data, 0), fp(ps.data, 4), fp(ps.data, 16) || 1, fp(ps.data, 20) || 1];
+  if (!ps || ps.data.byteLength < 24) return [0, 0, 0, 1, 1];
+  return [fp(ps.data, 0), fp(ps.data, 4), fp(ps.data, 8),
+          fp(ps.data, 16) || 1, fp(ps.data, 20) || 1];
 }
 
 export const FEAT_OUTSIDE = 0, FEAT_INSIDE = 1, FEAT_BOTH = 2;
@@ -406,13 +440,22 @@ export function surfaceFeatures(prsm, mesh) {
       const side = feat.hdr ? u16(feat.hdr, 0) : FEAT_OUTSIDE;
       const poly = featPolygon(feat);
       if (!poly || poly.length < 3) continue;
-      const [tx, ty, sx, sy] = featTransform(feat);
+      const [tx, ty, th, sx, sy] = featTransform(feat);
       const col = feat.kid('COLR');
       const rgb = col && col.data.byteLength >= 4
         ? [col.data.getUint8(1), col.data.getUint8(2), col.data.getUint8(3)] : [0, 0, 0];
       const alpha = col && col.data.byteLength >= 4 ? col.data.getUint8(0) : 255;
-      const pts2 = poly.map(([x, y]) => [x * sx + tx, y * sy + ty]);
-      const pv = pts2.map(([a, b]) => add(add(fr.origin, mul(fr.u, a)), mul(fr.v, b)));
+      const ct = Math.cos(th), st = Math.sin(th);
+      const pts2 = poly.map(([x, y]) => [ct * (x * sx) - st * (y * sy) + tx,
+                                         st * (x * sx) + ct * (y * sy) + ty]);
+      // Two coordinate conventions, and the POSN translation says which. With a
+      // non-zero (tx, ty) the outline is measured from the face's minimum
+      // CORNER; with (0, 0) it is measured from the face's CENTRE. Measured over
+      // the 338 decorations without a translation: centre-origin leaves 19
+      // outside their face, corner-origin 62, and the prism's bare local origin
+      // 29. Over the 2182 with one, corner-origin leaves 118 and centre 1660.
+      const base = (Math.abs(tx) > 1e-6 || Math.abs(ty) > 1e-6) ? fr.origin : fr.middle;
+      const pv = pts2.map(([a, b]) => add(add(base, mul(fr.u, a)), mul(fr.v, b)));
       const tri = triangulate(pv.map((p) => [dot(p, fr.u), dot(p, fr.v)]));
       if (!tri.length) continue;
       // Decorations stack: a roundel is concentric FEATs on ONE face, all
@@ -429,10 +472,37 @@ export function surfaceFeatures(prsm, mesh) {
  * Walk a PRSM/PGRP tree collecting world-space meshes.
  * Child transforms are ABSOLUTE -- a group's POSN is never composed onto them.
  */
-export function collect(node, out = []) {
+const INCH = 0.0254;   // metres, the unit the geometry is normally authored in
+
+/**
+ * UNIT -> how many inches one stored unit is worth.
+ *
+ * UNIT is an 8-byte IEEE-754 double giving METRES PER STORED UNIT, and it is NOT
+ * always an inch. 497 clips carry 0.0254 (1 in) but others carry 0.00635 (1/4
+ * in), 0.003175 (1/8 in), 0.00254 (1/10 in), 0.0015875 (1/16 in) or 0.01 (1 cm).
+ * Ignoring it renders those objects 4x, 8x, 10x or 16x too large. `Bar Stool` is
+ * the clearest proof: 48 x 48 x 104 raw, 12 x 12 x 26 inches once divided.
+ *
+ * UNIT appears on ROOT, VCLP, PGRP and PRSM, but across 537 nested occurrences a
+ * child never disagrees with its ancestor.
+ */
+export function unitScale(node) {
+  const u = node && node.kid ? node.kid('UNIT') : null;
+  if (u && u.data.byteLength === 8) return u.data.getFloat64(0, false) / INCH;
+  return null;
+}
+
+export function collect(node, out = [], unit = null) {
+  const here = unitScale(node);
+  if (here !== null) unit = here;
   for (const k of node.children) {
     if (k.tag !== 'PRSM' && k.tag !== 'PGRP') continue;
-    const W = posnMatrix(k.kid('POSN'));
+    const kf = unitScale(k);
+    const u = kf !== null ? kf : unit;
+    let W = posnMatrix(k.kid('POSN'));
+    if (u !== null && Math.abs(u - 1) > 1e-12) {
+      W = W.map((row) => row.map((x) => x * u));
+    }
     if (k.tag === 'PRSM') {
       const m = prismMesh(k);
       if (m) {
@@ -447,7 +517,7 @@ export function collect(node, out = []) {
         }
       }
     }
-    collect(k, out);
+    collect(k, out, u);
   }
   return out;
 }

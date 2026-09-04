@@ -123,7 +123,8 @@ off  size  field
 4    2     uint16 nseg — curve subdivision           ✅
 6    4     fp16.16  sweep bound A
 10   4     fp16.16  sweep bound B
-14   14    zeros (reserved)                          ❓
+14   12    oblique-sweep offset (3 x fp16.16)        ✅
+26   2     small signed int16, meaning unknown        ❓
 28   4     uint32 vertex count N
 32   N×8   vertices, each (x: fp16.16, y: fp16.16)
 ```
@@ -138,6 +139,26 @@ segment count for flat shapes. ✅
 their *order* flips between variants but `min`/`max` is what matters for
 geometry. Default gallery primitives use ±48 (a 96-inch, 8-foot object). The
 ordering flip is ❓ — possibly a normal-direction hint.
+
+**Bytes 14–25 are an oblique-sweep offset, not padding.** ✅ Three fp16.16 that
+displace the `za` end of the sweep, so the extrusion leans instead of running
+straight; every ring takes its share in proportion to how far along the sweep it
+sits. Non-zero on **341 prisms (5.1 %)**.
+
+The user's own screenshot of `Bar Sink` in the application is what surfaced it —
+its faucet is a spout that *leans* over the basin, and ours stood bolt upright.
+That prism carries `(0, −7.87, 0)`. A `6' Work Table` leg carries `(0, −5, 0)`
+and a `Conference Table` leg `(0, 5.5, 0)`: splayed legs, which is exactly what
+those previews show.
+
+Measured: detached prisms **51 → 25**, and mean silhouette IoU over the 24 clips
+that contain a skewed prism **0.7583 → 0.7702**.
+
+Which end moves is decided by `detach.py`: anchoring at `zb` and displacing `za`
+gives 25 detached parts, the other way round gives 40. IoU cannot separate them
+(0.7702 against 0.7726, on 24 clips — noise), so treat the direction as ✅ by the
+sharper oracle but not independently confirmed. Anchoring at `za` is also what
+the taper rule already does, which is at least consistent.
 
 **Winding.** The stored polygon's signed area determines which way side quads
 face; caps follow from the ring order; a final signed-volume check flips the
@@ -274,8 +295,30 @@ edges traversed backwards within each band), face `bands*n + 1` is the low cap,
 and cut faces follow.
 
 `FEAT`'s 2-byte header is the Outside / Inside / Both selector (values 0, 1, 2).
-Its coordinates live in a 2D frame local to the face. Full details in
-`findings/surf.md`.
+Full details in `findings/surf.md`.
+
+**A `FEAT`'s own `POSN` is 24 bytes: `(x, y, rotation, ~0, sx, sy)`.** Field 2
+is a rotation in radians about the decoration's origin — non-zero on 4.3 % of
+decals, with values that give it away (π, π/2, −π/2, π/4, 5.359, −0.2618).
+Field 3 is zero on 99.7 % of records. Fields 4 and 5 are scale and are exactly
+1.0 on 94 % of them.
+
+**There are TWO coordinate conventions for the outline, and the `POSN`
+translation says which.** The 2D frame is built by dropping the axis the face
+normal is most aligned with and keeping the other two in ascending order. Then:
+
+| `(tx, ty)` | outline coordinates are… | origin |
+|---|---|---|
+| non-zero | relative, offset by `(tx, ty)` | the face's **minimum corner** |
+| `(0, 0)` | already the prism's own **local coordinates** | the bare face plane, no in-plane shift |
+
+The split is exact. Of the 2182 decorations that carry a translation, 2064 fit
+the corner frame and **none** fit only the local-coordinate frame; of the 338
+without one, 309 fit local coordinates and **none** fit only the corner frame.
+Treating every decal as corner-relative is what threw the `Copy Machine`'s front
+panel ten inches below the machine, left a slab floating beside the `Bar Sink`,
+and turned some of `Jersey Cow`'s spots into black spikes. Applying the split
+took decals-outside-their-prism from **11.8 % to 4.2 %** (`tools/decalfit.py`).
 
 ### 4.5 `COLR` (8 bytes)
 
@@ -374,9 +417,9 @@ unrelated to `nseg`.
 | # | Question | Priority |
 |---|---|---|
 | 1 | `ESLC[3..5]` angles — not needed for geometry (see `findings/slic.md`) | Low |
-| 3 | `POSN` fields 6–8 | Medium |
+| 3 | `POSN` fields 6–8, and `POLY[26:28]` (a small signed int16, non-zero on 72 of the 341 skewed prisms) | Medium |
 | 4 | A few clipped prisms are not perfectly watertight (`scenes/REEVES.VVR`), so their volume depends on cap tessellation | Low |
-| 2 | **11.8 % of `FEAT` decals land outside the prism they decorate** (346 of 2932, non-`ID` galleries). Worst: `Tiled Bedroom` 72 in, `Red Bedroom` 60 in, `Jersey Cow` 34 in, `Bar Sink` 20 in. The containment test in section 9 is a sharp oracle for this — face-index selection is the likely culprit | **High** |
+| 2 | **4.2 % of `FEAT` decals still land outside the prism they decorate** (124 of 2932). Worst: `Tiled Bedroom` 72 in, `Red Bedroom` 60 in, `Springs Kitchen` 49 in, `Jersey Cow` 34 in, `Bar Sink` 20 in. Both remaining shapes look like a face-index problem on prisms with many `SLIC` cuts: `Bar Sink`'s stray panel is 13.6 × 15.6 in but is assigned to a face that is 19.7 × 0.5 in. Sweeping six face-numbering variants did not beat the current one, so the answer is probably not a global renumbering | **High** |
 | 5 | `Printer w/stand`'s paper path: four identical sheets whose `POSN` differs only in `v[3]` and position, all carrying scale `(-0.112, -1.0, -0.585)` and fields 6–8 `(0, -0.174, 0)`. The `VRIF` preview draws them as one continuous curled ribbon, so they are probably chained rather than independent — note the `CONN` chunk on that clip | Medium |
 | 5 | `PLTX` / `SFTX` / `TXTB` — the Key Design 3-D texture system | Medium |
 | 6 | `COLR` two-record meaning; `FEAT` alpha semantics | Medium |
@@ -400,12 +443,26 @@ touches no other prism's. Silhouette IoU forgives a part rotated into the wrong
 place — a 50×50 preview simply cannot see it — but real assemblies are connected,
 so "floating detached piece" is directly measurable. It is what settled Euler vs
 axis-angle when IoU could not, and what showed the short-`POSN` bug at a glance.
-Current baseline: **49 isolated of 6487** gallery parts (0.76 %), and a good
+Current baseline: **25 isolated of 6487** gallery parts (0.39 %), and a good
 share of those are legitimately separate objects (`Cannisters`, `Patio
 Ensemble`). Treat it as the regression bar alongside IoU.
 
-A third check, worth building out: every `FEAT` decal's world box should sit
-inside the box of the prism it decorates. 11.8 % currently do not.
+`tools/decalfit.py` is the third oracle: every `FEAT` decal's world box must sit
+inside the box of the prism it decorates. Neither of the others can see a decal
+at all — IoU because 50×50 hides it, detach.py because it only looks at prisms.
+Current baseline: **124 of 2932 (4.2 %)**, down from 346 (11.8 %). Measured at
+the level of the 2D face frame rather than the world box it is 147 of 2520
+(5.8 %); six alternative face numberings were swept against that figure after
+the coordinate-convention and oblique-sweep fixes and none beat the current one,
+so whatever remains is not a global renumbering.
+
+Note that decal geometry is deliberately **not** identical between the two
+implementations: Python lifts each decoration off its face by `SURF_OFFSET` and
+emits two copies for a Both-sided `FEAT`, while the JS leaves them coplanar and
+lets the renderer's polygon offset and `layer` separate them. So `parity.py` /
+`parity.mjs` exclude decorations by default (set `SURF=1` to include them, and
+expect area and volume to differ). To check decal *placement* across the two,
+compare per-decal world bounding boxes instead — they agree to 0.01 in.
 
 `tools/clip.py` (plane clipping) is verified watertight: the two complementary
 half-cuts of a cube sum back to the exact original volume for every plane
