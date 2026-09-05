@@ -123,9 +123,9 @@ off  size  field
 4    2     uint16 nseg — curve subdivision           ✅
 6    4     fp16.16  sweep bound A
 10   4     fp16.16  sweep bound B
-14   12    oblique-sweep offset (3 x fp16.16)        ✅
-26   2     small signed int16, meaning unknown        ❓
-28   4     uint32 vertex count N
+14   8     in-plane offset of the `za` cap (2 x fp16.16)  ✅
+22   8     in-plane offset of the `zb` cap (2 x fp16.16)  ✅
+30   2     uint16 vertex count N                          ✅
 32   N×8   vertices, each (x: fp16.16, y: fp16.16)
 ```
 Total size `32 + 8N`. Verified against file-size deltas across the Basic
@@ -140,10 +140,36 @@ their *order* flips between variants but `min`/`max` is what matters for
 geometry. Default gallery primitives use ±48 (a 96-inch, 8-foot object). The
 ordering flip is ❓ — possibly a normal-direction hint.
 
-**Bytes 14–25 are an oblique-sweep offset, not padding.** ✅ Three fp16.16 that
-displace the `za` end of the sweep, so the extrusion leans instead of running
-straight; every ring takes its share in proportion to how far along the sweep it
-sits. Non-zero on **341 prisms (5.1 %)**.
+**Bytes 14–29 are FOUR fp16.16: an in-plane offset for EACH cap of the sweep** —
+`(du, dv)` at `za`, then `(du, dv)` at `zb`. ✅ An offset slides that cap
+sideways so the extrusion leans instead of running straight, and a ring between
+them takes the linear blend. Neither offset has a component along the sweep, so
+a lean can never change the prism's length. Non-zero on **341 prisms (5.1 %)**.
+
+> **This was read as THREE values plus a mystery, and both halves of the mystery
+> were the same field.** The old layout had a 3-vector at 14–25, "a small signed
+> int16 of unknown meaning" at 26–27, and the vertex count as a uint32 at 28–31.
+> The int16 was the *integer* half of the fourth fp16.16, and the uint32 count
+> swallowed its *fractional* half.
+>
+> **Nine prisms prove the count is a uint16 at 30.** Their POLY length is
+> impossible under the uint32 reading and exact under this one: `Curtis` declares
+> 196612 vertices in a 64-byte chunk (eight times), `Bedroom with Porch`
+> 2,696,019,971. All 4212 prisms satisfy `len == 32 + 8 * uint16[30]`; 4203 also
+> satisfy the uint32 form, which is why it survived — a clamp hid the rest.
+>
+> The geometric symptom was worse than the parse one. Reading the fourth value
+> as a third VECTOR component put it along the sweep, where an offset is a
+> LENGTH CHANGE rather than a lean: the `Picnic Table`'s legs stretched 42 in —
+> two down through the floor, two up through the table top — instead of crossing,
+> and the `Lawnmower Man`'s handle stays slid off into the air instead of running
+> down to the mower. `Curtis`'s diagonal-slat back came out as plain horizontal
+> rungs, because its lean lived entirely in the discarded fourth value.
+>
+> Two prisms with the SAME axis, profile, class and vertex list encoded the same
+> physical lean in different slots — which is what proves the triple was never a
+> vector in a fixed frame. No permutation of three components can do that; two
+> offsets, one per cap, can.
 
 The user's own screenshot of `Bar Sink` in the application is what surfaced it —
 its faucet is a spout that *leans* over the basin, and ours stood bolt upright.

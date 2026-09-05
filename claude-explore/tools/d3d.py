@@ -29,12 +29,24 @@ class Poly:
         self.nseg = iff.u16(b, 4)   # curve subdivision (1 for flat profiles)
         self.za = iff.fp(b, 6)
         self.zb = iff.fp(b, 10)
-        # POLY[14:26] -- three fp16.16 that offset the far end of the sweep, so
-        # the extrusion leans instead of running straight. Non-zero on 5.1 % of
-        # prisms. b[26:28] is a small signed int16 whose meaning is unknown.
-        self.skew = (iff.fp(b, 14), iff.fp(b, 18), iff.fp(b, 22))
-        self.mid = b[14:28]
-        n = iff.u32(b, 28)
+        # POLY[14:30] -- FOUR fp16.16, the in-plane offset of EACH END of the
+        # sweep: (du, dv) at `za`, then (du, dv) at `zb`. An offset moves that
+        # cap sideways, so the extrusion leans instead of running straight.
+        #
+        # This was previously read as THREE values (a single far-end offset)
+        # plus "a small signed int16 of unknown meaning" at [26:28] -- which was
+        # really the integer half of the fourth value -- and the vertex count as
+        # a u32 at [28:32], which swallowed that value's FRACTIONAL half.
+        #
+        # The count is a u16 at [30:32]. Nine prisms prove it: their POLY length
+        # is impossible under the u32 reading (`Curtis` declared 196612 vertices
+        # in a 64-byte chunk, `Bedroom with Porch` 2,696,019,971) and exact under
+        # the u16 one. All 4212 prisms satisfy len == 32 + 8*u16[30].
+        self.skew_a = (iff.fp(b, 14), iff.fp(b, 18))    # offset of the za cap
+        self.skew_b = (iff.fp(b, 22), iff.fp(b, 26))    # offset of the zb cap
+        self.skew = (self.skew_a[0], self.skew_a[1], 0.0)   # back-compat
+        self.mid = b[14:30]
+        n = iff.u16(b, 30)
         self.declared_n = n
         n = max(0, min(n, (len(b) - 32) // 8))   # guard against 2D POLYs read as 3D
         self.verts = [(iff.fp(b, 32 + i * 8), iff.fp(b, 36 + i * 8)) for i in range(n)]
@@ -219,18 +231,24 @@ def prsm_mesh(prsm):
     rings = poly.rings()
     A = axis_matrix(poly.axis)
 
-    # An oblique sweep: POLY's skew vector displaces the far end, and every ring
-    # takes its share in proportion to how far along the sweep it sits.
-    sk = poly.skew if SKEW_MODE != 'off' else (0.0, 0.0, 0.0)
+    # An oblique sweep. Each CAP carries its own in-plane offset -- `skew_a` at
+    # `za`, `skew_b` at `zb` -- and a ring between them takes the linear blend.
+    # Neither offset has a component along the sweep, so a lean can never change
+    # the prism's length; reading the fourth value as a third VECTOR component
+    # did exactly that, stretching the `Picnic Table`'s legs 42 inches (two down
+    # through the floor, two up through the table top) instead of crossing them,
+    # and sliding the `Lawnmower Man`'s handle stays off into the air.
+    sa = poly.skew_a if SKEW_MODE != 'off' else (0.0, 0.0)
+    sb = poly.skew_b if SKEW_MODE != 'off' else (0.0, 0.0)
     span = poly.zb - poly.za
 
     def shift(z):
-        if span == 0.0 or sk == (0.0, 0.0, 0.0):
+        if sa == (0.0, 0.0) and sb == (0.0, 0.0):
             return 0.0, 0.0, 0.0
-        t = (z - poly.za) / span
-        if SKEW_MODE == 'near':
-            t = 1.0 - t
-        return t * sk[0], t * sk[1], t * sk[2]
+        t = 0.0 if span == 0.0 else (z - poly.za) / span
+        return (sa[0] + (sb[0] - sa[0]) * t,
+                sa[1] + (sb[1] - sa[1]) * t,
+                0.0)
 
     verts, ringidx = [], []
     for z, s in rings:

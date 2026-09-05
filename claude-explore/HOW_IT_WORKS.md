@@ -257,9 +257,9 @@ off  size  field                                     status
  4    2    nseg — curve subdivision (uint16)            ✅
  6    4    sweep bound za                               ✅
 10    4    sweep bound zb                               ✅
-14   12    OBLIQUE-SWEEP OFFSET (3 × fp16.16)           ✅ ← was "reserved"
-26    2    small signed int16                           ❓
-28    4    vertex count N (uint32)                      ✅
+14    8    offset of the `za` cap (2 × fp16.16)         ✅ ← was "reserved"
+22    8    offset of the `zb` cap (2 × fp16.16)         ✅ ← was 1 comp + "❓"
+30    2    vertex count N (uint16)                      ✅ ← was uint32 @ 28
 32   8N    vertices (x, y) as fp16.16                   ✅
 ```
 

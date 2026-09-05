@@ -35,11 +35,21 @@ export class Poly {
     this.nseg = u16(b, 4);         // curve subdivision (1 for flat profiles)
     this.za = fp(b, 6);
     this.zb = fp(b, 10);
-    // POLY[14:26] -- three fp16.16 that displace the `za` end of the sweep, so
-    // the extrusion leans instead of running straight. Non-zero on 5.1% of
-    // prisms; b[26:28] is a small signed int16 of unknown meaning.
-    this.skew = [fp(b, 14), fp(b, 18), fp(b, 22)];
-    let n = u32(b, 28);
+    // POLY[14:30] -- FOUR fp16.16: the in-plane offset of EACH end of the
+    // sweep, (du, dv) at `za` then (du, dv) at `zb`. An offset slides that cap
+    // sideways so the extrusion leans; neither has a component along the sweep,
+    // so a lean can never change the prism's length.
+    //
+    // Previously read as THREE values plus "a signed int16 of unknown meaning"
+    // at [26:28] -- the integer half of the fourth value -- with the vertex
+    // count a u32 at [28:32] that swallowed its fractional half. The count is a
+    // u16 at [30:32]: nine prisms have a POLY length impossible under the u32
+    // reading (`Curtis` declared 196612 vertices in 64 bytes) and exact under
+    // this one. Must match d3d.py's Poly.
+    this.skewA = [fp(b, 14), fp(b, 18)];   // offset of the za cap
+    this.skewB = [fp(b, 22), fp(b, 26)];   // offset of the zb cap
+    this.skew = [this.skewA[0], this.skewA[1], 0];   // back-compat
+    let n = u16(b, 30);
     n = Math.max(0, Math.min(n, Math.floor((b.byteLength - 32) / 8)));
     this.verts = [];
     for (let i = 0; i < n; i++) this.verts.push([fp(b, 32 + i * 8), fp(b, 36 + i * 8)]);
@@ -226,15 +236,16 @@ export function prismMesh(prsm) {
   const n = base.length;
   const nband = rings.length - 1;
 
-  // An oblique sweep: the skew vector displaces the `za` end, and every ring
-  // takes its share in proportion to how far along the sweep it sits.
-  const sk = options.applySkew === false ? [0, 0, 0] : poly.skew;
+  // An oblique sweep: each CAP carries its own in-plane offset -- skewA at `za`,
+  // skewB at `zb` -- and a ring between them takes the linear blend.
+  const sa = options.applySkew === false ? [0, 0] : poly.skewA;
+  const sb = options.applySkew === false ? [0, 0] : poly.skewB;
   const span = poly.zb - poly.za;
-  const flat = span === 0 || (sk[0] === 0 && sk[1] === 0 && sk[2] === 0);
+  const flat = sa[0] === 0 && sa[1] === 0 && sb[0] === 0 && sb[1] === 0;
   const shift = (z) => {
     if (flat) return [0, 0, 0];
-    const t = 1 - (z - poly.za) / span;
-    return [t * sk[0], t * sk[1], t * sk[2]];
+    const t = span === 0 ? 0 : (z - poly.za) / span;
+    return [sa[0] + (sb[0] - sa[0]) * t, sa[1] + (sb[1] - sa[1]) * t, 0];
   };
 
   const verts = [], ringIdx = [];
