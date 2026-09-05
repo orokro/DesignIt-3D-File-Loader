@@ -74,10 +74,14 @@ export class Poly {
       case POINTED: out = [[za, 0], [zb, 1]]; break;
       case DIAMOND: out = [[za, 0], [(za + zb) / 2, 1], [zb, 0]]; break;
       case ROUNDED:
+        // Rings are spaced EVENLY ALONG THE SWEEP with the radius taken from the
+        // circle -- not evenly by angle. Angle-spacing bunches rings at the
+        // poles, which bulges the shape and squeezes the end bands to slivers.
+        // Confirmed against the application. Must match d3d.py's rings().
         out = [];
         for (let k = 0; k <= n; k++) {
-          const th = (k / n) * (Math.PI / 2);
-          out.push([za + (zb - za) * (1 - Math.cos(th)), Math.sin(th)]);
+          const t = k / n;
+          out.push([za + (zb - za) * t, Math.sqrt(Math.max(0, 1 - (1 - t) * (1 - t)))]);
         }
         break;
       case SPHERE: {
@@ -89,8 +93,8 @@ export class Poly {
         out = [];
         const m = 2 * n;
         for (let k = 0; k <= m; k++) {
-          const th = (k / m) * Math.PI;
-          out.push([za + (zb - za) * (1 - Math.cos(th)) / 2, Math.sin(th)]);
+          const t = k / m;
+          out.push([za + (zb - za) * t, Math.sqrt(Math.max(0, 1 - (2 * t - 1) * (2 * t - 1)))]);
         }
         break;
       }
@@ -277,7 +281,17 @@ export function prismMesh(prsm) {
   // A side face is named by the vertex its edge ARRIVES at, plus one: edge
   // v_j -> v_j+1 is face (j+1)+1, and face 1 is the edge that closes the
   // polygon back onto vertex 0. Must match d3d.py's side_id.
-  const sideId = (r, i) => 1 + r * n + ((i + 1) % n);
+  // Cap count by profile, straight from the application (0x57fb): straight 2,
+  // pointed 1, rounded 1, diamond 0, sphere 0; and with one cap, 0x5929 puts it
+  // at the HIGH end when za <= zb. See claude-explore/DISASSEMBLY.md.
+  const ncap = poly.profile === STRAIGHT ? 2
+             : (poly.profile === POINTED || poly.profile === ROUNDED) ? 1 : 0;
+  const hasHigh = ncap === 2 || (ncap === 1 && poly.za <= poly.zb);
+  // The side faces are 1-based ONLY when a high cap exists to be face 0:
+  // 0x59c5 computes n*band + edge and adds one only in that case. Sphere and
+  // diamond have no caps, so their sides start at 0. Must match d3d.py.
+  const first = hasHigh ? 1 : 0;
+  const sideId = (r, i) => first + r * n + ((i + 1) % n);
   const faces = [], fids = [];
   for (let r = 0; r < nband; r++) {
     const lo = ringIdx[r], hi = ringIdx[r + 1];   // lo is the HIGHER end
@@ -299,7 +313,8 @@ export function prismMesh(prsm) {
       }
     }
   }
-  const cap0 = 0, cap1 = nband * n + 1;
+  const nbase = ncap + nband * n;         // caps + sides; the low cap is the last
+  const cap0 = 0, cap1 = nbase - 1;
   // triangulate() normalises to CCW in polygon space: the high cap faces
   // +sweep as written, the low cap is the reverse
   const tris = triangulate(base);
@@ -329,7 +344,7 @@ export function prismMesh(prsm) {
       const nn = [fp(sl.data, o), fp(sl.data, o + 4), fp(sl.data, o + 8)];
       const dd = fp(sl.data, o + 12);
       if (!nn.some((x) => Math.abs(x) > 1e-9)) continue;
-      const r = clipMesh(V, F, nn, dd, { keepNegative: options.slicKeepNeg, ids, newId: cap1 + 1 + i });
+      const r = clipMesh(V, F, nn, dd, { keepNegative: options.slicKeepNeg, ids, newId: nbase + i });
       V = r.verts; F = r.faces; ids = r.ids;
       if (!F.length) break;
     }

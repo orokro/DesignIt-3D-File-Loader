@@ -73,8 +73,12 @@ class Poly:
         elif p == ROUNDED:
             out = []
             for k in range(n + 1):
-                th = (k / n) * (math.pi / 2)
-                out.append((za + (zb - za) * (1 - math.cos(th)), math.sin(th)))
+                if RING_Z == 'uniform':
+                    t = k / n
+                    out.append((za + (zb - za) * t, math.sqrt(max(0.0, 1 - (1 - t) ** 2))))
+                else:
+                    th = (k / n) * (math.pi / 2)
+                    out.append((za + (zb - za) * (1 - math.cos(th)), math.sin(th)))
         elif p == SPHERE:
             # `nseg` counts bands per QUARTER turn, not per profile. ROUNDED is a
             # quarter turn in `n` bands; SPHERE is a HALF turn, so it takes 2n at
@@ -92,8 +96,13 @@ class Poly:
             out = []
             m = 2 * n
             for k in range(m + 1):
-                th = (k / m) * math.pi
-                out.append((za + (zb - za) * (1 - math.cos(th)) / 2, math.sin(th)))
+                if RING_Z == 'uniform':
+                    # rings spaced evenly ALONG the sweep, radius from the circle
+                    t = k / m
+                    out.append((za + (zb - za) * t, math.sqrt(max(0.0, 1 - (2 * t - 1) ** 2))))
+                else:
+                    th = (k / m) * math.pi
+                    out.append((za + (zb - za) * (1 - math.cos(th)) / 2, math.sin(th)))
         else:
             out = [(za, 1.0), (zb, 1.0)]
         if out[0][0] < out[-1][0]:
@@ -293,6 +302,22 @@ def prsm_mesh(prsm):
                 for i in range(n))
     ccw = sarea > 0
 
+    # How many CAPS this profile has, and whether one sits at the HIGH end of the
+    # sweep. Read straight out of the application: 0x57fb returns the cap count
+    # by profile byte -- straight 2, pointed 1, rounded 1, diamond 0, sphere 0 --
+    # and 0x5929 gives the high cap index 0, choosing by `za <= zb` when there is
+    # only one. See claude-explore/DISASSEMBLY.md.
+    ncap = (2 if poly.profile == STRAIGHT
+            else 1 if poly.profile in (POINTED, ROUNDED) else 0)
+    has_high = ncap == 2 or (ncap == 1 and poly.za <= poly.zb)
+    has_low = ncap == 2 or (ncap == 1 and not has_high)
+    # THE SIDE FACES ARE 1-BASED ONLY WHEN THERE IS A HIGH CAP TO BE FACE 0.
+    # 0x59c5 computes `n*band + edge` and adds one ONLY if the high cap exists.
+    # Straight prisms always have two caps, which is why the galleries -- almost
+    # all boxes -- never showed this. Sphere and diamond have NO caps, so their
+    # sides start at 0 and we were adding a spurious +1 to every one of them.
+    first = 1 if has_high else 0
+
     def side_id(r, i):
         if FACE_BASE == 'side0':
             return r * n + ((i + 1) % n)
@@ -300,8 +325,8 @@ def prsm_mesh(prsm):
             # A side face is named by the vertex its edge ARRIVES at, plus one:
             # edge v_j -> v_j+1 is face (j+1)+1. Face 1 is therefore the edge
             # that closes the polygon back onto vertex 0.
-            return 1 + r * n + ((i + 1) % n)
-        return 1 + r * n + (n - 1 - i)
+            return first + r * n + ((i + 1) % n)
+        return first + r * n + (n - 1 - i)
 
     for r in range(nband):
         lo, hi = ringidx[r], ringidx[r + 1]      # lo is the HIGHER end of the sweep
@@ -323,8 +348,11 @@ def prsm_mesh(prsm):
                 faces.append(t1); fids.append(side_id(r, i))
                 faces.append(t2); fids.append(side_id(r, i))
 
+    # base faces = caps + sides (0x56f4 = 0x573b + cut faces; 0x573b = caps +
+    # sides). The high cap is index 0; the low cap is the LAST base face.
+    nbase = ncap + nband * n
     cap0, cap1 = ((nband * n, nband * n + 1) if FACE_BASE == 'side0'
-                  else (0, nband * n + 1))
+                  else (0, nbase - 1))
     # triangulate() normalises to CCW in polygon space, so the high cap faces
     # +sweep as written and the low cap is the reverse
     tris = triangulate(base)
@@ -366,7 +394,7 @@ def prsm_mesh(prsm):
             if SLIC_MODE == 'clip':
                 verts, faces, fids = _clip.clip_mesh(
                     verts, faces, nn, dd, keep_negative=SLIC_KEEP_NEG,
-                    ids=fids, new_id=cap1 + 1 + i)
+                    ids=fids, new_id=nbase + i)
                 if not faces:
                     break
             elif SLIC_MODE == 'hinge' and es is not None:
@@ -533,6 +561,16 @@ def scene_meshes(path_or_chunk):
 DRAW_SURF = True
 FACE_ORDER = 'end'       # 'end' | 'rev' -- how SURF face ids map to profile edges
 FACE_HAND = 'right'      # 'right' | 'raw' -- orient the face frame by its outward normal
+# Curved profiles space their rings EVENLY ALONG THE SWEEP, taking the radius
+# from the circle -- not evenly by angle. Both are legitimate spheres and differ
+# only in where the rings land, but angle-spacing bunches them at the poles: it
+# makes a head bulge like a barrel and squeezes the top band to a sliver, so the
+# `INFANTRY` soldiers' helmets came out as a thin rim instead of a hat. The user
+# confirmed the even-spaced silhouette against the application.
+# No oracle can see this -- facefit scores the two identically (464 misfits, 202
+# adrift, both ways) because face EXTENTS barely move. It took the eye.
+RING_Z = 'uniform'       # 'uniform' | 'angle' -- how curved-profile rings are spaced
+FACE_FRAME = 'world'     # 'world' | 'sweep_v' | 'sweep_u' -- a side face's 2D axes
 FACE_BASE = 'cap0'       # 'cap0' (cap first, sides 1-based) | 'side0' (sides first, 0-based)
 SURF_OFFSET = 0.05      # inches to lift a decoration off its face, to beat z-fighting
 
@@ -547,7 +585,7 @@ SURF_OFFSET = 0.05      # inches to lift a decoration off its face, to beat z-fi
 FEAT_INSIDE, FEAT_OUTSIDE, FEAT_BOTH = 0, 1, 2
 
 
-def face_frame(verts, tris):
+def face_frame(verts, tris, sweep=None):
     """A 2D coordinate frame for one face of a prism.
 
     Drop the axis the face normal is most aligned with and keep the other two
@@ -592,6 +630,26 @@ def face_frame(verts, tris):
     ax = [i for i in range(3) if i != drop]          # ascending order
     u = np.zeros(3); u[ax[0]] = 1.0
     v = np.zeros(3); v[ax[1]] = 1.0
+
+    # `u` ALWAYS RUNS ALONG THE SWEEP on a side face.
+    #
+    # The world-axis rule alone is discontinuous: as a facet's normal swings past
+    # 45 degrees the dropped axis changes, and with it WHICH of the two kept axes
+    # ends up along the extrusion. Going round an octagonal cylinder the eight
+    # facets therefore do not share a convention -- and on `SPACSTAT` exactly the
+    # four whose `u` landed on the sweep placed their window rows correctly while
+    # the other four threw them into space. 60 decorations of 120, a clean half.
+    #
+    # So keep the world-axis PAIR (it decides the in-plane direction) but fix the
+    # ROLES: whichever of the two is more aligned with the sweep becomes `u`. A
+    # cap face has no sweep component and is left alone.
+    if FACE_FRAME in ('sweep_u', 'sweep_v') and sweep is not None:
+        w = np.asarray(sweep, float)
+        du, dv = abs(float(u @ w)), abs(float(v @ w))
+        if FACE_FRAME == 'sweep_u' and dv > du + 1e-9:
+            u, v = v, u
+        elif FACE_FRAME == 'sweep_v' and du > dv + 1e-9:
+            u, v = v, u
     # keep the frame in the face plane
     u = u - nrm * (u @ nrm)
     nu = np.linalg.norm(u)
@@ -681,12 +739,15 @@ def surface_features(prsm, verts, faces, fids, W):
     for t, fid in zip(faces, fids):
         byface.setdefault(fid, []).append(t)
 
+    pc = prsm.kid('POLY')
+    sweep_dir = axis_matrix(Poly(pc).axis) @ np.array([0.0, 0.0, 1.0]) if pc else None
+
     for surf in prsm.kids('SURF'):
         fid = iff.u16(surf.hdr, 0)
         tris = byface.get(fid)
         if not tris:
             continue
-        fr = face_frame(verts, tris)
+        fr = face_frame(verts, tris, sweep=sweep_dir)
         if fr is None:
             continue
         corner, u, v, nrm, middle = fr

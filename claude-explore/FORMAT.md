@@ -231,10 +231,33 @@ Sweeping from `t = 0` at `zmin` to `t = 1` at `zmax`, with cross-section scale
 | 1 straight | `(0,1) (1,1)` | prism / cylinder |
 | 2 pointed | `(0,1) (1,0)` | cone / pyramid |
 | 3 diamond | `(0,0) (½,1) (1,0)` | bipyramid |
-| 4 rounded | `θ = kπ/2n`, `z ∝ sin θ`, `s = cos θ` | dome |
-| 5 sphere | `θ = kπ/2n`, `z ∝ (1−cos θ)/2`, `s = sin θ`, **k = 0…2n** | sphere |
+| 4 rounded | `t = k/n`, `z` LINEAR in t, `s = √(1−(1−t)²)` | dome |
+| 5 sphere | `t = k/2n`, `z` LINEAR in t, `s = √(1−(2t−1)²)`, **k = 0…2n** | sphere |
 
-Verified visually against the Basic and Advanced gallery screenshots.
+**Curved profiles space their rings EVENLY ALONG THE SWEEP, taking the radius
+from the circle — not evenly by angle.** ✅ Both produce a sphere and differ only
+in where the rings land, but angle-spacing bunches them at the poles: it bulges
+the middle into a barrel and squeezes the end bands into slivers.
+
+The `INFANTRY` soldiers are the case that showed it. Their heads are sphere
+prisms whose helmet is a recolour of band 1 plus the flat crown — correct faces,
+but under angle-spacing band 1 is a 1-inch sliver of a 10-inch head and almost
+all of it is removed by the head's own `SLIC` cut, so the helmet rendered as a
+thin rim instead of a hat. Under even spacing the band is 2.3× thicker and the
+head's silhouette goes from barrel-shaped to nearly straight-sided, which is
+what the application draws. The user confirmed it directly against the app.
+
+> **No oracle could see this.** `facefit` scores the two ring placements
+> IDENTICALLY (464 misfits, 202 adrift, either way) because face *extents* barely
+> move. Silhouette IoU over the 51 curved clips marginally *prefers* the wrong
+> one, 0.9058 against 0.9026 — and that is explainable without reference to the
+> truth: a regular angle-spaced polygon is the maximum-area inscribed polygon for
+> a given vertex count, so it always scores a hair better against a filled disc,
+> and at 50×50 the real difference is sub-pixel. A metric can be both consistent
+> and pointing the wrong way.
+
+Profile classes verified visually against the Basic and Advanced gallery
+screenshots.
 
 ### 4.3 Sweep axis is a cyclic permutation ✅
 
@@ -360,8 +383,32 @@ ignored outright. Face numbering is
 
 Rings run from the **high** end of the sweep to the low end, which is why
 `POLY`'s two sweep bounds are stored in an order that flips between objects.
-Face 0 is the cap at that high end, faces `1 .. bands*n` are the sides, face
-`bands*n + 1` is the low cap, and cut faces follow.
+
+**The numbering, read out of the application itself** (see `DISASSEMBLY.md`):
+
+```
+    caps      = 2 straight | 1 pointed, rounded | 0 diamond, sphere      (0x57fb)
+    bands     = 1 straight, pointed | 2 diamond | nseg rounded | 2*nseg sphere  (0x58b2)
+    highCap   = caps == 2, or caps == 1 and za <= zb                      (0x5929)
+
+    face(band, edge) = (1 if highCap else 0) + bands*n + edge             (0x59c5)
+    high cap         = 0                     (only when highCap)
+    low  cap         = caps + bands*n - 1    (the LAST base face)
+    SLIC cut k       = caps + bands*n + k
+```
+
+**The `+1` is conditional on there being a high cap to be face 0.** A straight
+prism always has two caps, which is why the galleries — almost all boxes — never
+showed this. Sphere and diamond have NO caps, so their side faces start at 0 and
+we were adding a spurious `+1` to every one of them; pointed and rounded have
+one cap, at the high end only when `za <= zb`.
+
+Measured: gallery misfits 22 → **9**, and the "names a face that does not exist"
+cluster **19 → 0** — `Tractor`, `Driveway Light`, `Bathroom/Platform Tub` and
+`Bathroom/Shower` were all this same off-by-one. It also put the `INFANTRY`
+soldiers' helmets on: their heads are sphere prisms whose recolour names faces
+`{4, 5, 6, 7, 24}`, which under the corrected numbering is exactly the whole of
+band 1 plus the flat crown cut — a helmet.
 
 **A side face is named after the vertex its edge ARRIVES at, plus one.** The
 edge `v_j -> v_j+1` is face `(j+1) + 1`, so face 1 is the edge that closes the

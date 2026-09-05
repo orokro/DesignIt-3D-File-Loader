@@ -431,12 +431,65 @@ the second flank was then laid out along a 7-inch axis using a 59-inch
 coordinate, and flew off into space. Rejected alternatives, with their failure
 rates:
 
-| frame | decals outside their face |
+Re-measured over the WHOLE corpus (19,902 decorations, not the 2,532 in the
+galleries), the world-axis rule beats every alternative by a wide margin:
+
+| frame | misfits / 19,902 |
 |---|---|
-| **current (world axes, ascending)** | **14 %** |
-| u/v swapped | 55 % |
-| intrinsic (polygon edge × sweep) | 22 % |
-| polygon space instead of object space | 22 % |
+| **world axes, ascending (current)** | **488 (2.5 %)** |
+| intrinsic: v = sweep, u = v × n | 2,009 |
+| intrinsic, swapped | 7,168 |
+| force u along the sweep on side faces | 7,120 |
+| force v along the sweep on side faces | 2,012 |
+
+And the corpus is close to unanimous about the convention. Of the 6,922
+decorations whose placement actually DISCRIMINATES between the two axis roles,
+**6,732 want the FEAT's x along the polygon EDGE and y along the sweep** — which
+is what the world rule already produces for `axis = 3`, the bulk of the corpus.
+
+The exceptions are 143 decorations, and 120 of them are the two space-station
+files. See §10.5.
+
+### 10.5 What is actually left, measured properly 🟡
+
+`facefit.py` used to scan `data/galleries3d` only — 2,532 of the corpus's 19,902
+decorations, **13 %**. Every decoration score quoted before this point was a
+score on an eighth of the data. Adding a Models tab to the explorer exposed the
+rest immediately. *If you add an oracle, point it at everything.*
+
+Corpus-wide, 469 decorations overhang their face. But a decoration is ALLOWED to
+overhang: `CAPECOD`'s windows are a 28×50 frame on a 24×46 wall panel, overhanging
+by exactly 2 inches, 110 times over. Read the histogram, not the headline:
+
+| overhang | count | reading |
+|---|---|---|
+| 0.6 – 2.5 in | 207 | trim, by design |
+| 2.5 – 6 in | 28 | mostly trim |
+| 6 – 15 in | 27 | borderline |
+| **over 15 in** | **207** | **adrift — the real bug** |
+| names a face that does not exist | 19 | cut away by SLIC |
+
+So the real population is ~207, and **120 of those are `SPACSTAT` / `SPACESTA`**.
+
+**The space station anomaly.** Its modules are 8-sided straight prisms, 720 long
+along the sweep with 160.4-inch facets. Every decoration sits at tx ≈ 620,
+ty ≈ 80 — so tx can only be the 720 axis. The app therefore puts the FEAT's x
+along the SWEEP on all eight facets. The world rule puts x along the sweep on
+the four diagonal facets and along the edge on the four axis-aligned ones, so
+exactly half the windows land and half fly: 60 of 120, twice over.
+
+That is the opposite convention from the 6,732 decorations that agree on x =
+edge, and no rule tried so far separates them. Ruled out as the discriminator:
+the axis byte (both conventions appear at `axis = 2`), the polygon vertex count
+(n = 8 shows 132 wanting sweep and 322 wanting edge), whether the facet normal
+is world-axis-aligned, the face's aspect ratio, and expressing the same
+drop-the-dominant-axis rule in LOCAL (u, v, w) space instead of world space —
+that last one predicts x = edge for the space station too.
+
+**The frame is inconsistent going round a cylinder and that is a genuine defect**
+even where it does not yet show: the world-axis rule changes which axis is which
+as a facet's normal crosses 45°. Any correct model must be continuous around the
+prism. We have not found the one the application uses.
 
 ### 10.3 Two coordinate conventions ✅
 
