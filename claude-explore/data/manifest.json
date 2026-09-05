@@ -1,0 +1,16 @@
+{
+ "generatedBy": "claude-explore/tools/build_data.py",
+ "units": "inch",
+ "upAxis": "Z",
+ "buckets": {
+  "scenes": "complete .VVR scenes shipped with the applications",
+  "models": "single-subject .VVR models shipped with the applications",
+  "galleries3d": ".WLB libraries of 3D objects (PRSM clips)",
+  "galleries2d": ".WLB libraries of 2D surface features (FEAT clips)",
+  "textures": ".TLB texture libraries (Key Design 3-D only)",
+  "exports": "the user's own single-object .VVR exports, one folder per gallery, with the app screenshot",
+  "misc": "loose test and probe files"
+ },
+ "fileCount": 0,
+ "files": []
+}

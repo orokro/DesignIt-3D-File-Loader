@@ -11,7 +11,7 @@
   "exports": "the user's own single-object .VVR exports, one folder per gallery, with the app screenshot",
   "misc": "loose test and probe files"
  },
- "fileCount": 404,
+ "fileCount": 511,
  "files": [
   {
    "path": "exports/Advanced 3-D Gallery/16-Sided Diamond.VVR",
@@ -99,17 +99,17 @@
    "features": 0,
    "bounds": {
     "min": [
-     -279.94,
-     -39.94,
+     -282.0,
+     -42.0,
      0.0
     ],
     "max": [
-     -200.06,
-     39.94,
+     -198.0,
+     42.0,
      96.0
     ],
     "meshes": 1,
-    "triangles": 158
+    "triangles": 288
    }
   },
   {
@@ -242,17 +242,17 @@
    "features": 0,
    "bounds": {
     "min": [
-     -285.65,
-     -45.65,
+     -288.0,
+     -48.0,
      0.0
     ],
     "max": [
-     -194.35,
-     45.65,
+     -192.0,
+     48.0,
      96.0
     ],
     "meshes": 1,
-    "triangles": 78
+    "triangles": 144
    }
   },
   {
@@ -507,16 +507,16 @@
    "bounds": {
     "min": [
      -288.0,
-     2.35,
-     -45.65
+     0.0,
+     -48.0
     ],
     "max": [
      -192.0,
-     93.65,
-     45.65
+     96.0,
+     48.0
     ],
     "meshes": 1,
-    "triangles": 158
+    "triangles": 288
    }
   },
   {
@@ -650,16 +650,16 @@
    "bounds": {
     "min": [
      -288.0,
-     9.38,
-     -33.83
+     7.21,
+     -36.0
     ],
     "max": [
      -192.0,
-     93.83,
-     50.62
+     96.0,
+     52.79
     ],
     "meshes": 1,
-    "triangles": 78
+    "triangles": 144
    }
   },
   {
@@ -913,17 +913,17 @@
    "features": 0,
    "bounds": {
     "min": [
-     -285.65,
+     -288.0,
      0.0,
-     -45.65
+     -48.0
     ],
     "max": [
-     -194.35,
+     -192.0,
      96.0,
-     45.65
+     48.0
     ],
     "meshes": 1,
-    "triangles": 158
+    "triangles": 288
    }
   },
   {
@@ -1056,17 +1056,17 @@
    "features": 0,
    "bounds": {
     "min": [
-     -273.99,
+     -276.16,
      0.0,
-     -33.83
+     -36.0
     ],
     "max": [
-     -189.54,
+     -187.37,
      96.0,
-     50.62
+     52.79
     ],
     "meshes": 1,
-    "triangles": 78
+    "triangles": 144
    }
   },
   {
@@ -1703,7 +1703,7 @@
      18.0,
      13.0
     ],
-    "meshes": 10,
+    "meshes": 16,
     "triangles": 120
    }
   },
@@ -1805,7 +1805,7 @@
    "bounds": {
     "min": [
      -246.87,
-     -0.62,
+     -0.67,
      0.0
     ],
     "max": [
@@ -1942,7 +1942,7 @@
     ],
     "max": [
      -221.67,
-     17.53,
+     17.58,
      23.4
     ],
     "meshes": 15,
@@ -1975,7 +1975,7 @@
     ],
     "max": [
      -226.0,
-     14.03,
+     14.08,
      13.73
     ],
     "meshes": 13,
@@ -2179,13 +2179,13 @@
    "bounds": {
     "min": [
      -252.0,
-     -12.0,
+     -12.05,
      0.0
     ],
     "max": [
      -232.0,
      6.0,
-     23.44
+     23.46
     ],
     "meshes": 9,
     "triangles": 84
@@ -2221,7 +2221,7 @@
      14.0,
      20.5
     ],
-    "meshes": 12,
+    "meshes": 13,
     "triangles": 128
    }
   },
@@ -2246,16 +2246,16 @@
    "features": 8,
    "bounds": {
     "min": [
-     -240.0,
+     -240.04,
      -12.0,
      0.0
     ],
     "max": [
-     -222.0,
+     -221.97,
      14.0,
      19.67
     ],
-    "meshes": 14,
+    "meshes": 15,
     "triangles": 132
    }
   },
@@ -2280,7 +2280,7 @@
    "bounds": {
     "min": [
      -244.0,
-     -11.0,
+     -11.05,
      0.0
     ],
     "max": [
@@ -2319,7 +2319,7 @@
     "max": [
      -225.95,
      24.52,
-     13.7
+     13.3
     ],
     "meshes": 16,
     "triangles": 72
@@ -2379,11 +2379,11 @@
    "bounds": {
     "min": [
      -255.11,
-     -1.97,
+     -2.02,
      0.0
     ],
     "max": [
-     -214.14,
+     -214.09,
      16.03,
      32.14
     ],
@@ -2478,15 +2478,15 @@
    "bounds": {
     "min": [
      -449.0,
-     -204.0,
-     -0.01
+     -204.05,
+     0.0
     ],
     "max": [
      -7.0,
-     204.21,
+     204.05,
      408.0
     ],
-    "meshes": 56,
+    "meshes": 57,
     "triangles": 170
    }
   },
@@ -2530,7 +2530,7 @@
      8.63,
      82.63
     ],
-    "meshes": 36,
+    "meshes": 37,
     "triangles": 616
    }
   },
@@ -2554,14 +2554,14 @@
    "features": 100,
    "bounds": {
     "min": [
-     -270.0,
-     -51.8,
+     -270.05,
+     -51.85,
      0.0
     ],
     "max": [
-     -202.28,
-     74.0,
-     72.0
+     -202.23,
+     74.05,
+     72.05
     ],
     "meshes": 105,
     "triangles": 260
@@ -2587,16 +2587,16 @@
    "features": 18,
    "bounds": {
     "min": [
-     -260.07,
+     -258.64,
      -47.79,
      0.0
     ],
     "max": [
-     -207.38,
+     -210.54,
      54.5,
-     85.63
+     62.0
     ],
-    "meshes": 50,
+    "meshes": 51,
     "triangles": 925
    }
   },
@@ -2632,7 +2632,7 @@
      35.5
     ],
     "meshes": 14,
-    "triangles": 301
+    "triangles": 354
    }
   },
   {
@@ -2665,8 +2665,8 @@
      180.0,
      1020.0
     ],
-    "meshes": 7,
-    "triangles": 296
+    "meshes": 6,
+    "triangles": 292
    }
   },
   {
@@ -2691,16 +2691,16 @@
    "bounds": {
     "min": [
      -369.65,
-     -28.14,
+     -28.19,
      0.0
     ],
     "max": [
      -111.6,
-     58.14,
+     58.19,
      150.51
     ],
-    "meshes": 24,
-    "triangles": 676
+    "meshes": 34,
+    "triangles": 704
    }
   },
   {
@@ -2732,8 +2732,8 @@
      29.0,
      36.58
     ],
-    "meshes": 17,
-    "triangles": 268
+    "meshes": 13,
+    "triangles": 252
    }
   },
   {
@@ -2765,7 +2765,7 @@
      18.0,
      30.0
     ],
-    "meshes": 13,
+    "meshes": 14,
     "triangles": 172
    }
   },
@@ -2796,10 +2796,10 @@
     ],
     "max": [
      -225.0,
-     14.0,
+     13.0,
      71.25
     ],
-    "meshes": 20,
+    "meshes": 22,
     "triangles": 195
    }
   },
@@ -2830,10 +2830,10 @@
     ],
     "max": [
      -226.0,
-     28.0,
+     23.84,
      59.25
     ],
-    "meshes": 18,
+    "meshes": 20,
     "triangles": 263
    }
   },
@@ -2857,13 +2857,13 @@
    "features": 0,
    "bounds": {
     "min": [
-     -255.5,
+     -256.74,
      -12.0,
      0.0
     ],
     "max": [
-     -226.78,
-     15.49,
+     -223.14,
+     16.6,
      41.0
     ],
     "meshes": 9,
@@ -2899,7 +2899,7 @@
      83.0,
      44.69
     ],
-    "meshes": 61,
+    "meshes": 62,
     "triangles": 1302
    }
   },
@@ -2932,7 +2932,7 @@
      12.0,
      43.0
     ],
-    "meshes": 3,
+    "meshes": 4,
     "triangles": 36
    }
   },
@@ -2965,7 +2965,7 @@
      64.0,
      43.0
     ],
-    "meshes": 9,
+    "meshes": 12,
     "triangles": 108
    }
   },
@@ -2990,17 +2990,17 @@
    "features": 0,
    "bounds": {
     "min": [
-     -253.0,
-     1.46,
+     -250.0,
+     -2.0,
      0.0
     ],
     "max": [
-     -226.23,
-     24.0,
-     45.44
+     -226.19,
+     18.0,
+     45.42
     ],
-    "meshes": 3,
-    "triangles": 411
+    "meshes": 4,
+    "triangles": 638
    }
   },
   {
@@ -3033,7 +3033,7 @@
      20.99,
      82.06
     ],
-    "meshes": 11,
+    "meshes": 12,
     "triangles": 120
    }
   },
@@ -3099,7 +3099,7 @@
      16.95,
      35.75
     ],
-    "meshes": 10,
+    "meshes": 15,
     "triangles": 206
    }
   },
@@ -3143,7 +3143,7 @@
      17.4,
      35.95
     ],
-    "meshes": 15,
+    "meshes": 20,
     "triangles": 346
    }
   },
@@ -3210,7 +3210,7 @@
      12.0,
      78.0
     ],
-    "meshes": 23,
+    "meshes": 24,
     "triangles": 192
    }
   },
@@ -3243,7 +3243,7 @@
      20.86,
      34.57
     ],
-    "meshes": 16,
+    "meshes": 21,
     "triangles": 491
    }
   },
@@ -3276,7 +3276,7 @@
      14.17,
      46.28
     ],
-    "meshes": 17,
+    "meshes": 22,
     "triangles": 586
    }
   },
@@ -3320,7 +3320,7 @@
      33.85,
      13.0
     ],
-    "meshes": 2,
+    "meshes": 3,
     "triangles": 120
    }
   },
@@ -3354,7 +3354,7 @@
      17.5,
      53.92
     ],
-    "meshes": 15,
+    "meshes": 16,
     "triangles": 158
    }
   },
@@ -3387,7 +3387,7 @@
      16.2,
      28.0
     ],
-    "meshes": 5,
+    "meshes": 6,
     "triangles": 98
    }
   },
@@ -3451,7 +3451,7 @@
     "max": [
      -184.0,
      23.49,
-     29.24
+     29.29
     ],
     "meshes": 15,
     "triangles": 382
@@ -3478,17 +3478,17 @@
    "features": 0,
    "bounds": {
     "min": [
-     -248.53,
-     -0.03,
+     -248.57,
+     -0.07,
      0.0
     ],
     "max": [
-     -228.47,
-     20.03,
+     -228.43,
+     20.07,
      66.0
     ],
-    "meshes": 3,
-    "triangles": 210
+    "meshes": 6,
+    "triangles": 180
    }
   },
   {
@@ -3512,7 +3512,7 @@
    "bounds": {
     "min": [
      -264.0,
-     -0.5,
+     -0.55,
      0.0
     ],
     "max": [
@@ -3520,7 +3520,7 @@
      0.0,
      72.0
     ],
-    "meshes": 25,
+    "meshes": 26,
     "triangles": 60
    }
   },
@@ -3597,7 +3597,7 @@
      29.24,
      44.75
     ],
-    "meshes": 5,
+    "meshes": 6,
     "triangles": 268
    }
   },
@@ -3829,7 +3829,7 @@
      18.71,
      31.61
     ],
-    "meshes": 9,
+    "meshes": 11,
     "triangles": 122
    }
   },
@@ -3895,8 +3895,8 @@
      6.5,
      70.86
     ],
-    "meshes": 30,
-    "triangles": 430
+    "meshes": 31,
+    "triangles": 458
    }
   },
   {
@@ -4137,7 +4137,7 @@
      18.0,
      36.5
     ],
-    "meshes": 40,
+    "meshes": 41,
     "triangles": 499
    }
   },
@@ -4170,7 +4170,7 @@
      10.0,
      62.0
     ],
-    "meshes": 56,
+    "meshes": 59,
     "triangles": 216
    }
   },
@@ -4208,16 +4208,176 @@
    }
   },
   {
+   "path": "galleries2d/ARCHENTR.WLB",
+   "bucket": "galleries2d",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 30876,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/2GALLERY/ARCHENTR.WLB"
+   ],
+   "clips": [
+    {
+     "prisms": 0,
+     "groups": 0,
+     "profiles": {},
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Arched Top 1",
+     "kind": "FEAT"
+    },
+    {
+     "prisms": 0,
+     "groups": 0,
+     "profiles": {},
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Arched Top 2",
+     "kind": "FEAT"
+    },
+    {
+     "prisms": 0,
+     "groups": 0,
+     "profiles": {},
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Dual Peak",
+     "kind": "FEAT"
+    },
+    {
+     "prisms": 0,
+     "groups": 0,
+     "profiles": {},
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Arches",
+     "kind": "FEAT"
+    },
+    {
+     "prisms": 0,
+     "groups": 0,
+     "profiles": {},
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Peaked",
+     "kind": "FEAT"
+    },
+    {
+     "prisms": 0,
+     "groups": 0,
+     "profiles": {},
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Grilled Peak",
+     "kind": "FEAT"
+    }
+   ],
+   "clipCount": 6
+  },
+  {
+   "path": "galleries2d/ARCHWALO.WLB",
+   "bucket": "galleries2d",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 37050,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/2GALLERY/ARCHWALO.WLB"
+   ],
+   "clips": [
+    {
+     "prisms": 0,
+     "groups": 0,
+     "profiles": {},
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Arched Grill",
+     "kind": "FEAT"
+    },
+    {
+     "prisms": 0,
+     "groups": 0,
+     "profiles": {},
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Arched Top",
+     "kind": "FEAT"
+    },
+    {
+     "prisms": 0,
+     "groups": 0,
+     "profiles": {},
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Rectangular Grill",
+     "kind": "FEAT"
+    },
+    {
+     "prisms": 0,
+     "groups": 0,
+     "profiles": {},
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Elliptical Grill",
+     "kind": "FEAT"
+    },
+    {
+     "prisms": 0,
+     "groups": 0,
+     "profiles": {},
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Rectangular",
+     "kind": "FEAT"
+    },
+    {
+     "prisms": 0,
+     "groups": 0,
+     "profiles": {},
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Elliptical",
+     "kind": "FEAT"
+    },
+    {
+     "prisms": 0,
+     "groups": 0,
+     "profiles": {},
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Diamond Grill",
+     "kind": "FEAT"
+    }
+   ],
+   "clipCount": 7
+  },
+  {
    "path": "galleries2d/BASIC.WLB",
    "bucket": "galleries2d",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 56864,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/2GALLERY/BASIC.WLB",
-    "D3D/2026_New_Exports/KESIGN3D/2GALLERY/BASIC.WLB"
+    "D3D/2026_New_Exports/KESIGN3D/2GALLERY/BASIC.WLB",
+    "D3D/2026_New_Exports/VirVRML/2GALLERY/Basic.wlb"
    ],
    "clips": [
     {
@@ -4348,12 +4508,14 @@
    "bucket": "galleries2d",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 57562,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/2GALLERY/BASIC2.WLB",
-    "D3D/2026_New_Exports/KESIGN3D/2GALLERY/BASIC2.WLB"
+    "D3D/2026_New_Exports/KESIGN3D/2GALLERY/BASIC2.WLB",
+    "D3D/2026_New_Exports/VirVRML/2GALLERY/Basic2.wlb"
    ],
    "clips": [
     {
@@ -4484,12 +4646,14 @@
    "bucket": "galleries2d",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 86974,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/2GALLERY/DOORS1.WLB",
-    "D3D/2026_New_Exports/KESIGN3D/2GALLERY/DOORS1.WLB"
+    "D3D/2026_New_Exports/KESIGN3D/2GALLERY/DOORS1.WLB",
+    "D3D/2026_New_Exports/VirVRML/2GALLERY/DOORS1.WLB"
    ],
    "clips": [
     {
@@ -4650,12 +4814,14 @@
    "bucket": "galleries2d",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 88842,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/2GALLERY/DOORS2.WLB",
-    "D3D/2026_New_Exports/KESIGN3D/2GALLERY/DOORS2.WLB"
+    "D3D/2026_New_Exports/KESIGN3D/2GALLERY/DOORS2.WLB",
+    "D3D/2026_New_Exports/VirVRML/2GALLERY/DOORS2.WLB"
    ],
    "clips": [
     {
@@ -4816,12 +4982,14 @@
    "bucket": "galleries2d",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 89324,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/2GALLERY/DOORS3.WLB",
-    "D3D/2026_New_Exports/KESIGN3D/2GALLERY/DOORS3.WLB"
+    "D3D/2026_New_Exports/KESIGN3D/2GALLERY/DOORS3.WLB",
+    "D3D/2026_New_Exports/VirVRML/2GALLERY/HOMDOOR1.WLB"
    ],
    "clips": [
     {
@@ -4982,12 +5150,14 @@
    "bucket": "galleries2d",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 89496,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/2GALLERY/DOORS4.WLB",
-    "D3D/2026_New_Exports/KESIGN3D/2GALLERY/DOORS4.WLB"
+    "D3D/2026_New_Exports/KESIGN3D/2GALLERY/DOORS4.WLB",
+    "D3D/2026_New_Exports/VirVRML/2GALLERY/HOMDOOR2.WLB"
    ],
    "clips": [
     {
@@ -5148,12 +5318,14 @@
    "bucket": "galleries2d",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 92718,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/2GALLERY/DOORS5.WLB",
-    "D3D/2026_New_Exports/KESIGN3D/2GALLERY/DOORS5.WLB"
+    "D3D/2026_New_Exports/KESIGN3D/2GALLERY/DOORS5.WLB",
+    "D3D/2026_New_Exports/VirVRML/2GALLERY/HOMDOOR3.WLB"
    ],
    "clips": [
     {
@@ -5314,12 +5486,14 @@
    "bucket": "galleries2d",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 99292,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/2GALLERY/DOORS6.WLB",
-    "D3D/2026_New_Exports/KESIGN3D/2GALLERY/DOORS6.WLB"
+    "D3D/2026_New_Exports/KESIGN3D/2GALLERY/DOORS6.WLB",
+    "D3D/2026_New_Exports/VirVRML/2GALLERY/HOMDOOR4.WLB"
    ],
    "clips": [
     {
@@ -7900,12 +8074,14 @@
    "bucket": "galleries2d",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 77808,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/2GALLERY/WINDOWS1.WLB",
-    "D3D/2026_New_Exports/KESIGN3D/2GALLERY/WINDOWS1.WLB"
+    "D3D/2026_New_Exports/KESIGN3D/2GALLERY/WINDOWS1.WLB",
+    "D3D/2026_New_Exports/VirVRML/2GALLERY/WINDOWS1.WLB"
    ],
    "clips": [
     {
@@ -8066,12 +8242,14 @@
    "bucket": "galleries2d",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 80638,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/2GALLERY/WINDOWS2.WLB",
-    "D3D/2026_New_Exports/KESIGN3D/2GALLERY/WINDOWS2.WLB"
+    "D3D/2026_New_Exports/KESIGN3D/2GALLERY/WINDOWS2.WLB",
+    "D3D/2026_New_Exports/VirVRML/2GALLERY/WINDOWS2.WLB"
    ],
    "clips": [
     {
@@ -8232,12 +8410,14 @@
    "bucket": "galleries2d",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 81684,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/2GALLERY/WINDOWS3.WLB",
-    "D3D/2026_New_Exports/KESIGN3D/2GALLERY/WINDOWS3.WLB"
+    "D3D/2026_New_Exports/KESIGN3D/2GALLERY/WINDOWS3.WLB",
+    "D3D/2026_New_Exports/VirVRML/2GALLERY/HOMWIND1.WLB"
    ],
    "clips": [
     {
@@ -8398,12 +8578,14 @@
    "bucket": "galleries2d",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 76806,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/2GALLERY/WINDOWS4.WLB",
-    "D3D/2026_New_Exports/KESIGN3D/2GALLERY/WINDOWS4.WLB"
+    "D3D/2026_New_Exports/KESIGN3D/2GALLERY/WINDOWS4.WLB",
+    "D3D/2026_New_Exports/VirVRML/2GALLERY/HOMWIND2.WLB"
    ],
    "clips": [
     {
@@ -8564,12 +8746,14 @@
    "bucket": "galleries2d",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 79992,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/2GALLERY/WINDOWS5.WLB",
-    "D3D/2026_New_Exports/KESIGN3D/2GALLERY/WINDOWS5.WLB"
+    "D3D/2026_New_Exports/KESIGN3D/2GALLERY/WINDOWS5.WLB",
+    "D3D/2026_New_Exports/VirVRML/2GALLERY/HOMWIND3.WLB"
    ],
    "clips": [
     {
@@ -8730,12 +8914,14 @@
    "bucket": "galleries2d",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 87048,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/2GALLERY/WINDOWS6.WLB",
-    "D3D/2026_New_Exports/KESIGN3D/2GALLERY/WINDOWS6.WLB"
+    "D3D/2026_New_Exports/KESIGN3D/2GALLERY/WINDOWS6.WLB",
+    "D3D/2026_New_Exports/VirVRML/2GALLERY/HOMWIND4.WLB"
    ],
    "clips": [
     {
@@ -8896,12 +9082,14 @@
    "bucket": "galleries3d",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 58138,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/3GALLERY/ADVANCED.WLB",
-    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/ADVANCED.WLB"
+    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/ADVANCED.WLB",
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/ADVANCED.WLB"
    ],
    "clips": [
     {
@@ -9056,12 +9244,14 @@
    "bucket": "galleries3d",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 58138,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/3GALLERY/ADVNCE_F.WLB",
-    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/ADVNCE_F.WLB"
+    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/ADVNCE_F.WLB",
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/ADVNCE_F.WLB"
    ],
    "clips": [
     {
@@ -9216,12 +9406,14 @@
    "bucket": "galleries3d",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 58138,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/3GALLERY/ADVNCE_R.WLB",
-    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/ADVNCE_R.WLB"
+    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/ADVNCE_R.WLB",
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/ADVNCE_R.WLB"
    ],
    "clips": [
     {
@@ -9372,16 +9564,1572 @@
    "clipCount": 12
   },
   {
+   "path": "galleries3d/ARCHANIM.WLB",
+   "bucket": "galleries3d",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 14686,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/ARCHANIM.WLB"
+   ],
+   "clips": [
+    {
+     "prisms": 14,
+     "groups": 1,
+     "profiles": {
+      "straight": 14
+     },
+     "slicedPrisms": 1,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Ox",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 12,
+     "groups": 2,
+     "profiles": {
+      "straight": 12
+     },
+     "slicedPrisms": 1,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Horse",
+     "kind": "PRSM"
+    }
+   ],
+   "clipCount": 2
+  },
+  {
+   "path": "galleries3d/ARCHBRDG.WLB",
+   "bucket": "galleries3d",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 37042,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/ARCHBRDG.WLB"
+   ],
+   "clips": [
+    {
+     "prisms": 17,
+     "groups": 1,
+     "profiles": {
+      "straight": 17
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Pile Driver",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 6,
+     "groups": 1,
+     "profiles": {
+      "straight": 6
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Hoist",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 7,
+     "groups": 3,
+     "profiles": {
+      "straight": 7
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 1,
+     "features": 1,
+     "name": "Water Pump",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 2,
+     "groups": 1,
+     "profiles": {
+      "straight": 2
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 1,
+     "features": 1,
+     "name": "Boat",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 3,
+     "groups": 1,
+     "profiles": {
+      "straight": 3
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Roller",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 11,
+     "groups": 1,
+     "profiles": {
+      "straight": 11
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Arch Support",
+     "kind": "PRSM"
+    }
+   ],
+   "clipCount": 6
+  },
+  {
+   "path": "galleries3d/ARCHCONS.WLB",
+   "bucket": "galleries3d",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 62854,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/ARCHCONS.WLB"
+   ],
+   "clips": [
+    {
+     "prisms": 1,
+     "groups": 0,
+     "profiles": {
+      "diamond": 1
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Odd 3",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 1,
+     "groups": 0,
+     "profiles": {
+      "diamond": 1
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Odd 6",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 1,
+     "groups": 0,
+     "profiles": {
+      "diamond": 1
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Odd 8",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 1,
+     "groups": 0,
+     "profiles": {
+      "straight": 1
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "PED",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 1,
+     "groups": 0,
+     "profiles": {
+      "straight": 1
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "SUPPORT",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 1,
+     "groups": 0,
+     "profiles": {
+      "straight": 1
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "HEX",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 1,
+     "groups": 0,
+     "profiles": {
+      "straight": 1
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "OCTIGON",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 1,
+     "groups": 0,
+     "profiles": {
+      "straight": 1
+     },
+     "slicedPrisms": 1,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "WEDGE",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 1,
+     "groups": 0,
+     "profiles": {
+      "pointed": 1
+     },
+     "slicedPrisms": 1,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "TRAP",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 1,
+     "groups": 0,
+     "profiles": {
+      "pointed": 1
+     },
+     "slicedPrisms": 1,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "TRI FLAT",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 1,
+     "groups": 0,
+     "profiles": {
+      "pointed": 1
+     },
+     "slicedPrisms": 1,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "HEXI FLAT",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 1,
+     "groups": 0,
+     "profiles": {
+      "pointed": 1
+     },
+     "slicedPrisms": 1,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "OCTI FLAT",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 1,
+     "groups": 0,
+     "profiles": {
+      "straight": 1
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "CIRCLE",
+     "kind": "PRSM"
+    }
+   ],
+   "clipCount": 13
+  },
+  {
+   "path": "galleries3d/ARCHEGPF.WLB",
+   "bucket": "galleries3d",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 36788,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/ARCHEGPF.WLB"
+   ],
+   "clips": [
+    {
+     "prisms": 10,
+     "groups": 1,
+     "profiles": {
+      "straight": 10
+     },
+     "slicedPrisms": 1,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Mummy",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 4,
+     "groups": 1,
+     "profiles": {
+      "straight": 4
+     },
+     "slicedPrisms": 1,
+     "decoratedFaces": 4,
+     "features": 20,
+     "name": "Mummy Case",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 12,
+     "groups": 3,
+     "profiles": {
+      "straight": 11,
+      "pointed": 1
+     },
+     "slicedPrisms": 4,
+     "decoratedFaces": 3,
+     "features": 2,
+     "name": "Queen",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 14,
+     "groups": 3,
+     "profiles": {
+      "straight": 12,
+      "pointed": 2
+     },
+     "slicedPrisms": 2,
+     "decoratedFaces": 1,
+     "features": 1,
+     "name": "Pharaoh",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 11,
+     "groups": 1,
+     "profiles": {
+      "straight": 10,
+      "pointed": 1
+     },
+     "slicedPrisms": 2,
+     "decoratedFaces": 1,
+     "features": 1,
+     "name": "High Priest",
+     "kind": "PRSM"
+    }
+   ],
+   "clipCount": 5
+  },
+  {
+   "path": "galleries3d/ARCHEGPM.WLB",
+   "bucket": "galleries3d",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 56194,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/ARCHEGPM.WLB"
+   ],
+   "clips": [
+    {
+     "prisms": 6,
+     "groups": 1,
+     "profiles": {
+      "straight": 6
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Chest 2",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 8,
+     "groups": 1,
+     "profiles": {
+      "straight": 8
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Shrine",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 2,
+     "groups": 1,
+     "profiles": {
+      "straight": 2
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Fan",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 10,
+     "groups": 1,
+     "profiles": {
+      "straight": 10
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Block",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 25,
+     "groups": 9,
+     "profiles": {
+      "straight": 25
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Table",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 7,
+     "groups": 1,
+     "profiles": {
+      "straight": 7
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Harp",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 3,
+     "groups": 1,
+     "profiles": {
+      "straight": 3
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Headrest",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 7,
+     "groups": 2,
+     "profiles": {
+      "straight": 7
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Folding Stool",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 3,
+     "groups": 1,
+     "profiles": {
+      "straight": 3
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 6,
+     "features": 6,
+     "name": "Chest",
+     "kind": "PRSM"
+    }
+   ],
+   "clipCount": 9
+  },
+  {
+   "path": "galleries3d/ARCHFIGR.WLB",
+   "bucket": "galleries3d",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 39720,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/ARCHFIGR.WLB"
+   ],
+   "clips": [
+    {
+     "prisms": 12,
+     "groups": 2,
+     "profiles": {
+      "straight": 12
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 13,
+     "features": 5,
+     "name": "Roman Senator",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 17,
+     "groups": 2,
+     "profiles": {
+      "straight": 16,
+      "pointed": 1
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 3,
+     "features": 20,
+     "name": "Roman Soldier 2",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 17,
+     "groups": 3,
+     "profiles": {
+      "straight": 16,
+      "pointed": 1
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 3,
+     "features": 7,
+     "name": "Roman Soldier 1",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 9,
+     "groups": 3,
+     "profiles": {
+      "pointed": 1,
+      "straight": 8
+     },
+     "slicedPrisms": 1,
+     "decoratedFaces": 1,
+     "features": 1,
+     "name": "Slave Standing",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 9,
+     "groups": 1,
+     "profiles": {
+      "pointed": 1,
+      "straight": 8
+     },
+     "slicedPrisms": 1,
+     "decoratedFaces": 1,
+     "features": 1,
+     "name": "Slave pointing",
+     "kind": "PRSM"
+    }
+   ],
+   "clipCount": 5
+  },
+  {
+   "path": "galleries3d/ARCHHENG.WLB",
+   "bucket": "galleries3d",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 47476,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/ARCHHENG.WLB"
+   ],
+   "clips": [
+    {
+     "prisms": 1,
+     "groups": 0,
+     "profiles": {
+      "straight": 1
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Arch Stone",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 1,
+     "groups": 0,
+     "profiles": {
+      "straight": 1
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Flat Stone",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 2,
+     "groups": 1,
+     "profiles": {
+      "straight": 2
+     },
+     "slicedPrisms": 1,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Heel Stone",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 1,
+     "groups": 0,
+     "profiles": {
+      "straight": 1
+     },
+     "slicedPrisms": 1,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Mid Stone",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 1,
+     "groups": 0,
+     "profiles": {
+      "straight": 1
+     },
+     "slicedPrisms": 1,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "High Stone",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 1,
+     "groups": 0,
+     "profiles": {
+      "straight": 1
+     },
+     "slicedPrisms": 1,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Single Stone",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 3,
+     "groups": 1,
+     "profiles": {
+      "straight": 3
+     },
+     "slicedPrisms": 2,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Low Arch",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 3,
+     "groups": 1,
+     "profiles": {
+      "straight": 3
+     },
+     "slicedPrisms": 2,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "High Arch",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 6,
+     "groups": 1,
+     "profiles": {
+      "straight": 6
+     },
+     "slicedPrisms": 1,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Rolling Stone",
+     "kind": "PRSM"
+    }
+   ],
+   "clipCount": 9
+  },
+  {
+   "path": "galleries3d/ARCHKITC.WLB",
+   "bucket": "galleries3d",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 37160,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/ARCHKITC.WLB"
+   ],
+   "clips": [
+    {
+     "prisms": 2,
+     "groups": 1,
+     "profiles": {
+      "pointed": 2
+     },
+     "slicedPrisms": 2,
+     "decoratedFaces": 1,
+     "features": 0,
+     "name": "Cook Pot 2",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 5,
+     "groups": 1,
+     "profiles": {
+      "diamond": 1,
+      "straight": 4
+     },
+     "slicedPrisms": 1,
+     "decoratedFaces": 1,
+     "features": 0,
+     "name": "Cook Pot 1",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 2,
+     "groups": 1,
+     "profiles": {
+      "diamond": 1,
+      "straight": 1
+     },
+     "slicedPrisms": 1,
+     "decoratedFaces": 3,
+     "features": 0,
+     "name": "Oil Jar",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 26,
+     "groups": 6,
+     "profiles": {
+      "straight": 23,
+      "pointed": 1,
+      "diamond": 2
+     },
+     "slicedPrisms": 3,
+     "decoratedFaces": 1,
+     "features": 0,
+     "name": "Wall Rack",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 1,
+     "groups": 0,
+     "profiles": {
+      "straight": 1
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 2,
+     "features": 3,
+     "name": "Toilet",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 3,
+     "groups": 1,
+     "profiles": {
+      "straight": 3
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 3,
+     "features": 1,
+     "name": "Stove",
+     "kind": "PRSM"
+    }
+   ],
+   "clipCount": 6
+  },
+  {
+   "path": "galleries3d/ARCHLIVG.WLB",
+   "bucket": "galleries3d",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 59296,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/ARCHLIVG.WLB"
+   ],
+   "clips": [
+    {
+     "prisms": 5,
+     "groups": 1,
+     "profiles": {
+      "straight": 5
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 5,
+     "features": 13,
+     "name": "Shrine",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 5,
+     "groups": 1,
+     "profiles": {
+      "straight": 5
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 4,
+     "features": 4,
+     "name": "Bronze Brazier",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 23,
+     "groups": 1,
+     "profiles": {
+      "straight": 17,
+      "diamond": 6
+     },
+     "slicedPrisms": 6,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Roman Chair",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 7,
+     "groups": 1,
+     "profiles": {
+      "straight": 7
+     },
+     "slicedPrisms": 1,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Dining Couch",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 7,
+     "groups": 1,
+     "profiles": {
+      "straight": 5,
+      "diamond": 1,
+      "pointed": 1
+     },
+     "slicedPrisms": 1,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Table Lamp",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 5,
+     "groups": 1,
+     "profiles": {
+      "straight": 4,
+      "pointed": 1
+     },
+     "slicedPrisms": 1,
+     "decoratedFaces": 2,
+     "features": 0,
+     "name": "Street Fountain",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 3,
+     "groups": 0,
+     "profiles": {
+      "straight": 3
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 4,
+     "features": 0,
+     "name": "Pool",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 11,
+     "groups": 3,
+     "profiles": {
+      "straight": 11
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Bronze Stool",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 7,
+     "groups": 1,
+     "profiles": {
+      "pointed": 2,
+      "straight": 4,
+      "diamond": 1
+     },
+     "slicedPrisms": 2,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Tall Lamp",
+     "kind": "PRSM"
+    }
+   ],
+   "clipCount": 9
+  },
+  {
+   "path": "galleries3d/ARCHSURV.WLB",
+   "bucket": "galleries3d",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 31250,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/ARCHSURV.WLB"
+   ],
+   "clips": [
+    {
+     "prisms": 20,
+     "groups": 1,
+     "profiles": {
+      "straight": 20
+     },
+     "slicedPrisms": 1,
+     "decoratedFaces": 1,
+     "features": 4,
+     "name": "Dioptra",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 7,
+     "groups": 1,
+     "profiles": {
+      "straight": 6,
+      "pointed": 1
+     },
+     "slicedPrisms": 2,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Level Staff",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 15,
+     "groups": 5,
+     "profiles": {
+      "straight": 11,
+      "pointed": 4
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 2,
+     "features": 0,
+     "name": "Sight Level",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 16,
+     "groups": 7,
+     "profiles": {
+      "straight": 12,
+      "pointed": 4
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 2,
+     "features": 0,
+     "name": "Aquaduct Level",
+     "kind": "PRSM"
+    }
+   ],
+   "clipCount": 4
+  },
+  {
+   "path": "galleries3d/ARCHTEMP.WLB",
+   "bucket": "galleries3d",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 49238,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/ARCHTEMP.WLB"
+   ],
+   "clips": [
+    {
+     "prisms": 1,
+     "groups": 0,
+     "profiles": {
+      "pointed": 1
+     },
+     "slicedPrisms": 1,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Obelisk",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 4,
+     "groups": 0,
+     "profiles": {
+      "straight": 4
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Base",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 2,
+     "groups": 1,
+     "profiles": {
+      "straight": 2
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Pediment",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 7,
+     "groups": 1,
+     "profiles": {
+      "straight": 7
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Cornice base",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 1,
+     "groups": 0,
+     "profiles": {
+      "straight": 1
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Ramp",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 1,
+     "groups": 0,
+     "profiles": {
+      "pointed": 1
+     },
+     "slicedPrisms": 1,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Column base",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 7,
+     "groups": 1,
+     "profiles": {
+      "straight": 7
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Ionic Column 25'",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 6,
+     "groups": 1,
+     "profiles": {
+      "straight": 6
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 2,
+     "features": 1,
+     "name": "Throne",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 6,
+     "groups": 1,
+     "profiles": {
+      "straight": 5,
+      "pointed": 1
+     },
+     "slicedPrisms": 1,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Doric Column 25'",
+     "kind": "PRSM"
+    }
+   ],
+   "clipCount": 9
+  },
+  {
+   "path": "galleries3d/ARCHTRAN.WLB",
+   "bucket": "galleries3d",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 36184,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/ARCHTRAN.WLB"
+   ],
+   "clips": [
+    {
+     "prisms": 20,
+     "groups": 3,
+     "profiles": {
+      "straight": 16,
+      "pointed": 4
+     },
+     "slicedPrisms": 4,
+     "decoratedFaces": 1,
+     "features": 0,
+     "name": "Litter",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 3,
+     "groups": 1,
+     "profiles": {
+      "straight": 3
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Mile Marker",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 13,
+     "groups": 1,
+     "profiles": {
+      "straight": 13
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "OX Cart",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 8,
+     "groups": 2,
+     "profiles": {
+      "straight": 8
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Hand Cart",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 13,
+     "groups": 1,
+     "profiles": {
+      "straight": 13
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 6,
+     "features": 16,
+     "name": "Chariot",
+     "kind": "PRSM"
+    }
+   ],
+   "clipCount": 5
+  },
+  {
+   "path": "galleries3d/ARCHVIKF.WLB",
+   "bucket": "galleries3d",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 24188,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/ARCHVIKF.WLB"
+   ],
+   "clips": [
+    {
+     "prisms": 13,
+     "groups": 1,
+     "profiles": {
+      "straight": 12,
+      "pointed": 1
+     },
+     "slicedPrisms": 4,
+     "decoratedFaces": 3,
+     "features": 4,
+     "name": "Viking Oarsman",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 16,
+     "groups": 1,
+     "profiles": {
+      "straight": 10,
+      "pointed": 6
+     },
+     "slicedPrisms": 2,
+     "decoratedFaces": 1,
+     "features": 1,
+     "name": "Shield Maiden",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 17,
+     "groups": 2,
+     "profiles": {
+      "straight": 13,
+      "pointed": 4
+     },
+     "slicedPrisms": 1,
+     "decoratedFaces": 1,
+     "features": 1,
+     "name": "Viking 1",
+     "kind": "PRSM"
+    }
+   ],
+   "clipCount": 3
+  },
+  {
+   "path": "galleries3d/ARCHVIKM.WLB",
+   "bucket": "galleries3d",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 54902,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/ARCHVIKM.WLB"
+   ],
+   "clips": [
+    {
+     "prisms": 6,
+     "groups": 3,
+     "profiles": {
+      "straight": 6
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 1,
+     "features": 0,
+     "name": "Pot",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 7,
+     "groups": 1,
+     "profiles": {
+      "straight": 7
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Leather Chest",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 18,
+     "groups": 1,
+     "profiles": {
+      "straight": 14,
+      "pointed": 4
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Viking Loom",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 2,
+     "groups": 0,
+     "profiles": {
+      "diamond": 1,
+      "straight": 1
+     },
+     "slicedPrisms": 1,
+     "decoratedFaces": 1,
+     "features": 0,
+     "name": "Barrel",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 8,
+     "groups": 3,
+     "profiles": {
+      "pointed": 1,
+      "straight": 7
+     },
+     "slicedPrisms": 1,
+     "decoratedFaces": 3,
+     "features": 1,
+     "name": "Water Cast",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 5,
+     "groups": 3,
+     "profiles": {
+      "straight": 5
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Bench",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 31,
+     "groups": 5,
+     "profiles": {
+      "straight": 23,
+      "diamond": 8
+     },
+     "slicedPrisms": 8,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Bed",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 5,
+     "groups": 3,
+     "profiles": {
+      "straight": 5
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Dining Table",
+     "kind": "PRSM"
+    }
+   ],
+   "clipCount": 8
+  },
+  {
+   "path": "galleries3d/ARCHVIKW.WLB",
+   "bucket": "galleries3d",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 45740,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/ARCHVIKW.WLB"
+   ],
+   "clips": [
+    {
+     "prisms": 21,
+     "groups": 1,
+     "profiles": {
+      "straight": 21
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 2,
+     "features": 0,
+     "name": "Tent",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 2,
+     "groups": 0,
+     "profiles": {
+      "straight": 1,
+      "pointed": 1
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 1,
+     "features": 3,
+     "name": "Shield 2",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 2,
+     "groups": 1,
+     "profiles": {
+      "straight": 1,
+      "pointed": 1
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 1,
+     "features": 1,
+     "name": "Shield 1",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 4,
+     "groups": 1,
+     "profiles": {
+      "straight": 4
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Sword 2",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 3,
+     "groups": 1,
+     "profiles": {
+      "straight": 3
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Sword",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 2,
+     "groups": 1,
+     "profiles": {
+      "straight": 2
+     },
+     "slicedPrisms": 1,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Pike",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 4,
+     "groups": 1,
+     "profiles": {
+      "straight": 4
+     },
+     "slicedPrisms": 1,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Ax",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 2,
+     "groups": 1,
+     "profiles": {
+      "straight": 2
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Oar",
+     "kind": "PRSM"
+    }
+   ],
+   "clipCount": 8
+  },
+  {
+   "path": "galleries3d/ARCHWEAP.WLB",
+   "bucket": "galleries3d",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 43482,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/ARCHWEAP.WLB"
+   ],
+   "clips": [
+    {
+     "prisms": 26,
+     "groups": 3,
+     "profiles": {
+      "straight": 24,
+      "pointed": 2
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Ballista",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 3,
+     "groups": 1,
+     "profiles": {
+      "straight": 3
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Short Sword",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 5,
+     "groups": 1,
+     "profiles": {
+      "straight": 5
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Fasces",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 5,
+     "groups": 1,
+     "profiles": {
+      "straight": 4,
+      "pointed": 1
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 1,
+     "features": 16,
+     "name": "Standard",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 2,
+     "groups": 1,
+     "profiles": {
+      "pointed": 1,
+      "straight": 1
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Javelin",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 1,
+     "groups": 0,
+     "profiles": {
+      "straight": 1
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Staff",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 3,
+     "groups": 1,
+     "profiles": {
+      "straight": 3
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 1,
+     "features": 3,
+     "name": "Shield",
+     "kind": "PRSM"
+    }
+   ],
+   "clipCount": 7
+  },
+  {
    "path": "galleries3d/BASIC.WLB",
    "bucket": "galleries3d",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 57988,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/3GALLERY/BASIC.WLB",
-    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/BASIC.WLB"
+    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/BASIC.WLB",
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/BASIC.WLB"
    ],
    "clips": [
     {
@@ -9536,12 +11284,14 @@
    "bucket": "galleries3d",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 57988,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/3GALLERY/BASIC_F.WLB",
-    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/BASIC_F.WLB"
+    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/BASIC_F.WLB",
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/BASIC_F.WLB"
    ],
    "clips": [
     {
@@ -9702,6 +11452,164 @@
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/3GALLERY/BASIC_R.WLB",
     "D3D/2026_New_Exports/KESIGN3D/3GALLERY/BASIC_R.WLB"
+   ],
+   "clips": [
+    {
+     "prisms": 1,
+     "groups": 0,
+     "profiles": {
+      "straight": 1
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Triangle",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 1,
+     "groups": 0,
+     "profiles": {
+      "straight": 1
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Rectangle",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 1,
+     "groups": 0,
+     "profiles": {
+      "straight": 1
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Pentagon",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 1,
+     "groups": 0,
+     "profiles": {
+      "straight": 1
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Hexagon",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 1,
+     "groups": 0,
+     "profiles": {
+      "straight": 1
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Octagon",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 1,
+     "groups": 0,
+     "profiles": {
+      "straight": 1
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "16-Sided",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 1,
+     "groups": 0,
+     "profiles": {
+      "pointed": 1
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Triangle Pointed",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 1,
+     "groups": 0,
+     "profiles": {
+      "pointed": 1
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Rectangle Pointed",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 1,
+     "groups": 0,
+     "profiles": {
+      "pointed": 1
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Pentagon Pointed",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 1,
+     "groups": 0,
+     "profiles": {
+      "pointed": 1
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Hexagon Pointed",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 1,
+     "groups": 0,
+     "profiles": {
+      "pointed": 1
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "Octagon Pointed",
+     "kind": "PRSM"
+    },
+    {
+     "prisms": 1,
+     "groups": 0,
+     "profiles": {
+      "pointed": 1
+     },
+     "slicedPrisms": 0,
+     "decoratedFaces": 0,
+     "features": 0,
+     "name": "16-Sided Pointed",
+     "kind": "PRSM"
+    }
+   ],
+   "clipCount": 12
+  },
+  {
+   "path": "galleries3d/BASIC_R__virvrml.WLB",
+   "bucket": "galleries3d",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 57988,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/BASIC_R.WLB"
    ],
    "clips": [
     {
@@ -10178,12 +12086,14 @@
    "bucket": "galleries3d",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 72902,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/3GALLERY/FARM.WLB",
-    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/FARM.WLB"
+    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/FARM.WLB",
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/FARM.WLB"
    ],
    "clips": [
     {
@@ -10609,12 +12519,14 @@
    "bucket": "galleries3d",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 69792,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/3GALLERY/HMCHAIR1.WLB",
-    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/HMCHAIR1.WLB"
+    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/HMCHAIR1.WLB",
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/HOMECHR1.WLB"
    ],
    "clips": [
     {
@@ -10746,12 +12658,14 @@
    "bucket": "galleries3d",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 78868,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/3GALLERY/HMCHAIR2.WLB",
-    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/HMCHAIR2.WLB"
+    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/HMCHAIR2.WLB",
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/HOMECHR2.WLB"
    ],
    "clips": [
     {
@@ -10882,12 +12796,14 @@
    "bucket": "galleries3d",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 110304,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/3GALLERY/HOME.WLB",
-    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/HOME.WLB"
+    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/HOME.WLB",
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/HOMESAMP.WLB"
    ],
    "clips": [
     {
@@ -11094,12 +13010,14 @@
    "bucket": "galleries3d",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 166782,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/3GALLERY/HOMELIFE.WLB",
-    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/HOMELIFE.WLB"
+    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/HOMELIFE.WLB",
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/HOMELIFE.WLB"
    ],
    "clips": [
     {
@@ -11422,12 +13340,14 @@
    "bucket": "galleries3d",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 95232,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/3GALLERY/HOMEMISC.WLB",
-    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/HOMEMISC.WLB"
+    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/HOMEMISC.WLB",
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/HOMEMISC.WLB"
    ],
    "clips": [
     {
@@ -11588,12 +13508,14 @@
    "bucket": "galleries3d",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 141354,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/3GALLERY/HOMTABLE.WLB",
-    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/HOMTABLE.WLB"
+    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/HOMTABLE.WLB",
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/HOMETBL.WLB"
    ],
    "clips": [
     {
@@ -13090,12 +15012,14 @@
    "bucket": "galleries3d",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 67988,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/3GALLERY/KFLRCAB1.WLB",
-    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/KFLRCAB1.WLB"
+    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/KFLRCAB1.WLB",
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/KFLRCAB1.WLB"
    ],
    "clips": [
     {
@@ -13250,12 +15174,14 @@
    "bucket": "galleries3d",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 69294,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/3GALLERY/KFLRCAB2.WLB",
-    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/KFLRCAB2.WLB"
+    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/KFLRCAB2.WLB",
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/KFLRCAB2.WLB"
    ],
    "clips": [
     {
@@ -13410,12 +15336,14 @@
    "bucket": "galleries3d",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 67296,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/3GALLERY/KITCHEN.WLB",
-    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/KITCHEN.WLB"
+    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/KITCHEN.WLB",
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/KITSAMPL.WLB"
    ],
    "clips": [
     {
@@ -13547,12 +15475,14 @@
    "bucket": "galleries3d",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 87278,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/3GALLERY/KITITEM1.WLB",
-    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/KITITEM1.WLB"
+    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/KITITEM1.WLB",
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/KITITEM1.WLB"
    ],
    "clips": [
     {
@@ -13710,12 +15640,14 @@
    "bucket": "galleries3d",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 80106,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/3GALLERY/KITITEM2.WLB",
-    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/KITITEM2.WLB"
+    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/KITITEM2.WLB",
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/KITITEM2.WLB"
    ],
    "clips": [
     {
@@ -13870,12 +15802,14 @@
    "bucket": "galleries3d",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 67304,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/3GALLERY/KWALCAB1.WLB",
-    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/KWALCAB1.WLB"
+    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/KWALCAB1.WLB",
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/KWALCAB1.WLB"
    ],
    "clips": [
     {
@@ -14030,12 +15964,14 @@
    "bucket": "galleries3d",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 71566,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/3GALLERY/KWALCAB2.WLB",
-    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/KWALCAB2.WLB"
+    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/KWALCAB2.WLB",
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/KWALCAB2.WLB"
    ],
    "clips": [
     {
@@ -14190,12 +16126,14 @@
    "bucket": "galleries3d",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 84244,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/3GALLERY/LANDSCAP.WLB",
-    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/LANDSCAP.WLB"
+    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/LANDSCAP.WLB",
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/LANDSCP.WLB"
    ],
    "clips": [
     {
@@ -15961,13 +17899,15 @@
    "bucket": "galleries3d",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 84262,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/3GALLERY/OFFICE.WLB",
     "D3D/2026_New_Exports/KESIGN3D/3GALLERY/OFFICE.WLB",
-    "D3D/MiscVVR/OFFICE.WLB"
+    "D3D/MiscVVR/OFFICE.WLB",
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/OFFCSAMP.WLB"
    ],
    "clips": [
     {
@@ -16098,12 +18038,14 @@
    "bucket": "galleries3d",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 108720,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/3GALLERY/PEOPLE.WLB",
-    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/PEOPLE.WLB"
+    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/PEOPLE.WLB",
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/PEOPLE.WLB"
    ],
    "clips": [
     {
@@ -16258,12 +18200,14 @@
    "bucket": "galleries3d",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 212298,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/3GALLERY/ROOMS1.WLB",
-    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/ROOMS1.WLB"
+    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/ROOMS1.WLB",
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/ROOMS2.WLB"
    ],
    "clips": [
     {
@@ -16443,12 +18387,14 @@
    "bucket": "galleries3d",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 136126,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/3GALLERY/ROOMS2.WLB",
-    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/ROOMS2.WLB"
+    "D3D/2026_New_Exports/KESIGN3D/3GALLERY/ROOMS2.WLB",
+    "D3D/2026_New_Exports/VirVRML/3GALLERY/ROOMS1.WLB"
    ],
    "clips": [
     {
@@ -17091,6 +19037,40 @@
    }
   },
   {
+   "path": "misc/KITCHEN.VVR",
+   "bucket": "misc",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 16320,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Tutorial/KITCHEN.VVR"
+   ],
+   "prisms": 29,
+   "groups": 6,
+   "profiles": {
+    "straight": 19,
+    "pointed": 10
+   },
+   "slicedPrisms": 10,
+   "decoratedFaces": 43,
+   "features": 78,
+   "bounds": {
+    "min": [
+     -205.05,
+     22.0,
+     0.0
+    ],
+    "max": [
+     -31.0,
+     142.05,
+     168.0
+    ],
+    "meshes": 138,
+    "triangles": 778
+   }
+  },
+  {
    "path": "misc/LOCKTEST.VVR",
    "bucket": "misc",
    "apps": [
@@ -17148,16 +19128,16 @@
    "bounds": {
     "min": [
      -864.0,
-     -252.0,
-     0.0
+     -252.05,
+     -0.05
     ],
     "max": [
      -84.0,
      545.0,
      338.63
     ],
-    "meshes": 338,
-    "triangles": 4453
+    "meshes": 330,
+    "triangles": 4442
    }
   },
   {
@@ -17224,6 +19204,76 @@
     ],
     "meshes": 1,
     "triangles": 8
+   }
+  },
+  {
+   "path": "misc/MYHOUSE.VVR",
+   "bucket": "misc",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 91382,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Tutorial/MYHOUSE.VVR"
+   ],
+   "prisms": 63,
+   "groups": 5,
+   "profiles": {
+    "straight": 61,
+    "pointed": 1,
+    "sphere": 1
+   },
+   "slicedPrisms": 3,
+   "decoratedFaces": 15,
+   "features": 38,
+   "bounds": {
+    "min": [
+     -877.0,
+     -757.0,
+     -96.0
+    ],
+    "max": [
+     1031.0,
+     1151.0,
+     168.0
+    ],
+    "meshes": 112,
+    "triangles": 1094
+   }
+  },
+  {
+   "path": "misc/MYHOUSE2.VVR",
+   "bucket": "misc",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 84802,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Tutorial/MYHOUSE2.VVR"
+   ],
+   "prisms": 92,
+   "groups": 12,
+   "profiles": {
+    "straight": 80,
+    "pointed": 11,
+    "sphere": 1
+   },
+   "slicedPrisms": 13,
+   "decoratedFaces": 57,
+   "features": 112,
+   "bounds": {
+    "min": [
+     -876.0,
+     -760.0,
+     -96.0
+    ],
+    "max": [
+     1032.0,
+     1148.0,
+     168.0
+    ],
+    "meshes": 247,
+    "triangles": 1876
    }
   },
   {
@@ -17701,7 +19751,41 @@
      120.0
     ],
     "meshes": 16,
-    "triangles": 2194
+    "triangles": 2277
+   }
+  },
+  {
+   "path": "models/ANTEROM.VVR",
+   "bucket": "models",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 6178,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Models/Temple/ANTEROM.VVR"
+   ],
+   "prisms": 26,
+   "groups": 0,
+   "profiles": {
+    "straight": 22,
+    "pointed": 4
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 4,
+   "features": 0,
+   "bounds": {
+    "min": [
+     -300.0,
+     -300.0,
+     -60.0
+    ],
+    "max": [
+     300.0,
+     300.0,
+     180.0
+    ],
+    "meshes": 26,
+    "triangles": 512
    }
   },
   {
@@ -17735,8 +19819,8 @@
      17280.0,
      6600.0
     ],
-    "meshes": 72,
-    "triangles": 3432
+    "meshes": 83,
+    "triangles": 3442
    }
   },
   {
@@ -17770,8 +19854,8 @@
      17280.0,
      6600.0
     ],
-    "meshes": 72,
-    "triangles": 3432
+    "meshes": 83,
+    "triangles": 3442
    }
   },
   {
@@ -17806,8 +19890,8 @@
      4200.0,
      8400.0
     ],
-    "meshes": 111,
-    "triangles": 2958
+    "meshes": 114,
+    "triangles": 3121
    }
   },
   {
@@ -17840,7 +19924,7 @@
     "max": [
      203.88,
      254.85,
-     96.0
+     92.22
     ],
     "meshes": 88,
     "triangles": 2104
@@ -17871,16 +19955,51 @@
    "bounds": {
     "min": [
      -510.0,
-     -435.66,
+     -433.63,
      -0.02
     ],
     "max": [
      528.0,
-     681.71,
+     679.68,
      327.4
     ],
     "meshes": 20,
     "triangles": 1365
+   }
+  },
+  {
+   "path": "models/CLOBBY.VVR",
+   "bucket": "models",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 50816,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Models/Corp/CLOBBY.VVR"
+   ],
+   "prisms": 150,
+   "groups": 14,
+   "profiles": {
+    "straight": 135,
+    "sphere": 11,
+    "rounded": 4
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 21,
+   "features": 112,
+   "bounds": {
+    "min": [
+     -240.01,
+     -240.0,
+     -0.05
+    ],
+    "max": [
+     240.0,
+     240.05,
+     120.0
+    ],
+    "meshes": 258,
+    "triangles": 7055
    }
   },
   {
@@ -17912,10 +20031,80 @@
     "max": [
      3168.0,
      3192.0,
-     65.53
+     57.0
     ],
-    "meshes": 100,
+    "meshes": 101,
     "triangles": 605
+   }
+  },
+  {
+   "path": "models/CONFRNC.VVR",
+   "bucket": "models",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 42004,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Models/Corp/CONFRNC.VVR"
+   ],
+   "prisms": 144,
+   "groups": 10,
+   "profiles": {
+    "straight": 101,
+    "sphere": 23,
+    "rounded": 20
+   },
+   "slicedPrisms": 5,
+   "decoratedFaces": 7,
+   "features": 10,
+   "bounds": {
+    "min": [
+     -240.0,
+     -0.0,
+     -0.0
+    ],
+    "max": [
+     240.0,
+     360.0,
+     96.0
+    ],
+    "meshes": 154,
+    "triangles": 11038
+   }
+  },
+  {
+   "path": "models/CPU.VVR",
+   "bucket": "models",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 8746,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Models/Cspace/CPU.VVR"
+   ],
+   "prisms": 11,
+   "groups": 0,
+   "profiles": {
+    "diamond": 5,
+    "straight": 4,
+    "pointed": 2
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 4,
+   "features": 55,
+   "bounds": {
+    "min": [
+     -384.0,
+     -1487.99,
+     -384.0
+    ],
+    "max": [
+     360.0,
+     312.0,
+     312.0
+    ],
+    "meshes": 68,
+    "triangles": 266
    }
   },
   {
@@ -17950,8 +20139,41 @@
      3192.0,
      40.41
     ],
-    "meshes": 108,
-    "triangles": 2781
+    "meshes": 112,
+    "triangles": 3181
+   }
+  },
+  {
+   "path": "models/DATASTOR.VVR",
+   "bucket": "models",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 7328,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Models/Cspace/DATASTOR.VVR"
+   ],
+   "prisms": 15,
+   "groups": 1,
+   "profiles": {
+    "straight": 15
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 2,
+   "features": 34,
+   "bounds": {
+    "min": [
+     -492.43,
+     -579.88,
+     0.0
+    ],
+    "max": [
+     144.0,
+     155.99,
+     132.0
+    ],
+    "meshes": 48,
+    "triangles": 357
    }
   },
   {
@@ -17959,12 +20181,14 @@
    "bucket": "models",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 11400,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/MODELS/DINDECK.VVR",
-    "D3D/2026_New_Exports/KESIGN3D/MODELS/DINDECK.VVR"
+    "D3D/2026_New_Exports/KESIGN3D/MODELS/DINDECK.VVR",
+    "D3D/2026_New_Exports/VirVRML/Homerem/HOMEMOD/DINDECK.VVR"
    ],
    "prisms": 45,
    "groups": 2,
@@ -17986,7 +20210,7 @@
      174.0
     ],
     "meshes": 51,
-    "triangles": 584
+    "triangles": 572
    }
   },
   {
@@ -17994,12 +20218,14 @@
    "bucket": "models",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 9866,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/MODELS/DINROOMA.VVR",
-    "D3D/2026_New_Exports/KESIGN3D/MODELS/DININGA.VVR"
+    "D3D/2026_New_Exports/KESIGN3D/MODELS/DININGA.VVR",
+    "D3D/2026_New_Exports/VirVRML/Homerem/HOMEMOD/DININGA.VVR"
    ],
    "prisms": 7,
    "groups": 0,
@@ -18020,8 +20246,43 @@
      4068.0,
      168.0
     ],
-    "meshes": 61,
-    "triangles": 268
+    "meshes": 56,
+    "triangles": 256
+   }
+  },
+  {
+   "path": "models/EXECOFFC.VVR",
+   "bucket": "models",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 64018,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Models/Corp/EXECOFFC.VVR"
+   ],
+   "prisms": 251,
+   "groups": 18,
+   "profiles": {
+    "straight": 232,
+    "sphere": 7,
+    "rounded": 12
+   },
+   "slicedPrisms": 1,
+   "decoratedFaces": 18,
+   "features": 86,
+   "bounds": {
+    "min": [
+     -240.0,
+     -0.0,
+     0.0
+    ],
+    "max": [
+     0.1,
+     240.1,
+     120.0
+    ],
+    "meshes": 339,
+    "triangles": 6010
    }
   },
   {
@@ -18058,8 +20319,42 @@
      660.0,
      168.0
     ],
-    "meshes": 22,
-    "triangles": 1503
+    "meshes": 24,
+    "triangles": 1674
+   }
+  },
+  {
+   "path": "models/FIREWALL.VVR",
+   "bucket": "models",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 7338,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Models/Cspace/FIREWALL.VVR"
+   ],
+   "prisms": 21,
+   "groups": 0,
+   "profiles": {
+    "straight": 3,
+    "pointed": 18
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 1,
+   "features": 25,
+   "bounds": {
+    "min": [
+     -142.39,
+     -486.0,
+     -12.0
+    ],
+    "max": [
+     120.0,
+     768.0,
+     168.0
+    ],
+    "meshes": 46,
+    "triangles": 274
    }
   },
   {
@@ -18094,8 +20389,8 @@
      434.3,
      133.05
     ],
-    "meshes": 22,
-    "triangles": 605
+    "meshes": 23,
+    "triangles": 607
    }
   },
   {
@@ -18161,7 +20456,7 @@
      6960.0,
      4800.0
     ],
-    "meshes": 218,
+    "meshes": 220,
     "triangles": 1100
    }
   },
@@ -18195,7 +20490,7 @@
      6960.0,
      4800.0
     ],
-    "meshes": 218,
+    "meshes": 220,
     "triangles": 1100
    }
   },
@@ -18228,10 +20523,10 @@
     "max": [
      3168.0,
      3192.0,
-     52.77
+     48.82
     ],
-    "meshes": 148,
-    "triangles": 980
+    "meshes": 154,
+    "triangles": 976
    }
   },
   {
@@ -18267,8 +20562,8 @@
      3312.0,
      67.99
     ],
-    "meshes": 61,
-    "triangles": 2088
+    "meshes": 64,
+    "triangles": 2256
    }
   },
   {
@@ -18302,8 +20597,76 @@
      3756.0,
      70.0
     ],
-    "meshes": 32,
-    "triangles": 643
+    "meshes": 31,
+    "triangles": 639
+   }
+  },
+  {
+   "path": "models/LIBRARY.VVR",
+   "bucket": "models",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 8252,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Models/Cspace/LIBRARY.VVR"
+   ],
+   "prisms": 15,
+   "groups": 2,
+   "profiles": {
+    "straight": 15
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 2,
+   "features": 41,
+   "bounds": {
+    "min": [
+     -192.0,
+     -192.0,
+     -12.0
+    ],
+    "max": [
+     792.72,
+     192.0,
+     121.51
+    ],
+    "meshes": 56,
+    "triangles": 394
+   }
+  },
+  {
+   "path": "models/LOGON.VVR",
+   "bucket": "models",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 4120,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Models/Cspace/LOGON.VVR"
+   ],
+   "prisms": 16,
+   "groups": 0,
+   "profiles": {
+    "pointed": 4,
+    "straight": 11,
+    "rounded": 1
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 0,
+   "features": 0,
+   "bounds": {
+    "min": [
+     -36.0,
+     -144.0,
+     0.0
+    ],
+    "max": [
+     252.0,
+     587.07,
+     288.0
+    ],
+    "meshes": 16,
+    "triangles": 378
    }
   },
   {
@@ -18337,8 +20700,8 @@
      4200.0,
      8400.0
     ],
-    "meshes": 122,
-    "triangles": 3301
+    "meshes": 135,
+    "triangles": 3299
    }
   },
   {
@@ -18372,8 +20735,8 @@
      4200.0,
      8400.0
     ],
-    "meshes": 122,
-    "triangles": 3301
+    "meshes": 134,
+    "triangles": 3299
    }
   },
   {
@@ -18407,7 +20770,7 @@
      3648.0,
      258.0
     ],
-    "meshes": 81,
+    "meshes": 82,
     "triangles": 1157
    }
   },
@@ -18443,7 +20806,7 @@
      6228.0,
      285.7
     ],
-    "meshes": 55,
+    "meshes": 59,
     "triangles": 1082
    }
   },
@@ -18478,7 +20841,7 @@
      4800.0
     ],
     "meshes": 12,
-    "triangles": 3389
+    "triangles": 5874
    }
   },
   {
@@ -18511,8 +20874,42 @@
      6960.0,
      4800.0
     ],
-    "meshes": 67,
+    "meshes": 74,
     "triangles": 759
+   }
+  },
+  {
+   "path": "models/NORTHCOR.VVR",
+   "bucket": "models",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 7036,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Models/Temple/NORTHCOR.VVR"
+   ],
+   "prisms": 23,
+   "groups": 0,
+   "profiles": {
+    "straight": 22,
+    "pointed": 1
+   },
+   "slicedPrisms": 1,
+   "decoratedFaces": 1,
+   "features": 3,
+   "bounds": {
+    "min": [
+     -120.0,
+     -360.0,
+     0.0
+    ],
+    "max": [
+     120.0,
+     360.0,
+     120.0
+    ],
+    "meshes": 27,
+    "triangles": 1068
    }
   },
   {
@@ -18520,12 +20917,14 @@
    "bucket": "models",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 9854,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/MODELS/PLATDECK.VVR",
-    "D3D/2026_New_Exports/KESIGN3D/MODELS/PLATDECK.VVR"
+    "D3D/2026_New_Exports/KESIGN3D/MODELS/PLATDECK.VVR",
+    "D3D/2026_New_Exports/VirVRML/Homerem/HOMEMOD/PLATDECK.VVR"
    ],
    "prisms": 33,
    "groups": 3,
@@ -18547,19 +20946,56 @@
      4068.0,
      240.0
     ],
-    "meshes": 59,
+    "meshes": 60,
     "triangles": 445
+   }
+  },
+  {
+   "path": "models/RECEPT.VVR",
+   "bucket": "models",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 48680,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Models/Corp/RECEPT.VVR"
+   ],
+   "prisms": 212,
+   "groups": 14,
+   "profiles": {
+    "straight": 195,
+    "rounded": 10,
+    "sphere": 7
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 3,
+   "features": 17,
+   "bounds": {
+    "min": [
+     -204.0,
+     -216.0,
+     -0.05
+    ],
+    "max": [
+     204.1,
+     240.0,
+     120.0
+    ],
+    "meshes": 229,
+    "triangles": 5750
    }
   },
   {
    "path": "models/REDBEDRM.VVR",
    "bucket": "models",
    "apps": [
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 11570,
    "sources": [
-    "D3D/2026_New_Exports/KESIGN3D/MODELS/REDBEDRM.VVR"
+    "D3D/2026_New_Exports/KESIGN3D/MODELS/REDBEDRM.VVR",
+    "D3D/2026_New_Exports/VirVRML/Homerem/HOMEMOD/REDBEDRM.VVR"
    ],
    "prisms": 22,
    "groups": 2,
@@ -18581,8 +21017,42 @@
      4068.0,
      132.01
     ],
-    "meshes": 62,
-    "triangles": 480
+    "meshes": 58,
+    "triangles": 516
+   }
+  },
+  {
+   "path": "models/ROUTING.VVR",
+   "bucket": "models",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 12044,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Models/Cspace/ROUTING.VVR"
+   ],
+   "prisms": 33,
+   "groups": 0,
+   "profiles": {
+    "straight": 29,
+    "diamond": 4
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 8,
+   "features": 44,
+   "bounds": {
+    "min": [
+     -381.45,
+     -380.97,
+     -12.0
+    ],
+    "max": [
+     390.0,
+     363.14,
+     246.0
+    ],
+    "meshes": 79,
+    "triangles": 727
    }
   },
   {
@@ -18644,14 +21114,14 @@
     "min": [
      -14700.0,
      -14400.0,
-     0.0
+     -0.05
     ],
     "max": [
      14580.0,
      14880.0,
      5160.0
     ],
-    "meshes": 123,
+    "meshes": 134,
     "triangles": 2530
    }
   },
@@ -18679,14 +21149,14 @@
     "min": [
      -14700.0,
      -14400.0,
-     0.0
+     -0.05
     ],
     "max": [
      14580.0,
      14880.0,
      5160.0
     ],
-    "meshes": 121,
+    "meshes": 132,
     "triangles": 2458
    }
   },
@@ -18721,10 +21191,77 @@
     "max": [
      6120.0,
      6228.0,
-     674.17
+     667.47
     ],
-    "meshes": 27,
+    "meshes": 36,
     "triangles": 495
+   }
+  },
+  {
+   "path": "models/SLABROOM.VVR",
+   "bucket": "models",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 8476,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Models/Temple/SLABROOM.VVR"
+   ],
+   "prisms": 35,
+   "groups": 0,
+   "profiles": {
+    "straight": 35
+   },
+   "slicedPrisms": 5,
+   "decoratedFaces": 0,
+   "features": 0,
+   "bounds": {
+    "min": [
+     -2399.9,
+     -360.4,
+     6.0
+    ],
+    "max": [
+     354.4,
+     690.03,
+     185.99
+    ],
+    "meshes": 35,
+    "triangles": 767
+   }
+  },
+  {
+   "path": "models/SOUTHCOR.VVR",
+   "bucket": "models",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 10384,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Models/Temple/SOUTHCOR.VVR"
+   ],
+   "prisms": 27,
+   "groups": 0,
+   "profiles": {
+    "straight": 23,
+    "pointed": 4
+   },
+   "slicedPrisms": 1,
+   "decoratedFaces": 1,
+   "features": 41,
+   "bounds": {
+    "min": [
+     -120.0,
+     -360.0,
+     -240.0
+    ],
+    "max": [
+     120.0,
+     360.0,
+     120.0
+    ],
+    "meshes": 69,
+    "triangles": 614
    }
   },
   {
@@ -18800,12 +21337,14 @@
    "bucket": "models",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 24612,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/MODELS/SPADECK.VVR",
-    "D3D/2026_New_Exports/KESIGN3D/MODELS/SPADECK.VVR"
+    "D3D/2026_New_Exports/KESIGN3D/MODELS/SPADECK.VVR",
+    "D3D/2026_New_Exports/VirVRML/Homerem/HOMEMOD/SPADECK.VVR"
    ],
    "prisms": 127,
    "groups": 1,
@@ -18861,7 +21400,7 @@
      8400.0,
      1050.08
     ],
-    "meshes": 36,
+    "meshes": 38,
     "triangles": 264
    }
   },
@@ -18896,7 +21435,7 @@
      8400.0,
      1050.08
     ],
-    "meshes": 36,
+    "meshes": 37,
     "triangles": 264
    }
   },
@@ -18905,12 +21444,14 @@
    "bucket": "models",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 16238,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/MODELS/SPLTDECK.VVR",
-    "D3D/2026_New_Exports/KESIGN3D/MODELS/SPLTDECK.VVR"
+    "D3D/2026_New_Exports/KESIGN3D/MODELS/SPLTDECK.VVR",
+    "D3D/2026_New_Exports/VirVRML/Homerem/HOMEMOD/SPLTDECK.VVR"
    ],
    "prisms": 75,
    "groups": 3,
@@ -18967,7 +21508,7 @@
      4800.0
     ],
     "meshes": 6,
-    "triangles": 152
+    "triangles": 232
    }
   },
   {
@@ -19002,7 +21543,40 @@
      4800.0
     ],
     "meshes": 6,
-    "triangles": 152
+    "triangles": 232
+   }
+  },
+  {
+   "path": "models/STAIRROM.VVR",
+   "bucket": "models",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 10908,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Models/Temple/STAIRROM.VVR"
+   ],
+   "prisms": 53,
+   "groups": 0,
+   "profiles": {
+    "straight": 53
+   },
+   "slicedPrisms": 1,
+   "decoratedFaces": 1,
+   "features": 0,
+   "bounds": {
+    "min": [
+     -504.0,
+     -312.0,
+     0.0
+    ],
+    "max": [
+     204.0,
+     312.0,
+     360.0
+    ],
+    "meshes": 53,
+    "triangles": 776
    }
   },
   {
@@ -19034,7 +21608,7 @@
     "max": [
      3168.0,
      3192.0,
-     63.22
+     63.26
     ],
     "meshes": 131,
     "triangles": 770
@@ -19045,12 +21619,14 @@
    "bucket": "models",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 13572,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/MODELS/STEPDECK.VVR",
-    "D3D/2026_New_Exports/KESIGN3D/MODELS/STEPDECK.VVR"
+    "D3D/2026_New_Exports/KESIGN3D/MODELS/STEPDECK.VVR",
+    "D3D/2026_New_Exports/VirVRML/Homerem/HOMEMOD/STEPDECK.VVR"
    ],
    "prisms": 63,
    "groups": 2,
@@ -19073,6 +21649,40 @@
     ],
     "meshes": 63,
     "triangles": 788
+   }
+  },
+  {
+   "path": "models/THRONERM.VVR",
+   "bucket": "models",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 7958,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Models/Temple/THRONERM.VVR"
+   ],
+   "prisms": 33,
+   "groups": 1,
+   "profiles": {
+    "straight": 32,
+    "pointed": 1
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 0,
+   "features": 0,
+   "bounds": {
+    "min": [
+     -240.0,
+     -480.0,
+     0.0
+    ],
+    "max": [
+     240.0,
+     480.0,
+     360.0
+    ],
+    "meshes": 33,
+    "triangles": 870
    }
   },
   {
@@ -19106,7 +21716,7 @@
      3192.0,
      102.01
     ],
-    "meshes": 207,
+    "meshes": 212,
     "triangles": 1478
    }
   },
@@ -19177,6 +21787,40 @@
    }
   },
   {
+   "path": "models/WELLROOM.VVR",
+   "bucket": "models",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 9476,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Models/Temple/WELLROOM.VVR"
+   ],
+   "prisms": 24,
+   "groups": 0,
+   "profiles": {
+    "straight": 23,
+    "rounded": 1
+   },
+   "slicedPrisms": 1,
+   "decoratedFaces": 39,
+   "features": 12,
+   "bounds": {
+    "min": [
+     -431.38,
+     -323.47,
+     -180.0
+    ],
+    "max": [
+     306.82,
+     320.39,
+     204.0
+    ],
+    "meshes": 35,
+    "triangles": 1122
+   }
+  },
+  {
    "path": "scenes/ADRNDACK.VVR",
    "bucket": "scenes",
    "apps": [
@@ -19206,7 +21850,7 @@
      276.0
     ],
     "meshes": 441,
-    "triangles": 3834
+    "triangles": 3832
    }
   },
   {
@@ -19214,12 +21858,14 @@
    "bucket": "scenes",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 11578,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/SCENES/AFRAME.VVR",
-    "D3D/2026_New_Exports/KESIGN3D/SCENES/AFRAME.VVR"
+    "D3D/2026_New_Exports/KESIGN3D/SCENES/AFRAME.VVR",
+    "D3D/2026_New_Exports/VirVRML/Homerem/HOMEMOD/AFRAME.VVR"
    ],
    "prisms": 5,
    "groups": 1,
@@ -19240,7 +21886,7 @@
      4068.0,
      504.0
     ],
-    "meshes": 73,
+    "meshes": 76,
     "triangles": 212
    }
   },
@@ -19266,15 +21912,15 @@
    "bounds": {
     "min": [
      -240.0,
-     -0.0,
-     -0.01
+     -0.05,
+     -0.0
     ],
     "max": [
      60.0,
-     408.0,
+     408.05,
      96.0
     ],
-    "meshes": 293,
+    "meshes": 300,
     "triangles": 3291
    }
   },
@@ -19309,8 +21955,41 @@
      4068.0,
      288.0
     ],
-    "meshes": 20,
-    "triangles": 111
+    "meshes": 17,
+    "triangles": 99
+   }
+  },
+  {
+   "path": "scenes/ATTIC__virvrml.VVR",
+   "bucket": "scenes",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 8868,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Homerem/HOMEMOD/ATTIC.VVR"
+   ],
+   "prisms": 3,
+   "groups": 0,
+   "profiles": {
+    "straight": 3
+   },
+   "slicedPrisms": 1,
+   "decoratedFaces": 6,
+   "features": 17,
+   "bounds": {
+    "min": [
+     -4032.0,
+     -3972.0,
+     -24.0
+    ],
+    "max": [
+     4008.0,
+     4068.0,
+     288.0
+    ],
+    "meshes": 17,
+    "triangles": 94
    }
   },
   {
@@ -19345,8 +22024,8 @@
      4068.0,
      108.0
     ],
-    "meshes": 54,
-    "triangles": 835
+    "meshes": 57,
+    "triangles": 868
    }
   },
   {
@@ -19380,8 +22059,8 @@
      4068.0,
      120.0
     ],
-    "meshes": 29,
-    "triangles": 495
+    "meshes": 30,
+    "triangles": 527
    }
   },
   {
@@ -19418,7 +22097,42 @@
      120.0
     ],
     "meshes": 73,
-    "triangles": 602
+    "triangles": 632
+   }
+  },
+  {
+   "path": "scenes/BATHC__virvrml.VVR",
+   "bucket": "scenes",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 15880,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Homerem/HOMEMOD/BATHC.VVR"
+   ],
+   "prisms": 22,
+   "groups": 1,
+   "profiles": {
+    "straight": 18,
+    "rounded": 2,
+    "pointed": 2
+   },
+   "slicedPrisms": 5,
+   "decoratedFaces": 17,
+   "features": 51,
+   "bounds": {
+    "min": [
+     -4032.0,
+     -3972.0,
+     -24.0
+    ],
+    "max": [
+     4008.0,
+     4068.0,
+     120.0
+    ],
+    "meshes": 72,
+    "triangles": 632
    }
   },
   {
@@ -19444,17 +22158,17 @@
    "features": 36,
    "bounds": {
     "min": [
-     -324.0,
-     -300.0,
+     -162.0,
+     -150.0,
      0.0
     ],
     "max": [
-     192.0,
-     144.0,
-     192.0
+     96.0,
+     72.0,
+     96.0
     ],
-    "meshes": 169,
-    "triangles": 7537
+    "meshes": 187,
+    "triangles": 7819
    }
   },
   {
@@ -19462,12 +22176,14 @@
    "bucket": "scenes",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 28914,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/SCENES/BATHE.VVR",
-    "D3D/2026_New_Exports/KESIGN3D/SCENES/BATHC.VVR"
+    "D3D/2026_New_Exports/KESIGN3D/SCENES/BATHC.VVR",
+    "D3D/2026_New_Exports/VirVRML/Homerem/HOMEMOD/BATHRMC.VVR"
    ],
    "prisms": 38,
    "groups": 5,
@@ -19491,8 +22207,8 @@
      4068.0,
      96.0
     ],
-    "meshes": 216,
-    "triangles": 1412
+    "meshes": 213,
+    "triangles": 1386
    }
   },
   {
@@ -19527,8 +22243,44 @@
      4068.0,
      108.0
     ],
-    "meshes": 54,
-    "triangles": 835
+    "meshes": 57,
+    "triangles": 868
+   }
+  },
+  {
+   "path": "scenes/BATHRMA__virvrml.VVR",
+   "bucket": "scenes",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 13640,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Homerem/HOMEMOD/BATHRMA.VVR"
+   ],
+   "prisms": 41,
+   "groups": 7,
+   "profiles": {
+    "straight": 29,
+    "rounded": 4,
+    "pointed": 7,
+    "sphere": 1
+   },
+   "slicedPrisms": 7,
+   "decoratedFaces": 15,
+   "features": 14,
+   "bounds": {
+    "min": [
+     -4032.0,
+     -3972.0,
+     -24.0
+    ],
+    "max": [
+     4008.0,
+     4068.0,
+     108.0
+    ],
+    "meshes": 57,
+    "triangles": 868
    }
   },
   {
@@ -19562,8 +22314,43 @@
      4068.0,
      120.0
     ],
-    "meshes": 29,
-    "triangles": 495
+    "meshes": 30,
+    "triangles": 527
+   }
+  },
+  {
+   "path": "scenes/BATHRMB__virvrml.VVR",
+   "bucket": "scenes",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 9120,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Homerem/HOMEMOD/BATHRMB.VVR"
+   ],
+   "prisms": 22,
+   "groups": 5,
+   "profiles": {
+    "straight": 19,
+    "sphere": 1,
+    "pointed": 2
+   },
+   "slicedPrisms": 5,
+   "decoratedFaces": 7,
+   "features": 8,
+   "bounds": {
+    "min": [
+     -4032.0,
+     -3972.0,
+     -24.0
+    ],
+    "max": [
+     4008.0,
+     4068.0,
+     120.0
+    ],
+    "meshes": 30,
+    "triangles": 527
    }
   },
   {
@@ -19591,17 +22378,51 @@
    "features": 350,
    "bounds": {
     "min": [
-     -6840.0,
-     -132.15,
-     -170.0
+     -1710.0,
+     -33.04,
+     -42.5
     ],
     "max": [
-     5880.0,
-     14627.85,
-     935.94
+     1470.0,
+     3656.96,
+     233.99
     ],
-    "meshes": 450,
-    "triangles": 3531
+    "meshes": 461,
+    "triangles": 3522
+   }
+  },
+  {
+   "path": "scenes/BEACHCBN__virvrml.VVR",
+   "bucket": "scenes",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 136020,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Homerem/HOMESCN/BEACHCBN.VVR"
+   ],
+   "prisms": 101,
+   "groups": 4,
+   "profiles": {
+    "straight": 100,
+    "pointed": 1
+   },
+   "slicedPrisms": 17,
+   "decoratedFaces": 56,
+   "features": 350,
+   "bounds": {
+    "min": [
+     -2370.0,
+     -843.04,
+     -45.5
+    ],
+    "max": [
+     2130.0,
+     3656.96,
+     680.5
+    ],
+    "meshes": 463,
+    "triangles": 3550
    }
   },
   {
@@ -19634,8 +22455,42 @@
      4068.0,
      108.0
     ],
-    "meshes": 121,
-    "triangles": 638
+    "meshes": 118,
+    "triangles": 680
+   }
+  },
+  {
+   "path": "scenes/BEDRMTIL__virvrml.VVR",
+   "bucket": "scenes",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 15380,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Homerem/HOMEMOD/BEDRMTIL.VVR"
+   ],
+   "prisms": 16,
+   "groups": 2,
+   "profiles": {
+    "straight": 14,
+    "sphere": 2
+   },
+   "slicedPrisms": 2,
+   "decoratedFaces": 18,
+   "features": 98,
+   "bounds": {
+    "min": [
+     -4032.0,
+     -3972.0,
+     -24.0
+    ],
+    "max": [
+     4008.0,
+     4068.0,
+     108.0
+    ],
+    "meshes": 112,
+    "triangles": 552
    }
   },
   {
@@ -19668,8 +22523,8 @@
      4068.0,
      108.0
     ],
-    "meshes": 121,
-    "triangles": 638
+    "meshes": 118,
+    "triangles": 680
    }
   },
   {
@@ -19701,8 +22556,41 @@
      4068.0,
      120.0
     ],
-    "meshes": 59,
-    "triangles": 929
+    "meshes": 60,
+    "triangles": 920
+   }
+  },
+  {
+   "path": "scenes/BEDROOMA__virvrml.VVR",
+   "bucket": "scenes",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 11272,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Homerem/HOMEMOD/BEDROOMA.VVR"
+   ],
+   "prisms": 22,
+   "groups": 4,
+   "profiles": {
+    "straight": 22
+   },
+   "slicedPrisms": 9,
+   "decoratedFaces": 14,
+   "features": 28,
+   "bounds": {
+    "min": [
+     -4032.0,
+     -3972.0,
+     -24.0
+    ],
+    "max": [
+     4008.0,
+     4068.0,
+     120.0
+    ],
+    "meshes": 60,
+    "triangles": 920
    }
   },
   {
@@ -19734,8 +22622,8 @@
      4068.0,
      120.0
     ],
-    "meshes": 59,
-    "triangles": 929
+    "meshes": 60,
+    "triangles": 920
    }
   },
   {
@@ -19743,12 +22631,14 @@
    "bucket": "scenes",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 13526,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/SCENES/BEDROOMC.VVR",
-    "D3D/2026_New_Exports/KESIGN3D/SCENES/BEDROOMW.VVR"
+    "D3D/2026_New_Exports/KESIGN3D/SCENES/BEDROOMW.VVR",
+    "D3D/2026_New_Exports/VirVRML/Homerem/HOMEMOD/BEDROOMW.VVR"
    ],
    "prisms": 13,
    "groups": 1,
@@ -19770,8 +22660,8 @@
      4068.0,
      338.63
     ],
-    "meshes": 50,
-    "triangles": 455
+    "meshes": 44,
+    "triangles": 441
    }
   },
   {
@@ -19805,8 +22695,8 @@
      2400.0,
      108.0
     ],
-    "meshes": 1060,
-    "triangles": 6388
+    "meshes": 1061,
+    "triangles": 6386
    }
   },
   {
@@ -19842,8 +22732,107 @@
      6000.0,
      226.0
     ],
-    "meshes": 944,
-    "triangles": 4520
+    "meshes": 926,
+    "triangles": 4472
+   }
+  },
+  {
+   "path": "scenes/CASARINC.VVR",
+   "bucket": "scenes",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 24252,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Archlogy/ARCHSCN/CASARINC.VVR"
+   ],
+   "prisms": 78,
+   "groups": 4,
+   "profiles": {
+    "straight": 78
+   },
+   "slicedPrisms": 5,
+   "decoratedFaces": 58,
+   "features": 0,
+   "bounds": {
+    "min": [
+     -6600.0,
+     -7680.0,
+     -960.0
+    ],
+    "max": [
+     6600.0,
+     7920.0,
+     72.0
+    ],
+    "meshes": 79,
+    "triangles": 1245
+   }
+  },
+  {
+   "path": "scenes/CHICHENI.VVR",
+   "bucket": "scenes",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 61042,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Archlogy/ARCHSCN/CHICHENI.VVR"
+   ],
+   "prisms": 100,
+   "groups": 3,
+   "profiles": {
+    "straight": 100
+   },
+   "slicedPrisms": 12,
+   "decoratedFaces": 6,
+   "features": 0,
+   "bounds": {
+    "min": [
+     -10680.0,
+     -11280.0,
+     -240.0
+    ],
+    "max": [
+     12120.0,
+     11520.0,
+     4080.0
+    ],
+    "meshes": 101,
+    "triangles": 1502
+   }
+  },
+  {
+   "path": "scenes/CHIMNEYR.VVR",
+   "bucket": "scenes",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 22214,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Archlogy/ARCHSCN/CHIMNEYR.VVR"
+   ],
+   "prisms": 85,
+   "groups": 1,
+   "profiles": {
+    "straight": 85
+   },
+   "slicedPrisms": 7,
+   "decoratedFaces": 14,
+   "features": 5,
+   "bounds": {
+    "min": [
+     -18504.0,
+     -18228.0,
+     -2160.0
+    ],
+    "max": [
+     17064.0,
+     17340.0,
+     192.0
+    ],
+    "meshes": 95,
+    "triangles": 1185
    }
   },
   {
@@ -19869,17 +22858,51 @@
    "features": 33,
    "bounds": {
     "min": [
-     -14454.75,
-     -13320.0,
-     -192.0
+     -7227.37,
+     -6660.0,
+     -96.0
     ],
     "max": [
-     14118.75,
-     19272.0,
-     720.0
+     7059.37,
+     9636.0,
+     360.0
     ],
-    "meshes": 254,
-    "triangles": 3079
+    "meshes": 312,
+    "triangles": 3057
+   }
+  },
+  {
+   "path": "scenes/CNCLUB__virvrml.VVR",
+   "bucket": "scenes",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 75958,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Homerem/HOMESCN/CNCLUB.VVR"
+   ],
+   "prisms": 222,
+   "groups": 6,
+   "profiles": {
+    "straight": 209,
+    "pointed": 13
+   },
+   "slicedPrisms": 19,
+   "decoratedFaces": 194,
+   "features": 33,
+   "bounds": {
+    "min": [
+     -3300.0,
+     -3288.0,
+     -150.0
+    ],
+    "max": [
+     3300.0,
+     3312.0,
+     2700.0
+    ],
+    "meshes": 313,
+    "triangles": 3105
    }
   },
   {
@@ -19914,8 +22937,8 @@
      2400.0,
      216.0
     ],
-    "meshes": 835,
-    "triangles": 6661
+    "meshes": 840,
+    "triangles": 6875
    }
   },
   {
@@ -19950,8 +22973,75 @@
      2400.0,
      216.0
     ],
-    "meshes": 835,
-    "triangles": 6661
+    "meshes": 840,
+    "triangles": 6875
+   }
+  },
+  {
+   "path": "scenes/DEALEY.VVR",
+   "bucket": "scenes",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 226532,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Scenes/DEALEY.VVR"
+   ],
+   "prisms": 83,
+   "groups": 9,
+   "profiles": {
+    "straight": 82,
+    "sphere": 1
+   },
+   "slicedPrisms": 11,
+   "decoratedFaces": 58,
+   "features": 91,
+   "bounds": {
+    "min": [
+     -2447.32,
+     -2481.13,
+     -426.43
+    ],
+    "max": [
+     3393.8,
+     3360.0,
+     1159.29
+    ],
+    "meshes": 230,
+    "triangles": 2406
+   }
+  },
+  {
+   "path": "scenes/DELPHI.VVR",
+   "bucket": "scenes",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 54894,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Archlogy/ARCHSCN/DELPHI.VVR"
+   ],
+   "prisms": 72,
+   "groups": 1,
+   "profiles": {
+    "straight": 72
+   },
+   "slicedPrisms": 9,
+   "decoratedFaces": 10,
+   "features": 3,
+   "bounds": {
+    "min": [
+     -8640.0,
+     -8640.0,
+     -120.0
+    ],
+    "max": [
+     8640.0,
+     8640.0,
+     2628.0
+    ],
+    "meshes": 77,
+    "triangles": 1333
    }
   },
   {
@@ -19977,17 +23067,17 @@
    "features": 28,
    "bounds": {
     "min": [
-     -5039.98,
-     -1919.99,
-     -200.02
+     -1260.0,
+     -480.0,
+     -6.0
     ],
     "max": [
-     1919.99,
-     4799.98,
-     1919.99
+     480.0,
+     1200.0,
+     480.0
     ],
-    "meshes": 621,
-    "triangles": 7682
+    "meshes": 640,
+    "triangles": 7674
    }
   },
   {
@@ -20022,8 +23112,8 @@
      1245.85,
      425.0
     ],
-    "meshes": 157,
-    "triangles": 2702
+    "meshes": 133,
+    "triangles": 2654
    }
   },
   {
@@ -20031,12 +23121,14 @@
    "bucket": "scenes",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 7240,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/SCENES/FAMLYRMA.VVR",
-    "D3D/2026_New_Exports/KESIGN3D/SCENES/FAMLYRMA.VVR"
+    "D3D/2026_New_Exports/KESIGN3D/SCENES/FAMLYRMA.VVR",
+    "D3D/2026_New_Exports/VirVRML/Homerem/HOMEMOD/FAMLYRMA.VVR"
    ],
    "prisms": 11,
    "groups": 0,
@@ -20057,8 +23149,8 @@
      4068.0,
      132.0
     ],
-    "meshes": 15,
-    "triangles": 177
+    "meshes": 14,
+    "triangles": 175
    }
   },
   {
@@ -20091,11 +23183,11 @@
     ],
     "max": [
      648.0,
-     492.12,
+     324.0,
      180.0
     ],
     "meshes": 274,
-    "triangles": 3391
+    "triangles": 3451
    }
   },
   {
@@ -20103,12 +23195,14 @@
    "bucket": "scenes",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 15880,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/SCENES/GARAGE.VVR",
-    "D3D/2026_New_Exports/KESIGN3D/SCENES/GARAGE.VVR"
+    "D3D/2026_New_Exports/KESIGN3D/SCENES/GARAGE.VVR",
+    "D3D/2026_New_Exports/VirVRML/Homerem/HOMEMOD/GARAGE.VVR"
    ],
    "prisms": 30,
    "groups": 2,
@@ -20129,7 +23223,7 @@
      4068.0,
      264.0
     ],
-    "meshes": 119,
+    "meshes": 121,
     "triangles": 550
    }
   },
@@ -20165,8 +23259,8 @@
      12000.0,
      156.0
     ],
-    "meshes": 699,
-    "triangles": 3713
+    "meshes": 700,
+    "triangles": 3709
    }
   },
   {
@@ -20192,17 +23286,85 @@
    "features": 51,
    "bounds": {
     "min": [
-     -86.0,
-     0.0,
+     -86.05,
+     -0.05,
      -12.0
     ],
     "max": [
-     332.0,
+     332.05,
      264.0,
      84.0
     ],
     "meshes": 206,
-    "triangles": 2339
+    "triangles": 2315
+   }
+  },
+  {
+   "path": "scenes/GREATPYR.VVR",
+   "bucket": "scenes",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 174484,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Archlogy/ARCHSCN/GREATPYR.VVR"
+   ],
+   "prisms": 89,
+   "groups": 1,
+   "profiles": {
+    "pointed": 1,
+    "straight": 88
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 38,
+   "features": 6,
+   "bounds": {
+    "min": [
+     -12000.0,
+     -12000.0,
+     -3600.0
+    ],
+    "max": [
+     16800.0,
+     12000.0,
+     5999.99
+    ],
+    "meshes": 93,
+    "triangles": 1126
+   }
+  },
+  {
+   "path": "scenes/HINDEN.VVR",
+   "bucket": "scenes",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 157854,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Scenes/HINDEN.VVR"
+   ],
+   "prisms": 14,
+   "groups": 4,
+   "profiles": {
+    "straight": 12,
+    "rounded": 2
+   },
+   "slicedPrisms": 2,
+   "decoratedFaces": 12,
+   "features": 61,
+   "bounds": {
+    "min": [
+     -12053.07,
+     -10800.0,
+     0.0
+    ],
+    "max": [
+     12053.07,
+     10800.0,
+     10800.0
+    ],
+    "meshes": 130,
+    "triangles": 992
    }
   },
   {
@@ -20228,17 +23390,17 @@
    "features": 47,
    "bounds": {
     "min": [
-     0.0,
+     -0.05,
      -40.0,
      0.0
     ],
     "max": [
      127.0,
-     131.0,
+     131.05,
      96.0
     ],
     "meshes": 119,
-    "triangles": 1524
+    "triangles": 1522
    }
   },
   {
@@ -20273,8 +23435,42 @@
      17668.47,
      1101.27
     ],
-    "meshes": 492,
-    "triangles": 2981
+    "meshes": 511,
+    "triangles": 2996
+   }
+  },
+  {
+   "path": "scenes/HOUSESQD__virvrml.VVR",
+   "bucket": "scenes",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 181800,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Scenes/HOUSESQD.VVR"
+   ],
+   "prisms": 159,
+   "groups": 15,
+   "profiles": {
+    "straight": 157,
+    "sphere": 2
+   },
+   "slicedPrisms": 13,
+   "decoratedFaces": 124,
+   "features": 329,
+   "bounds": {
+    "min": [
+     -17643.16,
+     -16468.47,
+     -1992.31
+    ],
+    "max": [
+     16493.78,
+     17668.47,
+     627.27
+    ],
+    "meshes": 511,
+    "triangles": 2996
    }
   },
   {
@@ -20310,8 +23506,44 @@
      1300.0,
      245.0
     ],
-    "meshes": 508,
-    "triangles": 5509
+    "meshes": 534,
+    "triangles": 5697
+   }
+  },
+  {
+   "path": "scenes/INDUST.VVR",
+   "bucket": "scenes",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 77806,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Scenes/INDUST.VVR"
+   ],
+   "prisms": 295,
+   "groups": 16,
+   "profiles": {
+    "straight": 289,
+    "pointed": 1,
+    "sphere": 4,
+    "rounded": 1
+   },
+   "slicedPrisms": 41,
+   "decoratedFaces": 26,
+   "features": 118,
+   "bounds": {
+    "min": [
+     -24.0,
+     -0.05,
+     -0.1
+    ],
+    "max": [
+     240.0,
+     203.31,
+     96.0
+    ],
+    "meshes": 421,
+    "triangles": 6335
    }
   },
   {
@@ -20345,8 +23577,8 @@
      6000.0,
      411.0
     ],
-    "meshes": 737,
-    "triangles": 4222
+    "meshes": 798,
+    "triangles": 5302
    }
   },
   {
@@ -20380,8 +23612,8 @@
      6000.0,
      411.0
     ],
-    "meshes": 737,
-    "triangles": 4222
+    "meshes": 798,
+    "triangles": 5302
    }
   },
   {
@@ -20419,7 +23651,7 @@
      360.0
     ],
     "meshes": 434,
-    "triangles": 6454
+    "triangles": 6496
    }
   },
   {
@@ -20444,17 +23676,17 @@
    "features": 194,
    "bounds": {
     "min": [
-     0.0,
-     -12.0,
+     -0.05,
+     -6.0,
      0.0
     ],
     "max": [
-     378.0,
-     360.0,
-     228.0
+     189.0,
+     180.0,
+     114.0
     ],
-    "meshes": 416,
-    "triangles": 4428
+    "meshes": 423,
+    "triangles": 4424
    }
   },
   {
@@ -20462,12 +23694,14 @@
    "bucket": "scenes",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 10454,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/SCENES/KITCHENA.VVR",
-    "D3D/2026_New_Exports/KESIGN3D/SCENES/KITCHB.VVR"
+    "D3D/2026_New_Exports/KESIGN3D/SCENES/KITCHB.VVR",
+    "D3D/2026_New_Exports/VirVRML/Homerem/HOMEMOD/KITCHENA.VVR"
    ],
    "prisms": 12,
    "groups": 0,
@@ -20488,8 +23722,8 @@
      4068.0,
      120.0
     ],
-    "meshes": 55,
-    "triangles": 358
+    "meshes": 44,
+    "triangles": 328
    }
   },
   {
@@ -20497,12 +23731,14 @@
    "bucket": "scenes",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 18728,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/SCENES/KITCHENB.VVR",
-    "D3D/2026_New_Exports/KESIGN3D/SCENES/KITCHENA.VVR"
+    "D3D/2026_New_Exports/KESIGN3D/SCENES/KITCHENA.VVR",
+    "D3D/2026_New_Exports/VirVRML/Homerem/HOMEMOD/KITCHENB.VVR"
    ],
    "prisms": 59,
    "groups": 7,
@@ -20523,8 +23759,8 @@
      4068.0,
      126.0
     ],
-    "meshes": 86,
-    "triangles": 843
+    "meshes": 82,
+    "triangles": 828
    }
   },
   {
@@ -20532,12 +23768,14 @@
    "bucket": "scenes",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 29712,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/SCENES/KITCHENC.VVR",
-    "D3D/2026_New_Exports/KESIGN3D/SCENES/KITCHENB.VVR"
+    "D3D/2026_New_Exports/KESIGN3D/SCENES/KITCHENB.VVR",
+    "D3D/2026_New_Exports/VirVRML/Homerem/HOMEMOD/KITCHB.VVR"
    ],
    "prisms": 91,
    "groups": 7,
@@ -20558,8 +23796,8 @@
      4068.0,
      96.0
     ],
-    "meshes": 197,
-    "triangles": 1819
+    "meshes": 209,
+    "triangles": 1817
    }
   },
   {
@@ -20586,17 +23824,52 @@
    "features": 271,
    "bounds": {
     "min": [
-     -996.02,
-     -6.17,
+     -498.01,
+     -3.14,
      -0.05
     ],
     "max": [
-     -383.46,
-     756.25,
-     378.48
+     -191.73,
+     378.13,
+     180.25
     ],
-    "meshes": 456,
-    "triangles": 4203
+    "meshes": 473,
+    "triangles": 4225
+   }
+  },
+  {
+   "path": "scenes/LIVDIN.VVR",
+   "bucket": "scenes",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 120884,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Scenes/LIVDIN.VVR"
+   ],
+   "prisms": 464,
+   "groups": 9,
+   "profiles": {
+    "straight": 447,
+    "sphere": 10,
+    "rounded": 7
+   },
+   "slicedPrisms": 43,
+   "decoratedFaces": 89,
+   "features": 220,
+   "bounds": {
+    "min": [
+     -0.05,
+     -66.0,
+     -6.0
+    ],
+    "max": [
+     360.05,
+     396.05,
+     240.05
+    ],
+    "meshes": 702,
+    "triangles": 9700
    }
   },
   {
@@ -20604,12 +23877,14 @@
    "bucket": "scenes",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 9530,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/SCENES/LIVROOMA.VVR",
-    "D3D/2026_New_Exports/KESIGN3D/SCENES/LIVING.VVR"
+    "D3D/2026_New_Exports/KESIGN3D/SCENES/LIVING.VVR",
+    "D3D/2026_New_Exports/VirVRML/Homerem/HOMEMOD/LIVROOM.VVR"
    ],
    "prisms": 22,
    "groups": 6,
@@ -20630,8 +23905,8 @@
      4068.0,
      120.0
     ],
-    "meshes": 54,
-    "triangles": 360
+    "meshes": 53,
+    "triangles": 356
    }
   },
   {
@@ -20639,12 +23914,14 @@
    "bucket": "scenes",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 12032,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/SCENES/LIVROOMB.VVR",
-    "D3D/2026_New_Exports/KESIGN3D/SCENES/LIVINGB.VVR"
+    "D3D/2026_New_Exports/KESIGN3D/SCENES/LIVINGB.VVR",
+    "D3D/2026_New_Exports/VirVRML/Homerem/HOMEMOD/LIVINGB.VVR"
    ],
    "prisms": 29,
    "groups": 1,
@@ -20666,7 +23943,7 @@
      120.0
     ],
     "meshes": 54,
-    "triangles": 419
+    "triangles": 412
    }
   },
   {
@@ -20674,12 +23951,14 @@
    "bucket": "scenes",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 16766,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/SCENES/LIVROOMC.VVR",
-    "D3D/2026_New_Exports/KESIGN3D/SCENES/LIVROOM.VVR"
+    "D3D/2026_New_Exports/KESIGN3D/SCENES/LIVROOM.VVR",
+    "D3D/2026_New_Exports/VirVRML/Homerem/HOMEMOD/LIVING.VVR"
    ],
    "prisms": 5,
    "groups": 0,
@@ -20700,8 +23979,8 @@
      4068.0,
      132.0
     ],
-    "meshes": 106,
-    "triangles": 278
+    "meshes": 101,
+    "triangles": 264
    }
   },
   {
@@ -20727,17 +24006,17 @@
    "features": 36,
    "bounds": {
     "min": [
-     -324.0,
-     -300.0,
+     -162.0,
+     -150.0,
      0.0
     ],
     "max": [
-     192.0,
-     144.0,
-     192.0
+     96.0,
+     72.0,
+     96.0
     ],
-    "meshes": 169,
-    "triangles": 7537
+    "meshes": 187,
+    "triangles": 7819
    }
   },
   {
@@ -20770,8 +24049,8 @@
      4504.62,
      2392.21
     ],
-    "meshes": 379,
-    "triangles": 2095
+    "meshes": 397,
+    "triangles": 2093
    }
   },
   {
@@ -20804,8 +24083,42 @@
      4504.62,
      2392.21
     ],
-    "meshes": 379,
-    "triangles": 2095
+    "meshes": 398,
+    "triangles": 2093
+   }
+  },
+  {
+   "path": "scenes/MOUNTAIN__virvrml.VVR",
+   "bucket": "scenes",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 81326,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Homerem/HOMESCN/MOUNTAIN.VVR"
+   ],
+   "prisms": 99,
+   "groups": 5,
+   "profiles": {
+    "straight": 98,
+    "pointed": 1
+   },
+   "slicedPrisms": 12,
+   "decoratedFaces": 76,
+   "features": 274,
+   "bounds": {
+    "min": [
+     -4363.01,
+     -3396.92,
+     -247.79
+    ],
+    "max": [
+     4732.24,
+     4504.62,
+     2392.21
+    ],
+    "meshes": 398,
+    "triangles": 2093
    }
   },
   {
@@ -20838,7 +24151,7 @@
      6000.0,
      11640.0
     ],
-    "meshes": 220,
+    "meshes": 227,
     "triangles": 2303
    }
   },
@@ -20872,7 +24185,41 @@
      6000.0,
      11640.0
     ],
-    "meshes": 220,
+    "meshes": 227,
+    "triangles": 2303
+   }
+  },
+  {
+   "path": "scenes/OCEANFLR__virvrml.VVR",
+   "bucket": "scenes",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 180962,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Scenes/OCEANFLR.VVR"
+   ],
+   "prisms": 122,
+   "groups": 8,
+   "profiles": {
+    "straight": 121,
+    "rounded": 1
+   },
+   "slicedPrisms": 4,
+   "decoratedFaces": 58,
+   "features": 84,
+   "bounds": {
+    "min": [
+     -6000.0,
+     -6000.0,
+     -360.0
+    ],
+    "max": [
+     6000.0,
+     6000.0,
+     11640.0
+    ],
+    "meshes": 227,
     "triangles": 2303
    }
   },
@@ -20881,12 +24228,14 @@
    "bucket": "scenes",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 10944,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/SCENES/OCTAGNAL.VVR",
-    "D3D/2026_New_Exports/KESIGN3D/SCENES/OCTAGNAL.VVR"
+    "D3D/2026_New_Exports/KESIGN3D/SCENES/OCTAGNAL.VVR",
+    "D3D/2026_New_Exports/VirVRML/Homerem/HOMEMOD/OCTAGNAL.VVR"
    ],
    "prisms": 5,
    "groups": 1,
@@ -20907,8 +24256,8 @@
      4068.0,
      132.0
     ],
-    "meshes": 63,
-    "triangles": 264
+    "meshes": 57,
+    "triangles": 244
    }
   },
   {
@@ -20934,16 +24283,50 @@
    "bounds": {
     "min": [
      -288.0,
-     0.0,
+     -0.05,
      0.0
     ],
     "max": [
      384.0,
-     336.0,
+     336.05,
      96.0
     ],
-    "meshes": 465,
-    "triangles": 1140
+    "meshes": 466,
+    "triangles": 1138
+   }
+  },
+  {
+   "path": "scenes/PASSAGEG.VVR",
+   "bucket": "scenes",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 22160,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Archlogy/ARCHSCN/PASSAGEG.VVR"
+   ],
+   "prisms": 54,
+   "groups": 1,
+   "profiles": {
+    "straight": 53,
+    "rounded": 1
+   },
+   "slicedPrisms": 4,
+   "decoratedFaces": 7,
+   "features": 5,
+   "bounds": {
+    "min": [
+     -5580.0,
+     -4986.0,
+     -180.0
+    ],
+    "max": [
+     5460.0,
+     6054.0,
+     384.0
+    ],
+    "meshes": 55,
+    "triangles": 1952
    }
   },
   {
@@ -20978,8 +24361,8 @@
      6108.0,
      252.0
     ],
-    "meshes": 80,
-    "triangles": 3687
+    "meshes": 104,
+    "triangles": 3723
    }
   },
   {
@@ -21011,19 +24394,21 @@
      4068.0,
      252.0
     ],
-    "meshes": 151,
-    "triangles": 1030
+    "meshes": 201,
+    "triangles": 1028
    }
   },
   {
    "path": "scenes/PEAKED__kesign3d.VVR",
    "bucket": "scenes",
    "apps": [
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 27538,
    "sources": [
-    "D3D/2026_New_Exports/KESIGN3D/SCENES/PEAKED.VVR"
+    "D3D/2026_New_Exports/KESIGN3D/SCENES/PEAKED.VVR",
+    "D3D/2026_New_Exports/VirVRML/Homerem/HOMEMOD/PEAKED.VVR"
    ],
    "prisms": 66,
    "groups": 18,
@@ -21044,8 +24429,8 @@
      4068.0,
      252.0
     ],
-    "meshes": 151,
-    "triangles": 1030
+    "meshes": 201,
+    "triangles": 1028
    }
   },
   {
@@ -21080,8 +24465,8 @@
      4440.99,
      360.62
     ],
-    "meshes": 558,
-    "triangles": 6908
+    "meshes": 541,
+    "triangles": 6870
    }
   },
   {
@@ -21089,12 +24474,14 @@
    "bucket": "scenes",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 23774,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/SCENES/PGARAGE.VVR",
-    "D3D/2026_New_Exports/KESIGN3D/SCENES/PGARAGE.VVR"
+    "D3D/2026_New_Exports/KESIGN3D/SCENES/PGARAGE.VVR",
+    "D3D/2026_New_Exports/VirVRML/Homerem/HOMEMOD/PGARAGE.VVR"
    ],
    "prisms": 34,
    "groups": 2,
@@ -21116,8 +24503,8 @@
      4068.0,
      240.0
     ],
-    "meshes": 299,
-    "triangles": 1266
+    "meshes": 300,
+    "triangles": 1264
    }
   },
   {
@@ -21125,12 +24512,14 @@
    "bucket": "scenes",
    "apps": [
     "designit",
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 66510,
    "sources": [
     "D3D/2026_New_Exports/DESIGNIT/SCENES/POPE.VVR",
-    "D3D/2026_New_Exports/KESIGN3D/SCENES/POPE.VVR"
+    "D3D/2026_New_Exports/KESIGN3D/SCENES/POPE.VVR",
+    "D3D/2026_New_Exports/VirVRML/Homerem/HOMESCN/POPE.VVR"
    ],
    "prisms": 194,
    "groups": 6,
@@ -21151,8 +24540,41 @@
      3894.55,
      133.0
     ],
-    "meshes": 370,
-    "triangles": 2863
+    "meshes": 375,
+    "triangles": 2849
+   }
+  },
+  {
+   "path": "scenes/QUARAIMI.VVR",
+   "bucket": "scenes",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 69298,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Archlogy/ARCHSCN/QUARAIMI.VVR"
+   ],
+   "prisms": 141,
+   "groups": 5,
+   "profiles": {
+    "straight": 141
+   },
+   "slicedPrisms": 2,
+   "decoratedFaces": 10,
+   "features": 0,
+   "bounds": {
+    "min": [
+     -10800.0,
+     -10800.0,
+     -192.0
+    ],
+    "max": [
+     10800.0,
+     10800.0,
+     3480.0
+    ],
+    "meshes": 144,
+    "triangles": 1792
    }
   },
   {
@@ -21179,15 +24601,15 @@
    "bounds": {
     "min": [
      6.0,
-     -120.0,
+     -120.05,
      -0.0
     ],
     "max": [
-     366.0,
-     420.0,
+     366.05,
+     420.05,
      96.0
     ],
-    "meshes": 212,
+    "meshes": 215,
     "triangles": 2717
    }
   },
@@ -21223,7 +24645,7 @@
      5588.82,
      565.69
     ],
-    "meshes": 420,
+    "meshes": 426,
     "triangles": 2038
    }
   },
@@ -21259,8 +24681,8 @@
      4800.0,
      312.0
     ],
-    "meshes": 631,
-    "triangles": 7554
+    "meshes": 830,
+    "triangles": 7586
    }
   },
   {
@@ -21297,6 +24719,172 @@
    }
   },
   {
+   "path": "scenes/ROMANAQU.VVR",
+   "bucket": "scenes",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 36474,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Archlogy/ARCHSCN/ROMANAQU.VVR"
+   ],
+   "prisms": 170,
+   "groups": 19,
+   "profiles": {
+    "straight": 170
+   },
+   "slicedPrisms": 3,
+   "decoratedFaces": 3,
+   "features": 0,
+   "bounds": {
+    "min": [
+     -3600.0,
+     -3360.0,
+     -600.0
+    ],
+    "max": [
+     3600.0,
+     3360.0,
+     1320.0
+    ],
+    "meshes": 172,
+    "triangles": 2103
+   }
+  },
+  {
+   "path": "scenes/ROMANBRI.VVR",
+   "bucket": "scenes",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 39548,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Archlogy/ARCHSCN/ROMANBRI.VVR"
+   ],
+   "prisms": 160,
+   "groups": 9,
+   "profiles": {
+    "straight": 160
+   },
+   "slicedPrisms": 2,
+   "decoratedFaces": 11,
+   "features": 7,
+   "bounds": {
+    "min": [
+     -5228.81,
+     -4710.0,
+     -240.0
+    ],
+    "max": [
+     4800.0,
+     4890.0,
+     420.0
+    ],
+    "meshes": 176,
+    "triangles": 2457
+   }
+  },
+  {
+   "path": "scenes/ROMANHS1.VVR",
+   "bucket": "scenes",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 20510,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Archlogy/ARCHSCN/ROMANHS1.VVR"
+   ],
+   "prisms": 56,
+   "groups": 1,
+   "profiles": {
+    "straight": 56
+   },
+   "slicedPrisms": 4,
+   "decoratedFaces": 26,
+   "features": 34,
+   "bounds": {
+    "min": [
+     -720.0,
+     -720.0,
+     -252.0
+    ],
+    "max": [
+     720.0,
+     480.0,
+     360.0
+    ],
+    "meshes": 72,
+    "triangles": 796
+   }
+  },
+  {
+   "path": "scenes/ROMANHS2.VVR",
+   "bucket": "scenes",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 27866,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Archlogy/ARCHSCN/ROMANHS2.VVR"
+   ],
+   "prisms": 55,
+   "groups": 1,
+   "profiles": {
+    "straight": 53,
+    "pointed": 2
+   },
+   "slicedPrisms": 4,
+   "decoratedFaces": 24,
+   "features": 15,
+   "bounds": {
+    "min": [
+     -1680.0,
+     -504.0,
+     -60.0
+    ],
+    "max": [
+     2520.0,
+     1260.0,
+     288.0
+    ],
+    "meshes": 64,
+    "triangles": 860
+   }
+  },
+  {
+   "path": "scenes/ROMANRD.VVR",
+   "bucket": "scenes",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 24526,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Archlogy/ARCHSCN/ROMANRD.VVR"
+   ],
+   "prisms": 83,
+   "groups": 5,
+   "profiles": {
+    "straight": 83
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 7,
+   "features": 8,
+   "bounds": {
+    "min": [
+     -1230.0,
+     -1200.0,
+     -36.0
+    ],
+    "max": [
+     1170.0,
+     1140.0,
+     420.0
+    ],
+    "meshes": 91,
+    "triangles": 1098
+   }
+  },
+  {
    "path": "scenes/ROOMS1.VVR",
    "bucket": "scenes",
    "apps": [
@@ -21318,8 +24906,8 @@
    "features": 699,
    "bounds": {
     "min": [
-     0.0,
-     -120.0,
+     -0.05,
+     -120.05,
      -0.0
     ],
     "max": [
@@ -21327,8 +24915,8 @@
      336.92,
      96.0
     ],
-    "meshes": 837,
-    "triangles": 1978
+    "meshes": 834,
+    "triangles": 1972
    }
   },
   {
@@ -21358,12 +24946,12 @@
      -0.5
     ],
     "max": [
-     143.41,
-     264.0,
+     143.46,
+     264.05,
      120.0
     ],
-    "meshes": 106,
-    "triangles": 277
+    "meshes": 107,
+    "triangles": 275
    }
   },
   {
@@ -21389,16 +24977,16 @@
    "bounds": {
     "min": [
      -240.0,
-     0.0,
+     -0.05,
      0.0
     ],
     "max": [
-     242.0,
-     288.0,
+     156.0,
+     288.05,
      96.0
     ],
-    "meshes": 290,
-    "triangles": 720
+    "meshes": 285,
+    "triangles": 704
    }
   },
   {
@@ -21423,13 +25011,13 @@
    "features": 538,
    "bounds": {
     "min": [
-     -408.0,
-     0.0,
+     -408.05,
+     -0.05,
      -0.0
     ],
     "max": [
-     144.0,
-     546.0,
+     144.05,
+     432.05,
      96.0
     ],
     "meshes": 551,
@@ -21458,17 +25046,17 @@
    "features": 455,
    "bounds": {
     "min": [
-     0.0,
+     -0.05,
      0.0,
      -0.46
     ],
     "max": [
      768.0,
-     576.0,
-     214.18
+     576.05,
+     192.0
     ],
-    "meshes": 474,
-    "triangles": 1463
+    "meshes": 472,
+    "triangles": 1453
    }
   },
   {
@@ -21494,16 +25082,16 @@
    "bounds": {
     "min": [
      -120.5,
-     0.0,
+     -0.05,
      -0.0
     ],
     "max": [
-     696.0,
-     439.0,
+     696.05,
+     432.05,
      96.0
     ],
-    "meshes": 543,
-    "triangles": 1376
+    "meshes": 540,
+    "triangles": 1370
    }
   },
   {
@@ -21528,17 +25116,17 @@
    "features": 229,
    "bounds": {
     "min": [
-     -240.0,
-     0.0,
+     -240.05,
+     -0.05,
      -0.0
     ],
     "max": [
-     72.0,
-     288.0,
+     72.05,
+     288.05,
      96.0
     ],
     "meshes": 242,
-    "triangles": 664
+    "triangles": 658
    }
   },
   {
@@ -21563,17 +25151,17 @@
    "features": 119,
    "bounds": {
     "min": [
-     -120.0,
+     -120.05,
      0.0,
      0.0
     ],
     "max": [
-     240.0,
+     240.05,
      288.0,
      96.0
     ],
-    "meshes": 123,
-    "triangles": 298
+    "meshes": 121,
+    "triangles": 294
    }
   },
   {
@@ -21607,8 +25195,8 @@
      1776.0,
      96.0
     ],
-    "meshes": 73,
-    "triangles": 252
+    "meshes": 72,
+    "triangles": 250
    }
   },
   {
@@ -21642,8 +25230,8 @@
      1620.0,
      96.0
     ],
-    "meshes": 141,
-    "triangles": 368
+    "meshes": 140,
+    "triangles": 366
    }
   },
   {
@@ -21677,8 +25265,8 @@
      1548.0,
      96.0
     ],
-    "meshes": 184,
-    "triangles": 617
+    "meshes": 181,
+    "triangles": 611
    }
   },
   {
@@ -21702,17 +25290,17 @@
    "features": 137,
    "bounds": {
     "min": [
-     -243.24,
-     -599.38,
-     -0.02
+     -121.62,
+     -299.74,
+     -0.01
     ],
     "max": [
-     243.24,
-     -0.27,
-     536.0
+     121.62,
+     -0.14,
+     268.0
     ],
-    "meshes": 151,
-    "triangles": 1060
+    "meshes": 149,
+    "triangles": 1024
    }
   },
   {
@@ -21736,17 +25324,17 @@
    "features": 137,
    "bounds": {
     "min": [
-     -243.24,
-     -599.38,
-     -0.02
+     -121.62,
+     -299.74,
+     -0.01
     ],
     "max": [
-     243.24,
-     -0.27,
-     536.0
+     121.62,
+     -0.14,
+     268.0
     ],
-    "meshes": 151,
-    "triangles": 1060
+    "meshes": 149,
+    "triangles": 1024
    }
   },
   {
@@ -21783,8 +25371,8 @@
      2400.0,
      96.01
     ],
-    "meshes": 303,
-    "triangles": 6137
+    "meshes": 305,
+    "triangles": 6515
    }
   },
   {
@@ -21820,8 +25408,8 @@
      12000.0,
      180.0
     ],
-    "meshes": 861,
-    "triangles": 7290
+    "meshes": 867,
+    "triangles": 7390
    }
   },
   {
@@ -21857,8 +25445,8 @@
      1200.0,
      144.0
     ],
-    "meshes": 704,
-    "triangles": 9158
+    "meshes": 717,
+    "triangles": 9482
    }
   },
   {
@@ -21883,17 +25471,50 @@
    "features": 100,
    "bounds": {
     "min": [
-     -989.23,
-     -1973.86,
-     -0.61
+     -95.99,
+     -194.99,
+     -0.06
     ],
     "max": [
-     996.64,
-     2195.08,
-     743.33
+     97.22,
+     216.01,
+     74.33
     ],
-    "meshes": 335,
-    "triangles": 3834
+    "meshes": 328,
+    "triangles": 3810
+   }
+  },
+  {
+   "path": "scenes/STONEHNG.VVR",
+   "bucket": "scenes",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 29878,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Archlogy/ARCHSCN/STONEHNG.VVR"
+   ],
+   "prisms": 93,
+   "groups": 2,
+   "profiles": {
+    "straight": 93
+   },
+   "slicedPrisms": 33,
+   "decoratedFaces": 2,
+   "features": 3,
+   "bounds": {
+    "min": [
+     -4800.0,
+     -4800.0,
+     -600.0
+    ],
+    "max": [
+     4800.0,
+     4800.0,
+     240.0
+    ],
+    "meshes": 96,
+    "triangles": 3098
    }
   },
   {
@@ -21926,8 +25547,8 @@
      7200.0,
      432.0
     ],
-    "meshes": 452,
-    "triangles": 6040
+    "meshes": 454,
+    "triangles": 6034
    }
   },
   {
@@ -21960,8 +25581,8 @@
      7200.0,
      432.0
     ],
-    "meshes": 470,
-    "triangles": 6136
+    "meshes": 460,
+    "triangles": 6106
    }
   },
   {
@@ -21997,8 +25618,42 @@
      4800.0,
      336.0
     ],
-    "meshes": 245,
-    "triangles": 4862
+    "meshes": 244,
+    "triangles": 4861
+   }
+  },
+  {
+   "path": "scenes/SUNROOM.VVR",
+   "bucket": "scenes",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 79338,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Scenes/SUNROOM.VVR"
+   ],
+   "prisms": 276,
+   "groups": 18,
+   "profiles": {
+    "straight": 275,
+    "rounded": 1
+   },
+   "slicedPrisms": 29,
+   "decoratedFaces": 56,
+   "features": 178,
+   "bounds": {
+    "min": [
+     -306.0,
+     -240.0,
+     -60.0
+    ],
+    "max": [
+     281.59,
+     264.0,
+     240.0
+    ],
+    "meshes": 538,
+    "triangles": 6432
    }
   },
   {
@@ -22023,17 +25678,51 @@
    "features": 29,
    "bounds": {
     "min": [
-     -144.0,
+     -144.05,
      -192.0,
      0.0
     ],
     "max": [
-     288.0,
+     288.05,
      192.0,
-     96.0
+     96.05
     ],
-    "meshes": 122,
+    "meshes": 130,
     "triangles": 1506
+   }
+  },
+  {
+   "path": "scenes/TEMPLENP.VVR",
+   "bucket": "scenes",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 67420,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Archlogy/ARCHSCN/TEMPLENP.VVR"
+   ],
+   "prisms": 258,
+   "groups": 62,
+   "profiles": {
+    "pointed": 124,
+    "straight": 134
+   },
+   "slicedPrisms": 126,
+   "decoratedFaces": 0,
+   "features": 0,
+   "bounds": {
+    "min": [
+     -7680.0,
+     -6960.0,
+     -276.0
+    ],
+    "max": [
+     8640.0,
+     9360.0,
+     792.0
+    ],
+    "meshes": 258,
+    "triangles": 5119
    }
   },
   {
@@ -22060,17 +25749,52 @@
    "features": 60,
    "bounds": {
     "min": [
-     -2160.0,
-     -3600.0,
-     -480.0
+     -1080.0,
+     -1800.0,
+     -240.0
     ],
     "max": [
-     2400.0,
-     3600.0,
-     557.0
+     1200.0,
+     1800.0,
+     278.5
     ],
-    "meshes": 256,
-    "triangles": 3804
+    "meshes": 311,
+    "triangles": 3800
+   }
+  },
+  {
+   "path": "scenes/THEBURBS__virvrml.VVR",
+   "bucket": "scenes",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 89750,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Homerem/HOMESCN/THEBURBS.VVR"
+   ],
+   "prisms": 195,
+   "groups": 5,
+   "profiles": {
+    "straight": 189,
+    "pointed": 4,
+    "rounded": 2
+   },
+   "slicedPrisms": 7,
+   "decoratedFaces": 191,
+   "features": 60,
+   "bounds": {
+    "min": [
+     -4583.61,
+     -4504.92,
+     -275.41
+    ],
+    "max": [
+     4622.95,
+     4701.64,
+     2340.98
+    ],
+    "meshes": 313,
+    "triangles": 3828
    }
   },
   {
@@ -22104,8 +25828,8 @@
      2400.0,
      168.0
     ],
-    "meshes": 539,
-    "triangles": 8568
+    "meshes": 558,
+    "triangles": 8566
    }
   },
   {
@@ -22139,8 +25863,8 @@
      2400.0,
      168.0
     ],
-    "meshes": 539,
-    "triangles": 8568
+    "meshes": 558,
+    "triangles": 8566
    }
   },
   {
@@ -22167,17 +25891,51 @@
    "features": 866,
    "bounds": {
     "min": [
-     249.01,
+     248.96,
      26.5,
      20.0
     ],
     "max": [
      549.95,
-     210.98,
+     211.48,
      115.0
     ],
-    "meshes": 966,
-    "triangles": 3270
+    "meshes": 989,
+    "triangles": 3480
+   }
+  },
+  {
+   "path": "scenes/TRELLEBG.VVR",
+   "bucket": "scenes",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 28220,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Archlogy/ARCHSCN/TRELLEBG.VVR"
+   ],
+   "prisms": 83,
+   "groups": 7,
+   "profiles": {
+    "straight": 82,
+    "pointed": 1
+   },
+   "slicedPrisms": 4,
+   "decoratedFaces": 5,
+   "features": 13,
+   "bounds": {
+    "min": [
+     -7200.0,
+     -7200.0,
+     -600.0
+    ],
+    "max": [
+     7200.0,
+     7200.0,
+     414.0
+    ],
+    "meshes": 95,
+    "triangles": 1241
    }
   },
   {
@@ -22205,15 +25963,114 @@
     "min": [
      522.0,
      196.0,
-     -8.5
+     0.0
     ],
     "max": [
-     924.0,
+     924.05,
      354.0,
      198.0
     ],
-    "meshes": 488,
-    "triangles": 8676
+    "meshes": 487,
+    "triangles": 8930
+   }
+  },
+  {
+   "path": "scenes/VIKINGHS.VVR",
+   "bucket": "scenes",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 24000,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Archlogy/ARCHSCN/VIKINGHS.VVR"
+   ],
+   "prisms": 81,
+   "groups": 10,
+   "profiles": {
+    "straight": 81
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 9,
+   "features": 18,
+   "bounds": {
+    "min": [
+     -6300.0,
+     -6000.0,
+     -600.0
+    ],
+    "max": [
+     5700.0,
+     6000.0,
+     176.0
+    ],
+    "meshes": 99,
+    "triangles": 1150
+   }
+  },
+  {
+   "path": "scenes/VRLOGO.VVR",
+   "bucket": "scenes",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 370942,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Scenes/VRLOGO.VVR"
+   ],
+   "prisms": 13,
+   "groups": 1,
+   "profiles": {
+    "straight": 13
+   },
+   "slicedPrisms": 1,
+   "decoratedFaces": 7,
+   "features": 9,
+   "bounds": {
+    "min": [
+     -854.41,
+     -1286.41,
+     -836.4
+    ],
+    "max": [
+     1814.41,
+     1382.41,
+     114.77
+    ],
+    "meshes": 33,
+    "triangles": 627
+   }
+  },
+  {
+   "path": "scenes/WHTHOUS.VVR",
+   "bucket": "scenes",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 152024,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Scenes/WHTHOUS.VVR"
+   ],
+   "prisms": 139,
+   "groups": 0,
+   "profiles": {
+    "straight": 139
+   },
+   "slicedPrisms": 10,
+   "decoratedFaces": 99,
+   "features": 154,
+   "bounds": {
+    "min": [
+     -5783.78,
+     -5975.77,
+     -287.99
+    ],
+    "max": [
+     6215.76,
+     9623.63,
+     791.97
+    ],
+    "meshes": 340,
+    "triangles": 2773
    }
   },
   {
@@ -22245,8 +26102,8 @@
      9623.63,
      791.97
     ],
-    "meshes": 308,
-    "triangles": 2761
+    "meshes": 344,
+    "triangles": 2773
    }
   },
   {
@@ -22278,9 +26135,120 @@
      9623.63,
      791.97
     ],
-    "meshes": 308,
-    "triangles": 2761
+    "meshes": 344,
+    "triangles": 2773
    }
+  },
+  {
+   "path": "scenes/ZIGGURAT.VVR",
+   "bucket": "scenes",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 29240,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Archlogy/ARCHSCN/ZIGGURAT.VVR"
+   ],
+   "prisms": 63,
+   "groups": 3,
+   "profiles": {
+    "straight": 60,
+    "rounded": 1,
+    "pointed": 2
+   },
+   "slicedPrisms": 3,
+   "decoratedFaces": 11,
+   "features": 49,
+   "bounds": {
+    "min": [
+     -12000.0,
+     -12000.0,
+     -3000.0
+    ],
+    "max": [
+     12000.0,
+     12000.0,
+     4344.0
+    ],
+    "meshes": 115,
+    "triangles": 1009
+   }
+  },
+  {
+   "path": "textures/@VRMLsym.tlb",
+   "bucket": "textures",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 224116,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Textures/@VRMLsym.tlb"
+   ],
+   "prisms": 7,
+   "groups": 0,
+   "profiles": {
+    "straight": 7
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 0,
+   "features": 0
+  },
+  {
+   "path": "textures/@briktil.tlb",
+   "bucket": "textures",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 83272,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Textures/@briktil.tlb"
+   ],
+   "prisms": 1,
+   "groups": 0,
+   "profiles": {
+    "straight": 1
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 5,
+   "features": 0
+  },
+  {
+   "path": "textures/@exter.tlb",
+   "bucket": "textures",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 74860,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Textures/@exter.tlb"
+   ],
+   "prisms": 1,
+   "groups": 0,
+   "profiles": {
+    "straight": 1
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 5,
+   "features": 0
+  },
+  {
+   "path": "textures/@outdor.tlb",
+   "bucket": "textures",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 99400,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Textures/@outdor.tlb"
+   ],
+   "prisms": 1,
+   "groups": 0,
+   "profiles": {
+    "straight": 1
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 5,
+   "features": 0
   },
   {
    "path": "textures/BLACKTIL.TLB",
@@ -22318,6 +26286,44 @@
    },
    "slicedPrisms": 0,
    "decoratedFaces": 0,
+   "features": 0
+  },
+  {
+   "path": "textures/Brick__virvrml.tlb",
+   "bucket": "textures",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 113070,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/BTexture/Stone/Brick.tlb"
+   ],
+   "prisms": 4,
+   "groups": 0,
+   "profiles": {
+    "straight": 4
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 0,
+   "features": 0
+  },
+  {
+   "path": "textures/Bricks.tlb",
+   "bucket": "textures",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 83272,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/BTexture/Pattern/Bricks.tlb"
+   ],
+   "prisms": 1,
+   "groups": 0,
+   "profiles": {
+    "straight": 1
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 5,
    "features": 0
   },
   {
@@ -22588,6 +26594,25 @@
    "features": 0
   },
   {
+   "path": "textures/Gold.tlb",
+   "bucket": "textures",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 18622,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/BTexture/Metal/Gold.tlb"
+   ],
+   "prisms": 1,
+   "groups": 0,
+   "profiles": {
+    "straight": 1
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 0,
+   "features": 0
+  },
+  {
    "path": "textures/KNOBCORD.TLB",
    "bucket": "textures",
    "apps": [
@@ -22686,11 +26711,13 @@
    "path": "textures/MONALISA.TLB",
    "bucket": "textures",
    "apps": [
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 265122,
    "sources": [
-    "D3D/2026_New_Exports/KESIGN3D/BTEXTURE/MONALISA.TLB"
+    "D3D/2026_New_Exports/KESIGN3D/BTEXTURE/MONALISA.TLB",
+    "D3D/2026_New_Exports/VirVRML/BTexture/Art/mona.tlb"
    ],
    "prisms": 3,
    "groups": 0,
@@ -22700,6 +26727,63 @@
    "slicedPrisms": 0,
    "decoratedFaces": 3,
    "features": 3
+  },
+  {
+   "path": "textures/Masonry.tlb",
+   "bucket": "textures",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 219908,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/BTexture/Stone/Masonry.tlb"
+   ],
+   "prisms": 10,
+   "groups": 0,
+   "profiles": {
+    "straight": 10
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 0,
+   "features": 0
+  },
+  {
+   "path": "textures/Material.tlb",
+   "bucket": "textures",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 680570,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/BTexture/Pattern/Material.tlb"
+   ],
+   "prisms": 10,
+   "groups": 0,
+   "profiles": {
+    "straight": 10
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 0,
+   "features": 0
+  },
+  {
+   "path": "textures/Metals.tlb",
+   "bucket": "textures",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 183930,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/BTexture/Metal/Metals.tlb"
+   ],
+   "prisms": 10,
+   "groups": 0,
+   "profiles": {
+    "straight": 10
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 0,
+   "features": 0
   },
   {
    "path": "textures/OUTSIDE.TLB",
@@ -22724,11 +26808,13 @@
    "path": "textures/PATTERNS.TLB",
    "bucket": "textures",
    "apps": [
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 79814,
    "sources": [
-    "D3D/2026_New_Exports/KESIGN3D/BTEXTURE/PATTERNS.TLB"
+    "D3D/2026_New_Exports/KESIGN3D/BTEXTURE/PATTERNS.TLB",
+    "D3D/2026_New_Exports/VirVRML/BTexture/Pattern/Pattern.tlb"
    ],
    "prisms": 5,
    "groups": 0,
@@ -22800,11 +26886,13 @@
    "path": "textures/STONES.TLB",
    "bucket": "textures",
    "apps": [
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 125118,
    "sources": [
-    "D3D/2026_New_Exports/KESIGN3D/BTEXTURE/STONES.TLB"
+    "D3D/2026_New_Exports/KESIGN3D/BTEXTURE/STONES.TLB",
+    "D3D/2026_New_Exports/VirVRML/BTexture/Stone/Stones.tlb"
    ],
    "prisms": 5,
    "groups": 0,
@@ -22813,6 +26901,63 @@
    },
    "slicedPrisms": 0,
    "decoratedFaces": 0,
+   "features": 0
+  },
+  {
+   "path": "textures/Sand.tlb",
+   "bucket": "textures",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 144394,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/BTexture/Stone/Sand.tlb"
+   ],
+   "prisms": 3,
+   "groups": 0,
+   "profiles": {
+    "straight": 3
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 1,
+   "features": 0
+  },
+  {
+   "path": "textures/Scoured.tlb",
+   "bucket": "textures",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 28082,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/BTexture/Stone/Scoured.tlb"
+   ],
+   "prisms": 1,
+   "groups": 0,
+   "profiles": {
+    "straight": 1
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 2,
+   "features": 0
+  },
+  {
+   "path": "textures/Stars.tlb",
+   "bucket": "textures",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 18654,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/BTexture/Nature/Stars.tlb"
+   ],
+   "prisms": 1,
+   "groups": 0,
+   "profiles": {
+    "straight": 1
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 1,
    "features": 0
   },
   {
@@ -22857,11 +27002,13 @@
    "path": "textures/TRELPAPR.TLB",
    "bucket": "textures",
    "apps": [
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 125570,
    "sources": [
-    "D3D/2026_New_Exports/KESIGN3D/BTEXTURE/TRELPAPR.TLB"
+    "D3D/2026_New_Exports/KESIGN3D/BTEXTURE/TRELPAPR.TLB",
+    "D3D/2026_New_Exports/VirVRML/BTexture/Pattern/treepap.tlb"
    ],
    "prisms": 7,
    "groups": 0,
@@ -22911,14 +27058,54 @@
    "features": 0
   },
   {
+   "path": "textures/Tiles.tlb",
+   "bucket": "textures",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 174640,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/BTexture/Pattern/Tiles.tlb"
+   ],
+   "prisms": 7,
+   "groups": 0,
+   "profiles": {
+    "straight": 7
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 0,
+   "features": 0
+  },
+  {
+   "path": "textures/Trees.tlb",
+   "bucket": "textures",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 18654,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/BTexture/Nature/Trees.tlb"
+   ],
+   "prisms": 1,
+   "groups": 0,
+   "profiles": {
+    "straight": 1
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 1,
+   "features": 0
+  },
+  {
    "path": "textures/WOOD.TLB",
    "bucket": "textures",
    "apps": [
-    "kesign3d"
+    "kesign3d",
+    "virvrml"
    ],
    "bytes": 268082,
    "sources": [
-    "D3D/2026_New_Exports/KESIGN3D/TEXTURES/WOOD.TLB"
+    "D3D/2026_New_Exports/KESIGN3D/TEXTURES/WOOD.TLB",
+    "D3D/2026_New_Exports/VirVRML/BTexture/Wood/wood1.tlb"
    ],
    "prisms": 15,
    "groups": 0,
@@ -22927,6 +27114,25 @@
    },
    "slicedPrisms": 0,
    "decoratedFaces": 0,
+   "features": 0
+  },
+  {
+   "path": "textures/Water.tlb",
+   "bucket": "textures",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 10518,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/BTexture/Nature/Water.tlb"
+   ],
+   "prisms": 1,
+   "groups": 0,
+   "profiles": {
+    "straight": 1
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 3,
    "features": 0
   },
   {
@@ -22965,6 +27171,311 @@
    },
    "slicedPrisms": 0,
    "decoratedFaces": 0,
+   "features": 0
+  },
+  {
+   "path": "textures/camo.tlb",
+   "bucket": "textures",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 10716,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/BTexture/Nature/camo.tlb"
+   ],
+   "prisms": 1,
+   "groups": 0,
+   "profiles": {
+    "straight": 1
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 5,
+   "features": 0
+  },
+  {
+   "path": "textures/clouds.tlb",
+   "bucket": "textures",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 10462,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/BTexture/Nature/clouds.tlb"
+   ],
+   "prisms": 1,
+   "groups": 0,
+   "profiles": {
+    "straight": 1
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 1,
+   "features": 0
+  },
+  {
+   "path": "textures/concret.tlb",
+   "bucket": "textures",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 135920,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/BTexture/Stone/concret.tlb"
+   ],
+   "prisms": 8,
+   "groups": 0,
+   "profiles": {
+    "straight": 8
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 16,
+   "features": 0
+  },
+  {
+   "path": "textures/flower.tlb",
+   "bucket": "textures",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 70940,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/BTexture/Nature/flower.tlb"
+   ],
+   "prisms": 3,
+   "groups": 0,
+   "profiles": {
+    "straight": 3
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 0,
+   "features": 0
+  },
+  {
+   "path": "textures/grass1.tlb",
+   "bucket": "textures",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 18654,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/BTexture/Nature/grass1.tlb"
+   ],
+   "prisms": 1,
+   "groups": 0,
+   "profiles": {
+    "straight": 1
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 1,
+   "features": 0
+  },
+  {
+   "path": "textures/grass2.tlb",
+   "bucket": "textures",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 28282,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/BTexture/Nature/grass2.tlb"
+   ],
+   "prisms": 1,
+   "groups": 0,
+   "profiles": {
+    "straight": 1
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 6,
+   "features": 0
+  },
+  {
+   "path": "textures/images.tlb",
+   "bucket": "textures",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 404844,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Archlogy/Textures/images.tlb",
+    "D3D/2026_New_Exports/VirVRML/BTexture/Art/images.tlb"
+   ],
+   "prisms": 4,
+   "groups": 0,
+   "profiles": {
+    "straight": 4
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 4,
+   "features": 0
+  },
+  {
+   "path": "textures/inout.tlb",
+   "bucket": "textures",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 74816,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Homerem/Textures/inout.tlb"
+   ],
+   "prisms": 1,
+   "groups": 0,
+   "profiles": {
+    "straight": 1
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 5,
+   "features": 0
+  },
+  {
+   "path": "textures/marbtil.tlb",
+   "bucket": "textures",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 91712,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Homerem/Textures/marbtil.tlb"
+   ],
+   "prisms": 1,
+   "groups": 0,
+   "profiles": {
+    "straight": 1
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 5,
+   "features": 0
+  },
+  {
+   "path": "textures/maswood.tlb",
+   "bucket": "textures",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 176714,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Archlogy/Textures/maswood.tlb"
+   ],
+   "prisms": 6,
+   "groups": 0,
+   "profiles": {
+    "straight": 6
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 0,
+   "features": 0
+  },
+  {
+   "path": "textures/mount.tlb",
+   "bucket": "textures",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 18654,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/BTexture/Nature/mount.tlb"
+   ],
+   "prisms": 1,
+   "groups": 0,
+   "profiles": {
+    "straight": 1
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 1,
+   "features": 0
+  },
+  {
+   "path": "textures/outdoor.tlb",
+   "bucket": "textures",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 74816,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Homerem/Textures/outdoor.tlb"
+   ],
+   "prisms": 1,
+   "groups": 0,
+   "profiles": {
+    "straight": 1
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 5,
+   "features": 0
+  },
+  {
+   "path": "textures/outdoor__virvrml.tlb",
+   "bucket": "textures",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 169382,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/BTexture/Nature/outdoor.tlb"
+   ],
+   "prisms": 2,
+   "groups": 0,
+   "profiles": {
+    "straight": 2
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 10,
+   "features": 0
+  },
+  {
+   "path": "textures/steelsat.tlb",
+   "bucket": "textures",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 36256,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/BTexture/Metal/steelsat.tlb"
+   ],
+   "prisms": 1,
+   "groups": 0,
+   "profiles": {
+    "straight": 1
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 2,
+   "features": 0
+  },
+  {
+   "path": "textures/stones__virvrml.tlb",
+   "bucket": "textures",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 125118,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/Archlogy/Textures/stones.tlb"
+   ],
+   "prisms": 5,
+   "groups": 0,
+   "profiles": {
+    "straight": 5
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 0,
+   "features": 0
+  },
+  {
+   "path": "textures/wood2.tlb",
+   "bucket": "textures",
+   "apps": [
+    "virvrml"
+   ],
+   "bytes": 129942,
+   "sources": [
+    "D3D/2026_New_Exports/VirVRML/BTexture/Wood/wood2.tlb"
+   ],
+   "prisms": 10,
+   "groups": 0,
+   "profiles": {
+    "straight": 10
+   },
+   "slicedPrisms": 0,
+   "decoratedFaces": 3,
    "features": 0
   }
  ]

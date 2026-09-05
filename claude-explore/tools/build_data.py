@@ -26,6 +26,32 @@ ROUTES = [
     ('2026_New_Exports/KESIGN3D/TEXTURES', 'textures',    'kesign3d'),
     ('2026_New_Exports/DESIGNIT/G',        'misc',        'designit'),
     ('MiscVVR',                            'misc',        'designit'),
+    # Virtus VRML -- the same engine one product generation later, and the only
+    # build in which textures actually render. Its content is largely NEW:
+    # the Archaeology and Cyberspace/Temple/Corporate model sets, the Dealey
+    # Plaza and Hindenburg scenes, and 31 texture libraries.
+    ('2026_New_Exports/VirVRML/2GALLERY',        'galleries2d', 'virvrml'),
+    ('2026_New_Exports/VirVRML/3GALLERY',        'galleries3d', 'virvrml'),
+    ('2026_New_Exports/VirVRML/Scenes',          'scenes',      'virvrml'),
+    ('2026_New_Exports/VirVRML/Archlogy/ARCHSCN', 'scenes',     'virvrml'),
+    ('2026_New_Exports/VirVRML/Homerem/HOMESCN', 'scenes',      'virvrml'),
+    ('2026_New_Exports/VirVRML/Homerem/HOMEMOD', 'scenes',      'virvrml'),
+    ('2026_New_Exports/VirVRML/Models/Corp',     'models',      'virvrml'),
+    ('2026_New_Exports/VirVRML/Models/Cspace',   'models',      'virvrml'),
+    ('2026_New_Exports/VirVRML/Models/Cspace/Library', 'models', 'virvrml'),
+    ('2026_New_Exports/VirVRML/Models/Cspace/Logon',   'models', 'virvrml'),
+    ('2026_New_Exports/VirVRML/Models/Temple',   'models',      'virvrml'),
+    ('2026_New_Exports/VirVRML/Tutorial',        'misc',        'virvrml'),
+    ('2026_New_Exports/VirVRML/Tutorial/WRLS',   'misc',        'virvrml'),
+    ('2026_New_Exports/VirVRML/Textures',           'textures', 'virvrml'),
+    ('2026_New_Exports/VirVRML/Archlogy/Textures',  'textures', 'virvrml'),
+    ('2026_New_Exports/VirVRML/Homerem/Textures',   'textures', 'virvrml'),
+    ('2026_New_Exports/VirVRML/BTexture/Art',       'textures', 'virvrml'),
+    ('2026_New_Exports/VirVRML/BTexture/Metal',     'textures', 'virvrml'),
+    ('2026_New_Exports/VirVRML/BTexture/Nature',    'textures', 'virvrml'),
+    ('2026_New_Exports/VirVRML/BTexture/Pattern',   'textures', 'virvrml'),
+    ('2026_New_Exports/VirVRML/BTexture/Stone',     'textures', 'virvrml'),
+    ('2026_New_Exports/VirVRML/BTexture/Wood',      'textures', 'virvrml'),
 ]
 EXTS = ('.VVR', '.WLB', '.TLB')
 

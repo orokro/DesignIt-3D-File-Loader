@@ -9,6 +9,13 @@ import clip as _clip
 SLIC_MODE = 'clip'  # 'off' | 'clip' | 'hinge' -- see findings/slic.md
 SLIC_FILTER = None  # optional fn(index, nrec, eslc_row) -> bool
 SLIC_KEEP_NEG = False
+# 'postscale' is a REJECTED hypothesis, kept switchable because it looked good:
+# `Brutus de Milo`'s prisms carry the most non-uniform POSN scales in the corpus
+# (0.089, 0.172, 0.068) and are the only object whose SLIC cutting is badly
+# wrong, so "the plane is authored in the space the object is DRAWN in" fit the
+# symptom exactly. Measured against the app's own VRML export it is WORSE --
+# it destroys solids outright (Brutus 1/9 vs 1/15). Leave it on 'prescale'.
+SLIC_SPACE = 'prescale'   # 'prescale' | 'postscale' -- which space the plane is in
 SKEW_MODE = 'near'  # 'off' | 'far' | 'near' -- POLY's oblique-sweep offset
 
 STRAIGHT, POINTED, DIAMOND, ROUNDED, SPHERE = 1, 2, 3, 4, 5
@@ -385,6 +392,15 @@ def prsm_mesh(prsm):
             o = 2 + i * 16
             nn = np.array([iff.fp(sl.data, o), iff.fp(sl.data, o + 4), iff.fp(sl.data, o + 8)])
             dd = iff.fp(sl.data, o + 12)
+            if SLIC_SPACE == 'postscale':
+                # If the plane were authored in the space the object is DRAWN in
+                # -- after POSN's scale -- then n.(S p) + d = (S n).p + d, so the
+                # pre-scale normal is the component-wise product with the scale.
+                _ps = prsm.kid('POSN')
+                if _ps is not None and len(_ps.data) >= 48:
+                    _sc = np.array([iff.fp(_ps.data, 36), iff.fp(_ps.data, 40), iff.fp(_ps.data, 44)])
+                    if np.all(np.abs(_sc) > 1e-9):
+                        nn = nn * _sc
             if not np.any(np.abs(nn) > 1e-9):
                 continue
             erow = ([iff.fp(es.data, 2 + i * 40 + j * 4) for j in range(10)]

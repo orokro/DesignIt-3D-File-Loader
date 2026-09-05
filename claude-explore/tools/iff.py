@@ -121,6 +121,15 @@ def _parse_seq(buf, start, end, parent, strict=True):
             c.data = buf[body:stop]
         parent.children.append(c)
         off = stop
+        # IFF-85 PADS an odd-length chunk to an even boundary, and this format
+        # does too -- it simply never came up. Every chunk in the SoftKey corpus
+        # happens to have an even length, so "exact lengths, no padding" held
+        # for 393 files and was written into the spec as fact. The Virtus VRML
+        # content breaks it: `VRAN` carries a URL, and
+        # `file:///kitchen.wrl` is 19 bytes, followed by a 00 before the next
+        # chunk. Without this, three tutorial files fail to parse.
+        if ln % 2 and off < end and buf[off] == 0:
+            off += 1
 
 
 def parse(buf):

@@ -33,6 +33,14 @@ lengths are exact and always happen to be even.
 | `.WLB` | `CAT <VCLP>` | A gallery library — many `FORM<VCLP>` clips |
 | `.TLB` | `FORM<VMDL>` | Texture library (Key Design 3-D only) |
 
+> **Odd-length chunks ARE padded to an even boundary.** ✅ This spec said the
+> opposite for the whole project — "exact lengths, no even-byte padding" — and
+> it held for 393 files because every chunk the SoftKey applications write
+> happens to have an even length. The Virtus VRML content breaks it: `VRAN`
+> carries a URL, `file:///kitchen.wrl` is 19 bytes, and a `00` follows it before
+> the next chunk. Three tutorial files fail to parse without this. A rule
+> confirmed by an entire corpus can still be an accident of that corpus.
+
 ### Container rules
 
 | Tag | Payload |
@@ -674,6 +682,15 @@ the top-level `POSN` translation. ✅ (The user's 130 single-object exports matc
 the gallery definitions byte-for-byte in `POLY` and `COLR`.)
 
 ---
+
+## 6.5 Chunks that only appear in Virtus VRML ✅
+
+| chunk | count | parent | meaning |
+|---|---|---|---|
+| `VRAN` | 7 | FEAT, PRSM, SURF | **a VRML anchor — a URL on a surface.** `myhouse.wrl`, `kitchen.wrl`, `http://www.pella.com/`. Click a door, jump to another world. This is the whole point of the VRML product, and it is why odd-length chunks and padding finally show up. |
+| `CRED` | 6 | FORM | a `BMAP` image in **exactly the `TXPD` layout** — 8-bit + `CMAP`, ~355x252. A per-scene preview render: Dealey Plaza's book depository, the Hindenburg, the Virtus VR logo. All six decode. |
+| `PHMD` | 12 | FORM | 26 bytes, byte-identical in every file that has it. Inert. |
+| `SUGR` | 7 | SURF | 4 bytes, `00 02 01 01` or `00 02 00 00`. NOT a container — treating it as one breaks two scenes. |
 
 ## 7. Complete chunk census
 
