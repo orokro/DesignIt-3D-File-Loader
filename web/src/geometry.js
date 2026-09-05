@@ -256,7 +256,10 @@ export function prismMesh(prsm) {
   }
   const ccw = sarea > 0;
 
-  const sideId = (r, i) => 1 + r * n + (n - 1 - i);
+  // A side face is named by the vertex its edge ARRIVES at, plus one: edge
+  // v_j -> v_j+1 is face (j+1)+1, and face 1 is the edge that closes the
+  // polygon back onto vertex 0. Must match d3d.py's side_id.
+  const sideId = (r, i) => 1 + r * n + ((i + 1) % n);
   const faces = [], fids = [];
   for (let r = 0; r < nband; r++) {
     const lo = ringIdx[r], hi = ringIdx[r + 1];   // lo is the HIGHER end
@@ -336,6 +339,27 @@ function compact(verts, faces) {
   return { verts: order.map((i) => verts[i]), faces: faces.map((f) => f.map((i) => remap.get(i))) };
 }
 
+/**
+ * SURF face-index -> RGB override. A SURF can carry a COLR that RECOLOURS its
+ * face; 548 of them across the galleries were previously ignored.
+ *
+ * Its COLR is NOT laid out like a PRSM's -- there is a 2-byte prefix first:
+ *     6 B   prefix 1 or 3, then ONE (a,r,g,b)     96 records
+ *    10 B   prefix 2,      then TWO (a,r,g,b)    452 records
+ * so `00 02 00 ff ff ff 00 ff ff ff` is white, not the dark blue you get by
+ * reading bytes 1-3 as a PRSM colour. The prefix looks like the same
+ * outside/inside/both selector FEAT uses, one-based.
+ */
+export function surfColours(prsm) {
+  const out = new Map();
+  for (const surf of prsm.kids('SURF')) {
+    const c = surf.kid('COLR');
+    if (!c || c.data.byteLength < 6) continue;
+    out.set(u16(surf.hdr, 0), [c.data.getUint8(3), c.data.getUint8(4), c.data.getUint8(5)]);
+  }
+  return out;
+}
+
 export function colorOf(prsm) {
   const c = prsm.kid('COLR');
   if (!c || c.data.byteLength < 8) return [170, 170, 170];
@@ -351,12 +375,19 @@ export function colorOf(prsm) {
  */
 export function faceFrame(verts, tris) {
   const idx = [...new Set(tris.flat())];
-  let best = 0, nrm = null;
+  // Area-weighted sum over the whole face, not the single largest triangle:
+  // one triangle's cross product carries enough float noise to flip the
+  // dominant-axis test below on a face sitting at exactly 45 degrees.
+  let best = 0, nbest = null;
+  const acc = [0, 0, 0];
   for (const t of tris) {
     const cr = cross(sub(verts[t[1]], verts[t[0]]), sub(verts[t[2]], verts[t[0]]));
+    acc[0] += cr[0]; acc[1] += cr[1]; acc[2] += cr[2];
     const l = len(cr);
-    if (l > best) { best = l; nrm = [cr[0] / l, cr[1] / l, cr[2] / l]; }
+    if (l > best) { best = l; nbest = [cr[0] / l, cr[1] / l, cr[2] / l]; }
   }
+  const la = len(acc);
+  let nrm = la > 1e-9 ? [acc[0] / la, acc[1] / la, acc[2] / la] : nbest;
   if (!nrm || best < 1e-9) return null;
   const ctr = [0, 0, 0];
   for (const v of verts) { ctr[0] += v[0] / verts.length; ctr[1] += v[1] / verts.length; ctr[2] += v[2] / verts.length; }
@@ -364,8 +395,11 @@ export function faceFrame(verts, tris) {
   for (const i of idx) { fc[0] += verts[i][0] / idx.length; fc[1] += verts[i][1] / idx.length; fc[2] += verts[i][2] / idx.length; }
   if (dot(nrm, sub(fc, ctr)) < 0) nrm = mul(nrm, -1);
 
+  // Break an exact tie towards the LOWEST axis index, so that two mirrored
+  // faces get mirrored frames instead of transposed ones -- see d3d.py.
+  let mx = Math.max(Math.abs(nrm[0]), Math.abs(nrm[1]), Math.abs(nrm[2]));
   let drop = 0;
-  for (let i = 1; i < 3; i++) if (Math.abs(nrm[i]) > Math.abs(nrm[drop])) drop = i;
+  for (let i = 0; i < 3; i++) if (Math.abs(nrm[i]) >= mx - 1e-6) { drop = i; break; }
   const ax = [0, 1, 2].filter((i) => i !== drop);
   let u = [0, 0, 0]; u[ax[0]] = 1;
   let v = [0, 0, 0]; v[ax[1]] = 1;
@@ -516,7 +550,27 @@ export function collect(node, out = [], unit = null) {
       const m = prismMesh(k);
       if (m) {
         const world = m.verts.map((p) => apply(W, p));
-        out.push({ verts: world, faces: m.faces, color: colorOf(k), poly: m.poly, isFeature: false });
+        const base = colorOf(k);
+        const over = surfColours(k);
+        if (over.size && m.faceIds) {
+          const groups = new Map();
+          m.faces.forEach((tri, i) => {
+            const col = over.get(m.faceIds[i]) || base;
+            const key = col.join(',');
+            if (!groups.has(key)) groups.set(key, { color: col, faces: [] });
+            groups.get(key).faces.push(tri);
+          });
+          // sorted: Python groups the same way, so the two stay comparable
+          for (const key of [...groups.keys()].sort((a, b) => {
+            const A = a.split(',').map(Number), B = b.split(',').map(Number);
+            return A[0] - B[0] || A[1] - B[1] || A[2] - B[2];
+          })) {
+            const g = groups.get(key);
+            out.push({ verts: world, faces: g.faces, color: g.color, poly: m.poly, isFeature: false });
+          }
+        } else {
+          out.push({ verts: world, faces: m.faces, color: base, poly: m.poly, isFeature: false });
+        }
         if (options.drawSurf) {
           for (const f of surfaceFeatures(k, m)) {
             f.verts = f.verts.map((p) => apply(W, p));

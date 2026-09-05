@@ -284,15 +284,64 @@ straight ones. Full derivation in `findings/slic.md`.
 ### 4.7 `SURF` / `FEAT` — per-face overrides ✅
 
 `SURF` carries a 2-byte face index and then a `COLR` (recolour that face), any
-number of `FEAT` records (2D shapes on it), or both. Face numbering is
+number of `FEAT` records (2D shapes on it), or both.
+
+**A `SURF`'s `COLR` is not laid out like a `PRSM`'s.** ✅ There is a 2-byte prefix
+first, and the length follows it:
+
+```
+ 6 B    prefix 1 or 3, then ONE  (a, r, g, b)      96 records
+10 B    prefix 2,      then TWO  (a, r, g, b)     452 records
+```
+
+A `PRSM`'s own 8-byte `COLR` is the same two-record body with no prefix, and its
+two records carry identical RGB in 6643 of 6647 cases — which fits the
+application's two-sided-surface model, where a face can be coloured differently
+inside and out. The prefix looks like the same outside/inside/both selector
+`FEAT` uses, one-based: 1 and 3 take a single colour, 2 takes a pair.
+
+Reading a `SURF` `COLR` at the `PRSM` offsets picks the prefix up as part of the
+colour: `00 02 00 ff ff ff 00 ff ff ff` is white, but bytes 1–3 read it as
+`(0x02, 0x00, 0xff)`, a dark blue. All 548 per-face recolours were previously
+ignored outright. Face numbering is
 `side quads (band-major)`, then the two caps, then one face per `SLIC` cut —
 99.84 % of indices in the corpus fall in that range.
 
 Rings run from the **high** end of the sweep to the low end, which is why
 `POLY`'s two sweep bounds are stored in an order that flips between objects.
-Face 0 is the cap at that high end, faces `1 .. bands*n` are the sides (polygon
-edges traversed backwards within each band), face `bands*n + 1` is the low cap,
-and cut faces follow.
+Face 0 is the cap at that high end, faces `1 .. bands*n` are the sides, face
+`bands*n + 1` is the low cap, and cut faces follow.
+
+**A side face is named after the vertex its edge ARRIVES at, plus one.** The
+edge `v_j -> v_j+1` is face `(j+1) + 1`, so face 1 is the edge that closes the
+polygon back onto vertex 0:
+
+```
+    side_id(band, edge i) = 1 + band*n + ((i + 1) % n)
+```
+
+This corrects a long-standing error: the sides were being numbered by walking
+the edges BACKWARDS. On a rectangular prism the two rules differ only by
+swapping OPPOSITE faces, so every oracle that measures bounding boxes scored
+them identically and the renders merely looked odd rather than broken -- the
+`Lectern`'s pages painted on its underside, the `Microwave, undercabinet`'s
+control panel on its back. On a profile with an odd or irregular vertex count
+the rules diverge properly and the decoration lands in mid-air, which is what
+the `Bar Sink`'s floating basin was. Measured with `tools/facefit.py`, which
+asks which individual FACE an outline fits on rather than which bounding box:
+
+| side numbering | decorations that do not fit their stored face |
+|---|---|
+| edges backwards (old) | 126 / 2532 (4.98 %) |
+| **arriving vertex (current)** | **22 / 2532 (0.87 %)** |
+
+`decalfit.py` fell from 94/2932 to 15/2932 on the same change.
+
+> **Lift a decoration off its face by `SURF_OFFSET` INCHES, not by that many
+> local units.** A prism's `W` carries the object's `UNIT` scale and its own
+> `POSN` scale, so a fixed local offset shrinks by whatever those come to — 4× on
+> a quarter-inch-unit object, 16× on a sixteenth. Divide by
+> `|W[:3,:3] · normal|`.
 
 `FEAT`'s 2-byte header is the Outside / Inside / Both selector (values 0, 1, 2).
 Full details in `findings/surf.md`.

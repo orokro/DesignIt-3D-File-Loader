@@ -262,6 +262,11 @@ def prsm_mesh(prsm):
     ccw = sarea > 0
 
     def side_id(r, i):
+        if FACE_ORDER == 'end':
+            # A side face is named by the vertex its edge ARRIVES at, plus one:
+            # edge v_j -> v_j+1 is face (j+1)+1. Face 1 is therefore the edge
+            # that closes the polygon back onto vertex 0.
+            return 1 + r * n + ((i + 1) % n)
         return 1 + r * n + (n - 1 - i)
 
     for r in range(nband):
@@ -367,6 +372,38 @@ def _compact(verts, faces):
     return verts[used], [tuple(remap[i] for i in f) for f in faces]
 
 
+def surf_colours(prsm):
+    """SURF face-index -> RGB override. {} if the prism has none.
+
+    A `SURF` can carry a `COLR` that RECOLOURS its face, and this was never
+    implemented -- 548 of them across the galleries were being ignored.
+
+    Its COLR is NOT laid out like a PRSM's. There is a 2-byte prefix first, and
+    the length follows it:
+
+        6 B    prefix 1 or 3, then ONE  (a, r, g, b)     96 records
+       10 B    prefix 2,      then TWO  (a, r, g, b)    452 records
+
+    A PRSM's own 8-byte COLR is the same two-record body with no prefix, and its
+    two records almost always carry identical RGB -- which fits the application's
+    two-sided-surface model, where a face can be coloured differently inside and
+    out. The prefix looks like the same outside/inside/both selector `FEAT` uses,
+    one-based: 1 and 3 take a single colour, 2 takes a pair.
+
+    Reading a SURF COLR at the PRSM offsets picks up the prefix as part of the
+    colour: `00 02 00 ff ff ff 00 ff ff ff` is white, but bytes 1-3 read it as
+    (0x02, 0x00, 0xff), a dark blue.
+    """
+    out = {}
+    for surf in prsm.kids('SURF'):
+        c = surf.kid('COLR')
+        if c is None or len(c.data) < 6:
+            continue
+        d = c.data
+        out[iff.u16(surf.hdr, 0)] = (d[3], d[4], d[5])
+    return out
+
+
 def color_of(prsm):
     c = prsm.kid('COLR')
     if c is None or len(c.data) < 8:
@@ -427,7 +464,16 @@ def collect(node, M, out, unit=None):
                 v, f, poly, fids = m
                 vh = np.hstack([v, np.ones((len(v), 1))])
                 wv = (W @ vh.T).T[:, :3]
-                out.append((wv, f, color_of(k), poly))
+                base = color_of(k)
+                over = surf_colours(k)
+                if over and fids is not None:
+                    groups = {}
+                    for tri, fid in zip(f, fids):
+                        groups.setdefault(over.get(fid, base), []).append(tri)
+                    for col in sorted(groups):          # sorted: JS must match
+                        out.append((wv, groups[col], col, poly))
+                else:
+                    out.append((wv, f, base, poly))
                 if DRAW_SURF:
                     out.extend(surface_features(k, v, f, fids, W))
         collect(k, W, out, u)
@@ -450,6 +496,7 @@ def scene_meshes(path_or_chunk):
 # ---------------------------------------------------------------------------
 
 DRAW_SURF = True
+FACE_ORDER = 'end'       # 'end' | 'rev' -- how SURF face ids map to profile edges
 SURF_OFFSET = 0.05      # inches to lift a decoration off its face, to beat z-fighting
 
 # FEAT's 2-byte header selects which side of the surface is decorated.
@@ -475,19 +522,36 @@ def face_frame(verts, tris):
     P = verts[idx]
     # use the largest triangle of the face -- clipping can leave slivers whose
     # cross product is numerically useless
-    best, nrm = 0.0, None
+    # Area-weighted sum over the whole face, not the single largest triangle.
+    # One triangle's cross product carries enough float noise to flip the
+    # dominant-axis test below on a face that sits at exactly 45 degrees, and a
+    # sum is both more accurate and cheaper to reason about. Keep the largest
+    # triangle only as the degenerate fallback.
+    acc = np.zeros(3)
+    best, nbest = 0.0, None
     for t in tris:
         a, b, c = verts[t[0]], verts[t[1]], verts[t[2]]
         cr = np.cross(b - a, c - a)
+        acc += cr
         ln = float(np.linalg.norm(cr))
         if ln > best:
-            best, nrm = ln, cr / ln
+            best, nbest = ln, cr / ln
+    la = float(np.linalg.norm(acc))
+    nrm = acc / la if la > 1e-9 else nbest
     if nrm is None or best < 1e-9:
         return None
     # point the normal away from the solid so decorations sit on the outside
     if float(nrm @ (P.mean(0) - verts.mean(0))) < 0:
         nrm = -nrm
-    drop = int(np.argmax(np.abs(nrm)))
+    # Which world axis to drop. A plane at exactly 45 degrees ties two axes, and
+    # `argmax` then decides on whatever the last ulp of the cross product says --
+    # so the `Jersey Cow`'s two flanks, which are mirror images of one another,
+    # got TRANSPOSED frames: one kept (Y, Z), the other (X, Y). The spot painted
+    # on the second flank was laid out along a 7-inch axis using a 59-inch
+    # coordinate and flew off into space. Break the tie towards the lowest axis
+    # index instead, so mirrored faces get mirrored frames.
+    a_n = np.abs(nrm)
+    drop = int(np.flatnonzero(a_n >= a_n.max() - 1e-6)[0])
     ax = [i for i in range(3) if i != drop]          # ascending order
     u = np.zeros(3); u[ax[0]] = 1.0
     v = np.zeros(3); v[ax[1]] = 1.0
@@ -605,8 +669,15 @@ def surface_features(prsm, verts, faces, fids, W):
             # check whether the subset is defined by a parsing failure before
             # inventing semantics for it.
             origin = corner
+            # Lift the decoration off its face by SURF_OFFSET INCHES, not by
+            # SURF_OFFSET local units. A prism carries the object's UNIT scale
+            # and its own POSN scale in W, so a fixed local offset shrinks by
+            # whatever those come to -- 4x on a quarter-inch-unit object, 16x on
+            # a sixteenth. That is what turned the `Microwave Oven`'s front into
+            # z-fighting speckle the moment UNIT scaling was implemented.
+            wn = np.linalg.norm(W[:3, :3] @ nrm) or 1.0
             for sgn in ((1, -1) if side == FEAT_BOTH else (1,) if side != FEAT_INSIDE else (-1,)):
-                off = nrm * (SURF_OFFSET * sgn)
+                off = nrm * (SURF_OFFSET * sgn / wn)
                 pv = np.array([origin + u * a + v * b + off for (a, b) in pts2])
                 tri = triangulate([(p @ u, p @ v) for p in pv])
                 if not tri:

@@ -368,25 +368,60 @@ The angles aren't needed for geometry and are ❓.
 This is where all the remaining bugs are. **113 of 2,932 decals (3.9 %) still
 land outside the prism they decorate.**
 
-### 10.1 Face numbering ✅ (twice re-verified)
+### 10.1 Face numbering ✅ (corrected — the old rule was wrong)
 
 ```
    face 0            cap at the HIGH end of the sweep
-   1 .. bands·n      side faces, band-major,
-                     polygon edges traversed BACKWARDS within a band
+   1 .. bands·n      side faces, band-major; the edge v_j -> v_j+1
+                     is face ((j+1) mod n) + 1, i.e. a side face is
+                     named after the vertex its edge ARRIVES at
    bands·n + 1       cap at the LOW end
    bands·n + 2 + k   the face created by SLIC cut k
 ```
 
-I swept six alternative numberings (edges forward, sides-first, low cap after the
-cuts, caps swapped, bands reversed) against the containment oracle **twice** —
-once before the coordinate-frame fixes and once after. The current scheme won
-both times. So whatever's left is not a global renumbering.
+**This section previously claimed the sides were the polygon's edges traversed
+BACKWARDS, "twice re-verified".** It was wrong, and the way it was wrong is the
+most useful lesson in this document.
+
+The verification swept six alternative numberings against the containment
+oracle. But that oracle asks only whether a decal escapes its prism's bounding
+BOX — and on a rectangular prism the backwards rule and the correct rule differ
+*only by swapping opposite faces*. Opposite faces of a box have identical
+extents and sit inside the same bounding box, so the oracle scored the right
+answer and the wrong answer exactly the same, and reported a tie as a win. Six
+alternatives, twice, all measured with an instrument that was blind to the
+distinction being tested.
+
+What broke the tie was a sharper oracle (`tools/facefit.py`): ask which
+individual FACE the outline fits on, not which box it stays inside.
+
+| side numbering | decorations that do not fit their stored face |
+|---|---|
+| edges backwards (old) | 126 / 2532 (4.98 %) |
+| **arriving vertex (current)** | **22 / 2532 (0.87 %)** |
+
+The symptom in the corpus was subtle by construction: a decal on the far side of
+an object still looks like a plausible object, so it survives a flythrough. It
+took `Lectern` (pages on the underside), `Microwave, undercabinet` (control
+panel on the back) and `Bar Sink` (basin adrift in mid-air, because a 7-vertex
+profile makes the two rules diverge properly) to expose it.
+
+**Rule of thumb this earns:** before trusting a sweep, check that the oracle can
+actually distinguish the options being swept. A metric that ties on the
+discriminating cases will confirm whatever you started with.
 
 ### 10.2 The 2-D frame 🟡
 
 Drop the axis the face normal is most aligned with; keep the other two in
-ascending axis order. Rejected alternatives, with their failure rates:
+ascending axis order. **Break an exact tie towards the lowest axis index**, and
+take the normal from the area-weighted sum over the face rather than from its
+largest triangle. A face at exactly 45 degrees ties two axes, and a single
+triangle's cross product carries enough float noise to decide the tie by luck:
+the `Jersey Cow`'s two flanks are mirror images, and they were getting
+TRANSPOSED frames, one keeping (Y, Z) and the other (X, Y). The spot painted on
+the second flank was then laid out along a 7-inch axis using a 59-inch
+coordinate, and flew off into space. Rejected alternatives, with their failure
+rates:
 
 | frame | decals outside their face |
 |---|---|
