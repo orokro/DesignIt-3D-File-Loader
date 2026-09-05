@@ -44,6 +44,7 @@
 <div id="modes" class="card">
   <button id="mGallery" aria-pressed="true">Gallery grid</button>
   <button id="mScenes" aria-pressed="false">Scenes</button>
+  <button id="mModels" aria-pressed="false">Models</button>
   <span class="sep"></span>
   <button id="mWire" aria-pressed="false" title="L">Edges</button>
 </div>
@@ -120,6 +121,67 @@ addEventListener('resize', resize);
 resize();
 
 // ---- building ----
+
+// Drop the decorative ground pads.
+//
+// Most scenes and models sit on one enormous slab -- 8040 inches across and 24
+// thick is the stock one, APOLLO's is 34,000 -- which is not part of the
+// subject but dominates the packing, so every object ends up hundreds of feet
+// from its neighbour with nothing in between.
+//
+// The rule is relative, not a magic size: walking down from the largest piece,
+// drop it while it is more than CULL_FACTOR times the footprint of the next
+// one down and is itself over CULL_FLOOR inches. A pad is 5-40x the next
+// largest thing in its file; a scene that is genuinely big -- DEPARTME's store
+// floor, MOUNTAIN's terrain, OCEANFLR's water -- has a top-two ratio near 1
+// and keeps everything. Iterating handles a pad stacked on a bigger pad.
+//
+// Cosmetic, and for the explorer only: nothing here touches the loader or the
+// geometry the parity harness measures.
+// CULL_TIE: pads come in matched sets -- APOLLO and SHUTTLE each carry two or
+// three identical slabs -- so a plain "bigger than the next one down" walk
+// stalls on the tie. Footprints within 5% of each other are one step and are
+// dropped or kept together.
+const CULL_FACTOR = 3, CULL_FLOOR = 1000, CULL_TIE = 1.05;
+
+function cullOversized(meshes) {
+  const solid = [], foot = [];
+  meshes.forEach((m, i) => {
+    if (m.isFeature || !m.verts.length) return;
+    let lox = Infinity, loy = Infinity, hix = -Infinity, hiy = -Infinity;
+    for (const v of m.verts) {
+      if (v[0] < lox) lox = v[0]; if (v[0] > hix) hix = v[0];
+      if (v[1] < loy) loy = v[1]; if (v[1] > hiy) hiy = v[1];
+    }
+    solid.push(i); foot.push(Math.max(hix - lox, hiy - loy));
+  });
+  if (solid.length < 2) return { meshes, culled: 0 };
+  const order = solid.map((i, k) => k).sort((a, b) => foot[b] - foot[a]);
+  const drop = new Set();
+  for (let k = 0; k < order.length; ) {
+    const big = foot[order[k]];
+    if (big <= CULL_FLOOR) break;
+    let j = k;
+    while (j < order.length && foot[order[j]] > big / CULL_TIE) j++;   // the tie group
+    if (j >= order.length) break;                    // everything is this size: content
+    if (big <= CULL_FACTOR * foot[order[j]]) break;  // no clear gap: content
+    for (let t = k; t < j; t++) drop.add(solid[order[t]]);
+    k = j;
+  }
+  if (!drop.size) return { meshes, culled: 0 };
+  // a decoration painted on a pad goes with it
+  const kept = meshes.filter((m, i) => !drop.has(i) && !(m.isFeature && bigFeature(m)));
+  return { meshes: kept, culled: drop.size };
+}
+function bigFeature(m) {
+  let lox = Infinity, loy = Infinity, hix = -Infinity, hiy = -Infinity;
+  for (const v of m.verts) {
+    if (v[0] < lox) lox = v[0]; if (v[0] > hix) hix = v[0];
+    if (v[1] < loy) loy = v[1]; if (v[1] > hiy) hiy = v[1];
+  }
+  return Math.max(hix - lox, hiy - loy) > CULL_FLOOR;
+}
+
 function meshesToGroup(meshes) {
   const solids = new Map(), feats = new Map();
   for (const m of meshes) {
@@ -208,29 +270,31 @@ async function buildGallery(manifest) {
   return { group, ground, items, extent, label: 'Gallery grid' };
 }
 
-async function buildScenes(manifest) {
-  // Scenes only. The `models` bucket holds single subjects, some sitting on
-  // enormous decorative pads -- APOLLO's is 34,000 inches across, which would
-  // dominate the packing and push the spawn point miles away.
-  const files = manifest.files.filter((f) => f.bucket === 'scenes' && f.bounds);
+// One builder for both whole-file buckets: `scenes` (rooms and sites) and
+// `models` (single subjects). They differ only in label, spacing and how big a
+// leftover is worth keeping, so they share the code.
+async function buildFileBucket(manifest, cfg) {
+  const files = manifest.files.filter((f) => f.bucket === cfg.bucket && f.bounds);
   const raw = [];
+  let culled = 0;
   for (let i = 0; i < files.length; i++) {
     const f = files[i];
-    progress(i / files.length * 0.85, `Reading ${f.path.split('/').pop()} — ${raw.length} scenes`);
+    progress(i / files.length * 0.85, `Reading ${f.path.split('/').pop()} — ${raw.length} ${cfg.noun}`);
     await sleep();
     try {
-      const meshes = sceneMeshes(parse(await fetchBuf(f.path)));
-      if (!meshes.length) continue;
-      const built = meshesToGroup(meshes);
+      const cut = cullOversized(sceneMeshes(parse(await fetchBuf(f.path))));
+      culled += cut.culled;
+      if (!cut.meshes.length) continue;
+      const built = meshesToGroup(cut.meshes);
       const box = new THREE.Box3().setFromObject(built.group);
       const s = box.getSize(new THREE.Vector3());
-      if (!isFinite(s.x) || Math.max(s.x, s.y) > 12000) continue;   // runaway ground slab
+      if (!isFinite(s.x) || Math.max(s.x, s.y) > cfg.maxSpan) continue;   // still runaway
       raw.push({ name: f.path.split('/').pop().replace(/\.VVR$/i, ''), built, box, size: [s.x, s.y, s.z] });
     } catch (e) { /* skip */ }
   }
-  progress(0.9, `Packing ${raw.length} scenes…`);
+  progress(0.9, `Packing ${raw.length} ${cfg.noun}…`);
   await sleep();
-  const { placed, extent } = shelfPack(raw, { gap: 160, aisle: 320 });
+  const { placed, extent } = shelfPack(raw, { gap: cfg.gap, aisle: cfg.aisle });
   const group = new THREE.Group();
   const items = [];
   for (const p of placed) {
@@ -241,10 +305,18 @@ async function buildScenes(manifest) {
     group.add(it.built.group);
     items.push({ name: it.name, x: p.x - extent[0] / 2, y: p.y - extent[1] / 2, group: it.built.group, size: it.size });
   }
-  const ground = makeGround(Math.max(extent[0], extent[1]) * 2.6, 0x5d6b4c);
+  const ground = makeGround(Math.max(extent[0], extent[1]) * 2.6, cfg.groundColor);
   group.add(ground);
-  return { group, ground, items, extent, label: 'Scenes' };
+  return { group, ground, items, extent, label: cfg.label, culled };
 }
+
+const buildScenes = (m) => buildFileBucket(m, {
+  bucket: 'scenes', label: 'Scenes', noun: 'scenes',
+  gap: 160, aisle: 320, maxSpan: 14000, groundColor: 0x5d6b4c });
+
+const buildModels = (m) => buildFileBucket(m, {
+  bucket: 'models', label: 'Models', noun: 'models',
+  gap: 90, aisle: 200, maxSpan: 14000, groundColor: 0x66705f });
 
 function makeGround(size, color) {
   const g = new THREE.Mesh(
@@ -274,7 +346,9 @@ async function setMode(which) {
   progress(0, 'Loading manifest…');
   const manifest = await (await fetch(DATA + 'manifest.json')).json();
   if (world) { scene.remove(world.group); }
-  world = which === 'scenes' ? await buildScenes(manifest) : await buildGallery(manifest);
+  world = which === 'scenes' ? await buildScenes(manifest)
+        : which === 'models' ? await buildModels(manifest)
+        : await buildGallery(manifest);
   scene.add(world.group);
   explorer.pickNearby = nearbyPicker(world);
   // spawn back and above the grid so the first view is an overview, not the
@@ -308,9 +382,11 @@ async function setMode(which) {
   let tris = 0;
   world.group.traverse((o) => { if (o.isMesh && o.geometry.attributes.position) tris += o.geometry.attributes.position.count / 3; });
   $('modeName').textContent = world.label;
-  $('counts').textContent = `${world.items.length} objects · ${Math.round(tris).toLocaleString()} triangles`;
-  $('mGallery').setAttribute('aria-pressed', which !== 'scenes');
+  $('counts').textContent = `${world.items.length} objects · ${Math.round(tris).toLocaleString()} triangles`
+    + (world.culled ? ` · ${world.culled} ground pads culled` : '');
+  $('mGallery').setAttribute('aria-pressed', which === 'gallery');
   $('mScenes').setAttribute('aria-pressed', which === 'scenes');
+  $('mModels').setAttribute('aria-pressed', which === 'models');
   setWire(wireOn);              // carry the overlay state across a mode switch
   pinned = null; $('picked').textContent = '—';
   progress(1, 'Ready — click to look around');
@@ -318,6 +394,7 @@ async function setMode(which) {
 }
 $('mGallery').onclick = () => setMode('gallery');
 $('mScenes').onclick = () => setMode('scenes');
+$('mModels').onclick = () => setMode('models');
 
 // ---- identify what the crosshair is on ----
 const pickRay = new THREE.Raycaster();

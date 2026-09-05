@@ -80,13 +80,20 @@ export class Poly {
           out.push([za + (zb - za) * (1 - Math.cos(th)), Math.sin(th)]);
         }
         break;
-      case SPHERE:
+      case SPHERE: {
+        // `nseg` counts bands per QUARTER turn: ROUNDED is a quarter turn in n
+        // bands, so a SPHERE (a half turn) takes 2n at the same angular step.
+        // With only n an odd-nseg sphere never reaches full radius -- nseg=5
+        // peaks at 0.951 -- and four families of SURF face ids overflow the
+        // numbering. Must match d3d.py's rings().
         out = [];
-        for (let k = 0; k <= n; k++) {
-          const th = (k / n) * Math.PI;
+        const m = 2 * n;
+        for (let k = 0; k <= m; k++) {
+          const th = (k / m) * Math.PI;
           out.push([za + (zb - za) * (1 - Math.cos(th)) / 2, Math.sin(th)]);
         }
         break;
+      }
       default: out = [[za, 1], [zb, 1]];
     }
     if (out[0][0] < out[out.length - 1][0]) out.reverse();
@@ -420,6 +427,12 @@ export function faceFrame(verts, tris) {
   v = sub(sub(v, mul(nrm, dot(v, nrm))), mul(u, dot(v, u)));
   if (len(v) < 1e-9) return null;
   v = norm(v);
+  // Make (u, v, nrm) RIGHT-HANDED. u and v come from fixed world axes, so the
+  // two opposite faces of a box get the SAME pair while their normals point
+  // opposite ways -- one frame right-handed, the other mirrored. A decoration
+  // in the mirrored frame comes out backwards, which is why DEPARTME's two
+  // escalators carry the same triangle and only one of them read correctly.
+  if (dot(cross(u, v), nrm) < 0) u = mul(u, -1);
   let minU = Infinity, minV = Infinity, maxU = -Infinity, maxV = -Infinity;
   for (const i of idx) {
     const du = dot(verts[i], u), dv = dot(verts[i], v);

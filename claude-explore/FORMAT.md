@@ -135,6 +135,31 @@ gallery: triangle 998 → 16-gon 1102, exactly 8 bytes per extra vertex.
 2, 3, 5 or 12 only for rounded and sphere.** It is the curve resolution, not a
 segment count for flat shapes. ✅
 
+**`nseg` counts bands per QUARTER turn, so a sphere takes 2·nseg of them.** ✅
+`rounded` is a quarter turn in `nseg` bands; `sphere` is a HALF turn, and at the
+same angular step that is `2·nseg`. Reading it as `nseg` gave every sphere too
+few bands, and an odd `nseg` then never reached full radius at all — `nseg = 5`
+peaked at `sin 72° = 0.951` and `nseg = 3` at 0.866, so a "sphere" came out a
+narrow barrel that never touched its own bounding box.
+
+Four families of `SURF` records settle it independently, by naming faces that do
+not exist under the `nseg` numbering and land exactly inside the `2·nseg` one:
+
+| nseg | polygon n | bands (2n) | side ids | cap | names face |
+|---|---|---|---|---|---|
+| 3 | 4 | 6 | 1–24 | 25 | **24** |
+| 5 | 4 | 10 | 1–40 | 41 | **40** |
+| 5 | 9 | 10 | 1–90 | 91 | **91** (the cap) |
+| 5 | 16 | 10 | 1–160 | 161 | **161, 162** (cap + first cut) |
+
+Visible effect: the `INFANTRY` soldiers' helmets. The head is a sphere prism
+coloured skin with five faces recoloured green; under three bands those ids
+landed on the big middle-band sides, painting the soldier's FACE green and
+leaving the helmet skin-coloured. Under six they land on the small top-band
+faces, which is the helmet. Silhouette IoU over the 27 clips containing a sphere
+moves 0.8796 → 0.8804 — noise, as expected, since the sphere is inscribed in the
+same box either way. This is a case the silhouette oracle simply cannot see.
+
 **Sweep bounds.** The two fp16.16 values are the extents along the sweep axis;
 their *order* flips between variants but `min`/`max` is what matters for
 geometry. Default gallery primitives use ±48 (a 96-inch, 8-foot object). The
@@ -207,7 +232,7 @@ Sweeping from `t = 0` at `zmin` to `t = 1` at `zmax`, with cross-section scale
 | 2 pointed | `(0,1) (1,0)` | cone / pyramid |
 | 3 diamond | `(0,0) (½,1) (1,0)` | bipyramid |
 | 4 rounded | `θ = kπ/2n`, `z ∝ sin θ`, `s = cos θ` | dome |
-| 5 sphere | `θ = kπ/n`, `z ∝ (1−cos θ)/2`, `s = sin θ` | sphere |
+| 5 sphere | `θ = kπ/2n`, `z ∝ (1−cos θ)/2`, `s = sin θ`, **k = 0…2n** | sphere |
 
 Verified visually against the Basic and Advanced gallery screenshots.
 

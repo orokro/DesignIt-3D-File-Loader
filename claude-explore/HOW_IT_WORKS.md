@@ -413,7 +413,15 @@ discriminating cases will confirm whatever you started with.
 ### 10.2 The 2-D frame 🟡
 
 Drop the axis the face normal is most aligned with; keep the other two in
-ascending axis order. **Break an exact tie towards the lowest axis index**, and
+ascending axis order, **then flip `u` if needed so that `(u, v, n)` is
+RIGHT-HANDED**. Because `u` and `v` come from fixed world axes, the two opposite
+faces of a box get the same pair while their outward normals point opposite
+ways, so one frame is mirrored — and every decoration on it comes out backwards.
+That is why `DEPARTME`'s two escalators carry mirror-image triangles in the file
+and only one of them read correctly: the other's triangle crossed the slope
+instead of following it. No containment oracle can see this (a mirrored
+decoration still fits the same face); it took the render.
+**Break an exact tie towards the lowest axis index**, and
 take the normal from the area-weighted sum over the face rather than from its
 largest triangle. A face at exactly 45 degrees ties two axes, and a single
 triangle's cross product carries enough float noise to decide the tie by luck:

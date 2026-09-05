@@ -76,9 +76,23 @@ class Poly:
                 th = (k / n) * (math.pi / 2)
                 out.append((za + (zb - za) * (1 - math.cos(th)), math.sin(th)))
         elif p == SPHERE:
+            # `nseg` counts bands per QUARTER turn, not per profile. ROUNDED is a
+            # quarter turn in `n` bands; SPHERE is a HALF turn, so it takes 2n at
+            # the same angular step.
+            #
+            # Two things say so. (1) Shape: with only n bands an odd-nseg sphere
+            # never reaches full radius -- nseg=5 peaks at sin(72 deg) = 0.951 and
+            # nseg=3 at 0.866, so every "sphere" came out a narrow barrel. With 2n
+            # a ring lands exactly on the equator and the scale reaches 1.0.
+            # (2) Face numbering: four families of SURF records name faces beyond
+            # the end of the n-band numbering and land exactly inside the 2n one --
+            # (nseg 3, n 4) names 24 against a cap at 25; (5, 4) names 40 against
+            # 41; (5, 9) names 91, the cap itself; (5, 16) names 161 and 162, the
+            # cap and its first SLIC face.
             out = []
-            for k in range(n + 1):
-                th = (k / n) * math.pi
+            m = 2 * n
+            for k in range(m + 1):
+                th = (k / m) * math.pi
                 out.append((za + (zb - za) * (1 - math.cos(th)) / 2, math.sin(th)))
         else:
             out = [(za, 1.0), (zb, 1.0)]
@@ -280,6 +294,8 @@ def prsm_mesh(prsm):
     ccw = sarea > 0
 
     def side_id(r, i):
+        if FACE_BASE == 'side0':
+            return r * n + ((i + 1) % n)
         if FACE_ORDER == 'end':
             # A side face is named by the vertex its edge ARRIVES at, plus one:
             # edge v_j -> v_j+1 is face (j+1)+1. Face 1 is therefore the edge
@@ -307,7 +323,8 @@ def prsm_mesh(prsm):
                 faces.append(t1); fids.append(side_id(r, i))
                 faces.append(t2); fids.append(side_id(r, i))
 
-    cap0, cap1 = 0, nband * n + 1
+    cap0, cap1 = ((nband * n, nband * n + 1) if FACE_BASE == 'side0'
+                  else (0, nband * n + 1))
     # triangulate() normalises to CCW in polygon space, so the high cap faces
     # +sweep as written and the low cap is the reverse
     tris = triangulate(base)
@@ -515,6 +532,8 @@ def scene_meshes(path_or_chunk):
 
 DRAW_SURF = True
 FACE_ORDER = 'end'       # 'end' | 'rev' -- how SURF face ids map to profile edges
+FACE_HAND = 'right'      # 'right' | 'raw' -- orient the face frame by its outward normal
+FACE_BASE = 'cap0'       # 'cap0' (cap first, sides 1-based) | 'side0' (sides first, 0-based)
 SURF_OFFSET = 0.05      # inches to lift a decoration off its face, to beat z-fighting
 
 # FEAT's 2-byte header selects which side of the surface is decorated.
@@ -584,6 +603,15 @@ def face_frame(verts, tris):
     if nv < 1e-9:
         return None
     v /= nv
+    # Make (u, v, nrm) RIGHT-HANDED.
+    #
+    # u and v come from fixed world axes, so the two opposite faces of a box get
+    # the SAME pair while their outward normals point opposite ways -- one frame
+    # right-handed, the other left-handed. A decoration laid out in the mirrored
+    # frame comes out backwards, which is why `DEPARTME`'s two escalators carry
+    # the same triangle and only one of them reads correctly.
+    if FACE_HAND == 'right' and float(np.cross(u, v) @ nrm) < 0:
+        u = -u
     uu, vv = P @ u, P @ v
     # `plane` is the face's plane with NO in-plane shift, so a decoration whose
     # coordinates are already prism-local can be laid down directly on it;
