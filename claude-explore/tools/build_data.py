@@ -52,8 +52,72 @@ ROUTES = [
     ('2026_New_Exports/VirVRML/BTexture/Pattern',   'textures', 'virvrml'),
     ('2026_New_Exports/VirVRML/BTexture/Stone',     'textures', 'virvrml'),
     ('2026_New_Exports/VirVRML/BTexture/Wood',      'textures', 'virvrml'),
+    # 3D Website Builder -- a THIRD Virtus product on the same engine, and the
+    # largest single haul yet: 214 scenes and models, 124 galleries, 70 texture
+    # libraries. Its scenes carry the .WSB extension but the container is
+    # byte-identical FORM<VMDL>, with not one chunk tag we had never seen.
+    ('2026_New_Exports/3DWebBld/2GALLERY',                      'galleries2d',   '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/3GALLERY',                      'galleries3d',   '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/Alpha/Scenes',                  'scenes',        '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/Alpha/Models',                  'models',        '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/Alpha/Texture',                 'textures',      '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/Arch/Scenes',                   'scenes',        '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/Arch/Textures',                 'textures',      '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/HomeRem/Scenes',                'scenes',        '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/HomeRem/Models',                'models',        '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/HomeRem/Textures',              'textures',      '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/IntDsgn/Scenes',                'scenes',        '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/IntDsgn/Models',                'models',        '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/IntDsgn/Texture',               'textures',      '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/Office/Scenes',                 'scenes',        '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/Office/Textures',               'textures',      '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/SciFi/Scenes',                  'scenes',        '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/SciFi/Models',                  'models',        '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/SciFi/Textures',                'textures',      '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/Models/VRMLidea',               'models',        '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/Models/archtect',               'models',        '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/Models/history',                'models',        '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/Models/interntl',               'models',        '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/Models/space',                  'models',        '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/Models/stage',                  'models',        '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/Models/unreal',                 'models',        '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/Samples/amaze',                 'scenes',        '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/Samples/booth',                 'scenes',        '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/Samples/campus',                'scenes',        '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/Samples/corp',                  'scenes',        '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/Samples/library',               'scenes',        '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/Samples/mall',                  'scenes',        '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/Samples/realty',                'scenes',        '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/Samples/webworld',              'scenes',        '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/VRMLSite/Corp',                 'scenes',        '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/VRMLSite/Cspace',               'scenes',        '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/VRMLSite/Temple',               'scenes',        '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/Tutorial',                      'misc',          '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/Textures',                      'textures',      '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/BonusTex',                      'textures',      '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/BonusTex/Art',                  'textures',      '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/BonusTex/Metal',                'textures',      '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/BonusTex/Nature',               'textures',      '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/BonusTex/Pattern',              'textures',      '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/BonusTex/Stone',                'textures',      '3dwebbld'),
+    ('2026_New_Exports/3DWebBld/BonusTex/Wood',                 'textures',      '3dwebbld'),
 ]
-EXTS = ('.VVR', '.WLB', '.TLB')
+
+# .WSB is 3D Website Builder's scene extension. Same FORM<VMDL> container as
+# .VVR -- the extension is the only difference.
+EXTS = ('.VVR', '.WSB', '.WLB', '.TLB')
+SCENE_EXTS = ('.VVR', '.WSB')
+
+# `Samples/booth/booth_e.wsb` is EXCLUDED: it was damaged by a text-mode file
+# transfer. The file holds ZERO 0x0A bytes across 334 KB and 93 0x0D -- every
+# line feed was rewritten as a carriage return, which turns any length byte of
+# 10 into 13 and derails the parse. It is NOT recoverable: the same substitution
+# hit bytes inside colour and coordinate payloads, where nothing constrains
+# them, so a "repaired" file would parse cleanly while carrying silently wrong
+# geometry. Re-extracting that one file from the ISO in BINARY mode would fix
+# it. Everything else is intact -- checked with the same zero-0x0A test across
+# all 775 binaries in the project.
+EXCLUDE = {'booth_e.wsb'}
 
 
 def md5(p):
@@ -68,7 +132,7 @@ def collect_sources():
         if not os.path.isdir(d):
             continue
         for f in sorted(os.listdir(d)):
-            if not f.upper().endswith(EXTS):
+            if not f.upper().endswith(EXTS) or f.lower() in EXCLUDE:
                 continue
             p = os.path.join(d, f)
             h = md5(p)
@@ -162,10 +226,10 @@ def main(do_bbox=True):
                     clips.append(st)
                 rec['clips'] = clips
                 rec['clipCount'] = len(clips)
-            elif up.endswith(('.VVR', '.TLB')):
+            elif up.endswith(SCENE_EXTS + ('.TLB',)):
                 r = iff.load(dest)
                 rec.update(prism_stats(r))
-                if do_bbox and up.endswith('.VVR'):
+                if do_bbox and up.endswith(SCENE_EXTS):
                     bb = scene_bbox(dest)
                     if bb:
                         rec['bounds'] = bb
@@ -177,8 +241,8 @@ def main(do_bbox=True):
         'generatedBy': 'claude-explore/tools/build_data.py',
         'units': 'inch', 'upAxis': 'Z',
         'buckets': {
-            'scenes': 'complete .VVR scenes shipped with the applications',
-            'models': 'single-subject .VVR models shipped with the applications',
+            'scenes': 'complete .VVR / .WSB scenes shipped with the applications',
+            'models': 'single-subject .VVR / .WSB models shipped with the applications',
             'galleries3d': '.WLB libraries of 3D objects (PRSM clips)',
             'galleries2d': '.WLB libraries of 2D surface features (FEAT clips)',
             'textures': '.TLB texture libraries (Key Design 3-D only)',

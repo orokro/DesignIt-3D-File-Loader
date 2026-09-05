@@ -1,0 +1,2123 @@
+#VRML V1.0 ascii
+
+Separator {
+	Info { string "Virtus 3D Website Builder 1.0
+	VRML Export Filter
+	Virtus Corporation
+	114 MacKenan Drive, Suite 100
+	Cary, NC 27511
+	919-467-9700"}
+
+	DEF BackgroundColor Info{  # Sky color
+		string " 0.3 0.8 1.0 "
+	}
+
+	DirectionalLight {
+		on         TRUE          # SFBool
+		intensity  1.0           # SFFloat
+		color      0.4 0.4 0.4   # SFColor
+		direction  0 0 0   # SFVec3f
+	}
+
+	DirectionalLight {
+		on         TRUE          # SFBool
+		intensity  1.0           # SFFloat
+		color      0.5 0.5 0.5   # SFColor
+		direction  34 -247 -57   # SFVec3f
+	}
+
+	DirectionalLight {
+		on         TRUE          # SFBool
+		intensity  1.0           # SFFloat
+		color      0.4 0.4 0.4   # SFColor
+		direction  -209 -104 105   # SFVec3f
+	}
+
+	DirectionalLight {
+		on         TRUE          # SFBool
+		intensity  1.0           # SFFloat
+		color      0.5 0.5 0.5   # SFColor
+		direction  5 119 -226   # SFVec3f
+	}
+
+	PerspectiveCamera {
+		position 3.9624 2.4892 -0.0508          #SFVec3f 
+		orientation 1 0 0  0.1228     #SFRotation 
+		orientation 0 1 0  1.6449     #SFRotation 
+		focalDistance  5            #SFFloat 
+		heightAngle 2.1726 
+	}
+
+	ShapeHints {
+		vertexOrdering	CLOCKWISE
+		shapeType	SOLID
+	}
+
+	Transform {
+		translation 0 0 0
+		scaleFactor 1.0 1.0 1.0
+	}
+
+Separator { #Polyhedron
+	DEF COORD0 Coordinate3 {
+		point [
+		 3.0480 9.1440 -7.9248,
+		 3.0480 9.1440 7.9248,
+		 -12.8016 9.1440 7.9248,
+		 -12.8016 9.1440 -7.9248,
+		 3.0480 0.0000 -7.9248,
+		 3.0480 0.0000 7.9248,
+		 -12.8016 0.0000 7.9248,
+		 -12.8016 0.0000 -7.9248,
+		 3.0480 3.6576 0.9144,
+		 3.0480 0.0000 0.9144,
+		 3.0480 0.0000 7.9248,
+		 3.0480 3.6576 7.9248,
+		 3.0480 3.6576 7.9248,
+		 3.0480 3.6576 -7.9248,
+		 3.0480 0.0000 -0.9144,
+		 3.0480 3.6576 -0.9144,
+		 3.0480 3.6576 -7.9248,
+		 3.0480 3.6576 7.9248,
+		 3.0480 0.0000 7.9248,
+		 3.0480 3.6576 -7.9248,
+		 3.0480 3.6576 7.9248,
+		 3.0480 3.6576 -7.9248
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	Texture2 {
+		filename ""  #filename
+		wrapS REPEAT 
+		wrapT REPEAT 
+	} #Texture2
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 8, 9, 10, 11,-1,
+		 12, 1, 0, 13,-1,
+		 14, 15, 16, 4,-1,
+		 17, 18, 9, 8,-1,
+		 19, 0, 1, 20,-1,
+		 4, 21, 15, 14,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD1 Coordinate3 {
+		point [
+		 -9.1440 0.1524 -0.6096,
+		 -9.1440 0.1524 0.6096,
+		 -9.7536 0.1524 0.6096,
+		 -9.7536 0.1524 -0.6096,
+		 -9.1440 0.0000 -0.6096,
+		 -9.1440 0.0000 0.6096,
+		 -9.7536 0.0000 0.6096,
+		 -9.7536 0.0000 -0.6096
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD2 Coordinate3 {
+		point [
+		 -9.7887 0.3048 -0.6751,
+		 -9.3717 0.3048 0.4706,
+		 -9.9446 0.3048 0.6791,
+		 -10.3615 0.3048 -0.4666,
+		 -9.7887 0.1524 -0.6751,
+		 -9.3717 0.1524 0.4706,
+		 -9.9446 0.1524 0.6791,
+		 -10.3615 0.1524 -0.4666
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD3 Coordinate3 {
+		point [
+		 -10.4169 0.4572 -0.5161,
+		 -9.6332 0.4572 0.4179,
+		 -10.1002 0.4572 0.8097,
+		 -10.8839 0.4572 -0.1242,
+		 -10.4169 0.3048 -0.5161,
+		 -9.6332 0.3048 0.4179,
+		 -10.1002 0.3048 0.8097,
+		 -10.8839 0.3048 -0.1242
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD4 Coordinate3 {
+		point [
+		 -10.9528 0.6096 -0.1518,
+		 -9.8970 0.6096 0.4578,
+		 -10.2018 0.6096 0.9857,
+		 -11.2576 0.6096 0.3761,
+		 -10.9528 0.4572 -0.1518,
+		 -9.8970 0.4572 0.4578,
+		 -10.2018 0.4572 0.9857,
+		 -11.2576 0.4572 0.3761
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD5 Coordinate3 {
+		point [
+		 -11.3318 0.7620 0.3737,
+		 -10.1312 0.7620 0.5855,
+		 -10.2371 0.7620 1.1858,
+		 -11.4377 0.7620 0.9740,
+		 -11.3318 0.6096 0.3737,
+		 -10.1312 0.6096 0.5855,
+		 -10.2371 0.6096 1.1858,
+		 -11.4377 0.6096 0.9740
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD6 Coordinate3 {
+		point [
+		 -11.5083 0.9144 0.9970,
+		 -10.3075 0.9144 0.7856,
+		 -10.2018 0.9144 1.3859,
+		 -11.4025 0.9144 1.5974,
+		 -11.5083 0.7620 0.9970,
+		 -10.3075 0.7620 0.7856,
+		 -10.2018 0.7620 1.3859,
+		 -11.4025 0.7620 1.5974
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD7 Coordinate3 {
+		point [
+		 -11.4609 1.0668 1.6430,
+		 -10.4048 1.0668 1.0339,
+		 -10.1003 1.0668 1.5620,
+		 -11.1564 1.0668 2.1711,
+		 -11.4609 0.9144 1.6430,
+		 -10.4048 0.9144 1.0339,
+		 -10.1003 0.9144 1.5620,
+		 -11.1564 0.9144 2.1711
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD8 Coordinate3 {
+		point [
+		 -11.1957 1.2192 2.2340,
+		 -10.4114 1.2192 1.3005,
+		 -9.9447 1.2192 1.6927,
+		 -10.7290 1.2192 2.6261,
+		 -11.1957 1.0668 2.2340,
+		 -10.4114 1.0668 1.3005,
+		 -9.9447 1.0668 1.6927,
+		 -10.7290 1.0668 2.6261
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD9 Coordinate3 {
+		point [
+		 -10.7445 1.3716 2.6986,
+		 -10.3264 1.3716 1.5533,
+		 -9.7538 1.3716 1.7624,
+		 -10.1719 1.3716 2.9076,
+		 -10.7445 1.2192 2.6986,
+		 -10.3264 1.2192 1.5533,
+		 -9.7538 1.2192 1.7624,
+		 -10.1719 1.2192 2.9076
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD10 Coordinate3 {
+		point [
+		 -10.1617 1.5240 2.9810,
+		 -10.1601 1.5240 1.7619,
+		 -9.5506 1.5240 1.7626,
+		 -9.5521 1.5240 2.9818,
+		 -10.1617 1.3716 2.9810,
+		 -10.1601 1.3716 1.7619,
+		 -9.5506 1.3716 1.7626,
+		 -9.5521 1.3716 2.9818
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD11 Coordinate3 {
+		point [
+		 -9.5175 1.6764 3.0473,
+		 -9.9327 1.6764 1.9010,
+		 -9.3595 1.6764 1.6934,
+		 -8.9444 1.6764 2.8398,
+		 -9.5175 1.5240 3.0473,
+		 -9.9327 1.5240 1.9010,
+		 -9.3595 1.5240 1.6934,
+		 -8.9444 1.5240 2.8398
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD12 Coordinate3 {
+		point [
+		 -8.8895 1.8288 2.8895,
+		 -9.6713 1.8288 1.9540,
+		 -9.2036 1.8288 1.5631,
+		 -8.4218 1.8288 2.4986,
+		 -8.8895 1.6764 2.8895,
+		 -9.6713 1.6764 1.9540,
+		 -9.2036 1.6764 1.5631,
+		 -8.4218 1.6764 2.4986
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD13 Coordinate3 {
+		point [
+		 -8.3532 1.9812 2.5267,
+		 -9.4076 1.9812 1.9146,
+		 -9.1015 1.9812 1.3874,
+		 -8.0472 1.9812 1.9995,
+		 -8.3532 1.8288 2.5267,
+		 -9.4076 1.8288 1.9146,
+		 -9.1015 1.8288 1.3874,
+		 -8.0472 1.8288 1.9995
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD14 Coordinate3 {
+		point [
+		 -7.9732 2.1336 2.0025,
+		 -9.1732 2.1336 1.7874,
+		 -9.0657 2.1336 1.1873,
+		 -7.8656 2.1336 1.4024,
+		 -7.9732 1.9812 2.0025,
+		 -9.1732 1.9812 1.7874,
+		 -9.0657 1.9812 1.1873,
+		 -7.8656 1.9812 1.4024
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD15 Coordinate3 {
+		point [
+		 -7.7951 2.2860 1.3800,
+		 -8.9965 2.2860 1.5878,
+		 -9.1003 2.2860 0.9871,
+		 -7.8990 2.2860 0.7793,
+		 -7.7951 2.1336 1.3800,
+		 -8.9965 2.1336 1.5878,
+		 -9.1003 2.1336 0.9871,
+		 -7.8990 2.1336 0.7793
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD16 Coordinate3 {
+		point [
+		 -7.8404 2.4384 0.7342,
+		 -8.8985 2.4384 1.3398,
+		 -9.2013 2.4384 0.8108,
+		 -8.1432 2.4384 0.2051,
+		 -7.8404 2.2860 0.7342,
+		 -8.8985 2.2860 1.3398,
+		 -9.2013 2.2860 0.8108,
+		 -8.1432 2.2860 0.2051
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD17 Coordinate3 {
+		point [
+		 -8.1035 2.5908 0.1427,
+		 -8.8911 2.5908 1.0733,
+		 -9.3564 2.5908 0.6795,
+		 -8.5688 2.5908 -0.2511,
+		 -8.1035 2.4384 0.1427,
+		 -8.8911 2.4384 1.0733,
+		 -9.3564 2.4384 0.6795,
+		 -8.5688 2.4384 -0.2511
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD18 Coordinate3 {
+		point [
+		 -8.5528 2.7432 -0.3233,
+		 -8.9752 2.7432 0.8204,
+		 -9.5470 2.7432 0.6091,
+		 -9.1246 2.7432 -0.5345,
+		 -8.5528 2.5908 -0.3233,
+		 -8.9752 2.5908 0.8204,
+		 -9.5470 2.5908 0.6091,
+		 -9.1246 2.5908 -0.5345
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD19 Coordinate3 {
+		point [
+		 -9.1342 2.8956 -0.6079,
+		 -9.1406 2.8956 0.6113,
+		 -9.7502 2.8956 0.6081,
+		 -9.7438 2.8956 -0.6111,
+		 -9.1342 2.7432 -0.6079,
+		 -9.1406 2.7432 0.6113,
+		 -9.7502 2.7432 0.6081,
+		 -9.7438 2.7432 -0.6111
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD20 Coordinate3 {
+		point [
+		 -9.7777 3.0480 -0.6767,
+		 -9.3675 3.0480 0.4714,
+		 -9.9415 3.0480 0.6765,
+		 -10.3518 3.0480 -0.4716,
+		 -9.7777 2.8956 -0.6767,
+		 -9.3675 2.8956 0.4714,
+		 -9.9415 2.8956 0.6765,
+		 -10.3518 2.8956 -0.4716
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD21 Coordinate3 {
+		point [
+		 -10.4061 3.2004 -0.5217,
+		 -9.6285 3.2004 0.4173,
+		 -10.0980 3.2004 0.8061,
+		 -10.8756 3.2004 -0.1329,
+		 -10.4061 3.0480 -0.5217,
+		 -9.6285 3.0480 0.4173,
+		 -10.0980 3.0480 0.8061,
+		 -10.8756 3.0480 -0.1329
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD22 Coordinate3 {
+		point [
+		 -10.9437 3.3528 -0.1615,
+		 -9.8923 3.3528 0.4557,
+		 -10.2009 3.3528 0.9814,
+		 -11.2523 3.3528 0.3642,
+		 -10.9437 3.2004 -0.1615,
+		 -9.8923 3.2004 0.4557,
+		 -10.2009 3.2004 0.9814,
+		 -11.2523 3.2004 0.3642
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD23 Coordinate3 {
+		point [
+		 -11.3261 3.5052 0.3606,
+		 -10.1271 3.5052 0.5818,
+		 -10.2378 3.5052 1.1813,
+		 -11.4367 3.5052 0.9600,
+		 -11.3261 3.3528 0.3606,
+		 -10.1271 3.3528 0.5818,
+		 -10.2378 3.3528 1.1813,
+		 -11.4367 3.3528 0.9600
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD24 Coordinate3 {
+		point [
+		 -11.5073 3.6576 0.9817,
+		 -10.3048 3.6576 0.7805,
+		 -10.2042 3.6576 1.3817,
+		 -11.4066 3.6576 1.5830,
+		 -11.5073 3.5052 0.9817,
+		 -10.3048 3.5052 0.7805,
+		 -10.2042 3.5052 1.3817,
+		 -11.4066 3.5052 1.5830
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD25 Coordinate3 {
+		point [
+		 -11.4656 3.8100 1.6274,
+		 -10.4040 3.8100 1.0278,
+		 -10.1042 3.8100 1.5586,
+		 -11.1658 3.8100 2.1582,
+		 -11.4656 3.6576 1.6274,
+		 -10.4040 3.6576 1.0278,
+		 -10.1042 3.6576 1.5586,
+		 -11.1658 3.6576 2.1582
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD26 Coordinate3 {
+		point [
+		 -11.2060 3.9624 2.2201,
+		 -10.4128 3.9624 1.2942,
+		 -9.9499 3.9624 1.6908,
+		 -10.7431 3.9624 2.6167,
+		 -11.2060 3.8100 2.2201,
+		 -10.4128 3.8100 1.2942,
+		 -9.9499 3.8100 1.6908,
+		 -10.7431 3.8100 2.6167
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD27 Coordinate3 {
+		point [
+		 -10.7598 4.1148 2.6885,
+		 -10.3303 4.1148 1.5475,
+		 -9.7598 4.1148 1.7623,
+		 -10.1893 4.1148 2.9033,
+		 -10.7598 3.9624 2.6885,
+		 -10.3303 3.9624 1.5475,
+		 -9.7598 3.9624 1.7623,
+		 -10.1893 3.9624 2.9033
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD28 Coordinate3 {
+		point [
+		 -10.1805 4.2672 2.9766,
+		 -10.1662 4.2672 1.7575,
+		 -9.5566 4.2672 1.7646,
+		 -9.5709 4.2672 2.9837,
+		 -10.1805 4.1148 2.9766,
+		 -10.1662 4.1148 1.7575,
+		 -9.5566 4.1148 1.7646,
+		 -9.5709 4.1148 2.9837
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD29 Coordinate3 {
+		point [
+		 -9.5377 4.4196 3.0496,
+		 -9.9404 4.4196 1.8988,
+		 -9.3650 4.4196 1.6975,
+		 -8.9623 4.4196 2.8482,
+		 -9.5377 4.2672 3.0496,
+		 -9.9404 4.2672 1.8988,
+		 -9.3650 4.2672 1.6975,
+		 -8.9623 4.2672 2.8482
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD30 Coordinate3 {
+		point [
+		 -8.9086 4.5720 2.8988,
+		 -9.6799 4.5720 1.9546,
+		 -9.2077 4.5720 1.5689,
+		 -8.4365 4.5720 2.5131,
+		 -8.9086 4.4196 2.8988,
+		 -9.6799 4.4196 1.9546,
+		 -9.2077 4.4196 1.5689,
+		 -8.4365 4.4196 2.5131
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD31 Coordinate3 {
+		point [
+		 -8.3687 4.7244 2.5423,
+		 -9.4160 4.7244 1.9181,
+		 -9.1038 4.7244 1.3945,
+		 -8.0566 4.7244 2.0187,
+		 -8.3687 4.5720 2.5423,
+		 -9.4160 4.5720 1.9181,
+		 -9.1038 4.5720 1.3945,
+		 -8.0566 4.5720 2.0187
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD32 Coordinate3 {
+		point [
+		 -7.9829 4.8768 2.0231,
+		 -9.1804 4.8768 1.7937,
+		 -9.0657 4.8768 1.1950,
+		 -7.8683 4.8768 1.4243,
+		 -7.9829 4.7244 2.0231,
+		 -9.1804 4.7244 1.7937,
+		 -9.0657 4.7244 1.1950,
+		 -7.8683 4.7244 1.4243
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD33 Coordinate3 {
+		point [
+		 -7.7976 5.0292 1.4033,
+		 -9.0014 5.0292 1.5965,
+		 -9.0980 5.0292 0.9946,
+		 -7.8942 5.0292 0.8014,
+		 -7.7976 4.8768 1.4033,
+		 -9.0014 4.8768 1.5965,
+		 -9.0980 4.8768 0.9946,
+		 -7.8942 4.8768 0.8014
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD34 Coordinate3 {
+		point [
+		 -7.8349 5.1816 0.7575,
+		 -8.9005 5.1816 1.3500,
+		 -9.1967 5.1816 0.8172,
+		 -8.1311 5.1816 0.2247,
+		 -7.8349 5.0292 0.7575,
+		 -8.9005 5.0292 1.3500,
+		 -9.1967 5.0292 0.8172,
+		 -8.1311 5.0292 0.2247
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD35 Coordinate3 {
+		point [
+		 -8.0904 5.3340 0.1633,
+		 -8.8898 5.3340 1.0838,
+		 -9.3501 5.3340 0.6842,
+		 -8.5507 5.3340 -0.2364,
+		 -8.0904 5.1816 0.1633,
+		 -8.8898 5.1816 1.0838,
+		 -9.3501 5.1816 0.6842,
+		 -8.5507 5.1816 -0.2364
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD36 Coordinate3 {
+		point [
+		 -8.4420 5.4864 -1.5163,
+		 -8.3820 5.4864 -0.1524,
+		 -9.3041 5.4864 0.8544,
+		 -10.6680 5.4864 0.9144,
+		 -11.6749 5.4864 -0.0077,
+		 -11.7348 5.4864 -1.3716,
+		 -10.8128 5.4864 -2.3785,
+		 -9.4488 5.4864 -2.4384,
+		 -8.4420 5.3340 -1.5163,
+		 -8.3820 5.3340 -0.1524,
+		 -9.3041 5.3340 0.8544,
+		 -10.6680 5.3340 0.9144,
+		 -11.6749 5.3340 -0.0077,
+		 -11.7348 5.3340 -1.3716,
+		 -10.8128 5.3340 -2.3785,
+		 -9.4488 5.3340 -2.4384
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3, 4, 5, 6, 7,-1,
+		 7, 6, 5, 4, 3, 2, 1, 0,-1,
+		 0, 7, 15, 8,-1,
+		 8, 15, 7, 0,-1,
+		 1, 0, 8, 9,-1,
+		 9, 8, 0, 1,-1,
+		 2, 1, 9, 10,-1,
+		 10, 9, 1, 2,-1,
+		 3, 2, 10, 11,-1,
+		 11, 10, 2, 3,-1,
+		 4, 3, 11, 12,-1,
+		 12, 11, 3, 4,-1,
+		 5, 4, 12, 13,-1,
+		 13, 12, 4, 5,-1,
+		 6, 5, 13, 14,-1,
+		 14, 13, 5, 6,-1,
+		 7, 6, 14, 15,-1,
+		 15, 14, 6, 7,-1,
+		 15, 14, 13, 12, 11, 10, 9, 8,-1,
+		 8, 9, 10, 11, 12, 13, 14, 15,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD37 Coordinate3 {
+		point [
+		 -10.2108 8.3820 -1.8288,
+		 -10.2108 8.3820 0.3048,
+		 -10.6680 8.3820 0.3048,
+		 -10.6680 8.3820 -1.8288,
+		 -10.2108 5.4864 -1.8288,
+		 -10.2108 5.4864 0.3048,
+		 -10.6680 5.4864 0.3048,
+		 -10.6680 5.4864 -1.8288
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.1951 0.1951 0.1951  #ambientColor
+		diffuseColor      0.7804 0.7804 0.7804  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD38 Coordinate3 {
+		point [
+		 -9.9568 7.9248 -0.6604,
+		 -9.9568 5.9436 -0.6604,
+		 -9.9568 5.9436 -0.0000,
+		 -9.9568 7.9248 -0.0000,
+		 -10.0584 7.9248 -0.6604,
+		 -10.0584 5.9436 -0.6604,
+		 -10.0584 5.9436 -0.0000,
+		 -10.0584 7.9248 -0.0000
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD39 Coordinate3 {
+		point [
+		 -9.9568 7.9248 -1.5240,
+		 -9.9568 5.9436 -1.5240,
+		 -9.9568 5.9436 -0.8636,
+		 -9.9568 7.9248 -0.8636,
+		 -10.0584 7.9248 -1.5240,
+		 -10.0584 5.9436 -1.5240,
+		 -10.0584 5.9436 -0.8636,
+		 -10.0584 7.9248 -0.8636
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD40 Coordinate3 {
+		point [
+		 -10.0584 8.0772 -1.6256,
+		 -10.0584 8.0772 0.2032,
+		 -10.2108 8.0772 0.2032,
+		 -10.2108 8.0772 -1.6256,
+		 -10.0584 5.7912 -1.6256,
+		 -10.0584 5.7912 0.2032,
+		 -10.2108 5.7912 0.2032,
+		 -10.2108 5.7912 -1.6256
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD41 Coordinate3 {
+		point [
+		 -10.1241 6.4008 0.2181,
+		 -10.1092 6.4008 0.2540,
+		 -10.1241 6.4008 0.2899,
+		 -10.1600 6.4008 0.3048,
+		 -10.1959 6.4008 0.2899,
+		 -10.2108 6.4008 0.2540,
+		 -10.1959 6.4008 0.2181,
+		 -10.1600 6.4008 0.2032,
+		 -10.1241 5.9436 0.2181,
+		 -10.1092 5.9436 0.2540,
+		 -10.1241 5.9436 0.2899,
+		 -10.1600 5.9436 0.3048,
+		 -10.1959 5.9436 0.2899,
+		 -10.2108 5.9436 0.2540,
+		 -10.1959 5.9436 0.2181,
+		 -10.1600 5.9436 0.2032
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.0000  #ambientColor
+		diffuseColor      1.0000 1.0000 0.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3, 4, 5, 6, 7,-1,
+		 7, 6, 5, 4, 3, 2, 1, 0,-1,
+		 0, 7, 15, 8,-1,
+		 8, 15, 7, 0,-1,
+		 1, 0, 8, 9,-1,
+		 9, 8, 0, 1,-1,
+		 2, 1, 9, 10,-1,
+		 10, 9, 1, 2,-1,
+		 3, 2, 10, 11,-1,
+		 11, 10, 2, 3,-1,
+		 4, 3, 11, 12,-1,
+		 12, 11, 3, 4,-1,
+		 5, 4, 12, 13,-1,
+		 13, 12, 4, 5,-1,
+		 6, 5, 13, 14,-1,
+		 14, 13, 5, 6,-1,
+		 7, 6, 14, 15,-1,
+		 15, 14, 6, 7,-1,
+		 15, 14, 13, 12, 11, 10, 9, 8,-1,
+		 8, 9, 10, 11, 12, 13, 14, 15,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD42 Coordinate3 {
+		point [
+		 -10.1241 7.9248 0.2181,
+		 -10.1092 7.9248 0.2540,
+		 -10.1241 7.9248 0.2899,
+		 -10.1600 7.9248 0.3048,
+		 -10.1959 7.9248 0.2899,
+		 -10.2108 7.9248 0.2540,
+		 -10.1959 7.9248 0.2181,
+		 -10.1600 7.9248 0.2032,
+		 -10.1241 7.4676 0.2181,
+		 -10.1092 7.4676 0.2540,
+		 -10.1241 7.4676 0.2899,
+		 -10.1600 7.4676 0.3048,
+		 -10.1959 7.4676 0.2899,
+		 -10.2108 7.4676 0.2540,
+		 -10.1959 7.4676 0.2181,
+		 -10.1600 7.4676 0.2032
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.0000  #ambientColor
+		diffuseColor      1.0000 1.0000 0.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3, 4, 5, 6, 7,-1,
+		 7, 6, 5, 4, 3, 2, 1, 0,-1,
+		 0, 7, 15, 8,-1,
+		 8, 15, 7, 0,-1,
+		 1, 0, 8, 9,-1,
+		 9, 8, 0, 1,-1,
+		 2, 1, 9, 10,-1,
+		 10, 9, 1, 2,-1,
+		 3, 2, 10, 11,-1,
+		 11, 10, 2, 3,-1,
+		 4, 3, 11, 12,-1,
+		 12, 11, 3, 4,-1,
+		 5, 4, 12, 13,-1,
+		 13, 12, 4, 5,-1,
+		 6, 5, 13, 14,-1,
+		 14, 13, 5, 6,-1,
+		 7, 6, 14, 15,-1,
+		 15, 14, 6, 7,-1,
+		 15, 14, 13, 12, 11, 10, 9, 8,-1,
+		 8, 9, 10, 11, 12, 13, 14, 15,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD43 Coordinate3 {
+		point [
+		 -12.6209 9.1440 -5.4513,
+		 -12.6492 9.1440 -7.7724,
+		 -10.3281 9.1440 -7.8007,
+		 -10.4940 9.1440 -6.9103,
+		 -10.9879 9.1440 -6.1511,
+		 -11.7348 9.1440 -5.6388,
+		 -12.6209 0.0000 -5.4513,
+		 -12.6492 0.0000 -7.7724,
+		 -10.3281 0.0000 -7.8007,
+		 -10.4940 0.0000 -6.9103,
+		 -10.9879 0.0000 -6.1511,
+		 -11.7348 0.0000 -5.6388
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.1951 0.1951 0.1951  #ambientColor
+		diffuseColor      0.7804 0.7804 0.7804  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3, 4, 5,-1,
+		 5, 4, 3, 2, 1, 0,-1,
+		 0, 5, 11, 6,-1,
+		 6, 11, 5, 0,-1,
+		 1, 0, 6, 7,-1,
+		 7, 6, 0, 1,-1,
+		 2, 1, 7, 8,-1,
+		 8, 7, 1, 2,-1,
+		 3, 2, 8, 9,-1,
+		 9, 8, 2, 3,-1,
+		 4, 3, 9, 10,-1,
+		 10, 9, 3, 4,-1,
+		 5, 4, 10, 11,-1,
+		 11, 10, 4, 5,-1,
+		 11, 10, 9, 8, 7, 6,-1,
+		 6, 7, 8, 9, 10, 11,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD44 Coordinate3 {
+		point [
+		 0.5745 9.1440 -7.7441,
+		 2.8956 9.1440 -7.7724,
+		 2.9239 9.1440 -5.4513,
+		 2.0335 9.1440 -5.6172,
+		 1.2744 9.1440 -6.1111,
+		 0.7620 9.1440 -6.8580,
+		 0.5745 0.0000 -7.7441,
+		 2.8956 0.0000 -7.7724,
+		 2.9239 0.0000 -5.4513,
+		 2.0335 0.0000 -5.6172,
+		 1.2744 0.0000 -6.1111,
+		 0.7620 0.0000 -6.8580
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.1951 0.1951 0.1951  #ambientColor
+		diffuseColor      0.7804 0.7804 0.7804  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3, 4, 5,-1,
+		 5, 4, 3, 2, 1, 0,-1,
+		 0, 5, 11, 6,-1,
+		 6, 11, 5, 0,-1,
+		 1, 0, 6, 7,-1,
+		 7, 6, 0, 1,-1,
+		 2, 1, 7, 8,-1,
+		 8, 7, 1, 2,-1,
+		 3, 2, 8, 9,-1,
+		 9, 8, 2, 3,-1,
+		 4, 3, 9, 10,-1,
+		 10, 9, 3, 4,-1,
+		 5, 4, 10, 11,-1,
+		 11, 10, 4, 5,-1,
+		 11, 10, 9, 8, 7, 6,-1,
+		 6, 7, 8, 9, 10, 11,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD45 Coordinate3 {
+		point [
+		 2.8673 9.1440 5.4513,
+		 2.8956 9.1440 7.7724,
+		 0.5745 9.1440 7.8007,
+		 0.7404 9.1440 6.9103,
+		 1.2343 9.1440 6.1512,
+		 1.9812 9.1440 5.6388,
+		 2.8673 0.0000 5.4513,
+		 2.8956 0.0000 7.7724,
+		 0.5745 0.0000 7.8007,
+		 0.7404 0.0000 6.9103,
+		 1.2343 0.0000 6.1512,
+		 1.9812 0.0000 5.6388
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.1951 0.1951 0.1951  #ambientColor
+		diffuseColor      0.7804 0.7804 0.7804  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3, 4, 5,-1,
+		 5, 4, 3, 2, 1, 0,-1,
+		 0, 5, 11, 6,-1,
+		 6, 11, 5, 0,-1,
+		 1, 0, 6, 7,-1,
+		 7, 6, 0, 1,-1,
+		 2, 1, 7, 8,-1,
+		 8, 7, 1, 2,-1,
+		 3, 2, 8, 9,-1,
+		 9, 8, 2, 3,-1,
+		 4, 3, 9, 10,-1,
+		 10, 9, 3, 4,-1,
+		 5, 4, 10, 11,-1,
+		 11, 10, 4, 5,-1,
+		 11, 10, 9, 8, 7, 6,-1,
+		 6, 7, 8, 9, 10, 11,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD46 Coordinate3 {
+		point [
+		 -10.3274 9.1440 7.7436,
+		 -12.6485 9.1440 7.7719,
+		 -12.6768 9.1440 5.4508,
+		 -11.7864 9.1440 5.6167,
+		 -11.0273 9.1440 6.1107,
+		 -10.5149 9.1440 6.8575,
+		 -10.3274 0.0000 7.7436,
+		 -12.6485 0.0000 7.7719,
+		 -12.6768 0.0000 5.4508,
+		 -11.7864 0.0000 5.6167,
+		 -11.0273 0.0000 6.1107,
+		 -10.5149 0.0000 6.8575
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.1951 0.1951 0.1951  #ambientColor
+		diffuseColor      0.7804 0.7804 0.7804  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3, 4, 5,-1,
+		 5, 4, 3, 2, 1, 0,-1,
+		 0, 5, 11, 6,-1,
+		 6, 11, 5, 0,-1,
+		 1, 0, 6, 7,-1,
+		 7, 6, 0, 1,-1,
+		 2, 1, 7, 8,-1,
+		 8, 7, 1, 2,-1,
+		 3, 2, 8, 9,-1,
+		 9, 8, 2, 3,-1,
+		 4, 3, 9, 10,-1,
+		 10, 9, 3, 4,-1,
+		 5, 4, 10, 11,-1,
+		 11, 10, 4, 5,-1,
+		 11, 10, 9, 8, 7, 6,-1,
+		 6, 7, 8, 9, 10, 11,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD47 Coordinate3 {
+		point [
+		 2.1336 0.0508 0.4572,
+		 2.1336 0.0508 1.2192,
+		 1.0668 0.0508 1.0668,
+		 1.2192 0.0508 0.3048,
+		 2.1336 0.0000 0.4572,
+		 2.1336 0.0000 1.2192,
+		 1.0668 0.0000 1.0668,
+		 1.2192 0.0000 0.3048
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD48 Coordinate3 {
+		point [
+		 2.7432 0.0508 -1.8288,
+		 1.9812 0.0508 -1.2192,
+		 1.5240 0.0508 -1.5240,
+		 1.6764 0.0508 -1.9812,
+		 2.7432 0.0000 -1.8288,
+		 1.9812 0.0000 -1.2192,
+		 1.5240 0.0000 -1.5240,
+		 1.6764 0.0000 -1.9812
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		 3, 2, 6, 7,-1,
+		 7, 6, 2, 3,-1,
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD49 Coordinate3 {
+		point [
+		 3.0480 0.0508 -0.4572,
+		 3.0480 0.0508 0.4572,
+		 2.5908 0.0508 0.3048,
+		 1.8288 0.0508 -0.6096,
+		 2.7432 0.0508 -0.9144,
+		 3.0480 0.0000 -0.4572,
+		 3.0480 0.0000 0.4572,
+		 2.5908 0.0000 0.3048,
+		 1.8288 0.0000 -0.6096,
+		 2.7432 0.0000 -0.9144
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.1951 0.1951 0.1951  #ambientColor
+		diffuseColor      0.7804 0.7804 0.7804  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3, 4,-1,
+		 4, 3, 2, 1, 0,-1,
+		 0, 4, 9, 5,-1,
+		 5, 9, 4, 0,-1,
+		 1, 0, 5, 6,-1,
+		 6, 5, 0, 1,-1,
+		 2, 1, 6, 7,-1,
+		 7, 6, 1, 2,-1,
+		 3, 2, 7, 8,-1,
+		 8, 7, 2, 3,-1,
+		 4, 3, 8, 9,-1,
+		 9, 8, 3, 4,-1,
+		 9, 8, 7, 6, 5,-1,
+		 5, 6, 7, 8, 9,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD50 Coordinate3 {
+		point [
+		 5.1816 3.6576 -0.9144,
+		 5.1816 3.6576 0.9144,
+		 3.0480 3.6576 0.9144,
+		 3.0480 3.6576 -0.9144,
+		 5.1816 0.0000 -0.9144,
+		 5.1816 0.0000 0.9144,
+		 3.0480 0.0000 0.9144,
+		 3.0480 0.0000 -0.9144
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3,-1,
+		 3, 2, 1, 0,-1,
+		 0, 3, 7, 4,-1,
+		 4, 7, 3, 0,-1,
+		 1, 0, 4, 5,-1,
+		 5, 4, 0, 1,-1,
+		 2, 1, 5, 6,-1,
+		 6, 5, 1, 2,-1,
+		]
+	} #IndexedFaceSet
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      1.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 7, 6, 2, 3,-1,
+		]
+	} #IndexedFaceSet
+	Material {
+		ambientColor      0.2500 0.2500 0.2500  #ambientColor
+		diffuseColor      1.0000 1.0000 1.0000  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 7, 6, 5, 4,-1,
+		 4, 5, 6, 7,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD51 Coordinate3 {
+		point [
+		 4.5720 0.0000 -0.7620,
+		 4.5720 2.5908 -0.6162,
+		 4.5720 3.5052 -0.1789,
+		 4.5720 3.3528 0.5500,
+		 4.5720 2.8956 0.8415,
+		 4.5720 0.0000 0.9144,
+		 5.1816 0.0000 -0.7620,
+		 5.1816 2.5908 -0.6162,
+		 5.1816 3.5052 -0.1789,
+		 5.1816 3.3528 0.5500,
+		 5.1816 2.8956 0.8415,
+		 5.1816 0.0000 0.9144,
+		 4.5720 1.7526 -0.6634,
+		 4.5720 1.7526 0.8703,
+		 4.6418 2.5908 -0.6162,
+		 4.7180 3.5052 -0.1789,
+		 4.7053 3.3528 0.5500,
+		 4.6672 2.8956 0.8415,
+		 4.5720 1.7526 0.2727,
+		 4.5720 0.6639 0.8977,
+		 4.7920 3.3528 0.5500,
+		 4.7138 3.4539 0.0666,
+		 4.7974 2.8956 0.8415
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.2431 0.2431 0.2431  #ambientColor
+		diffuseColor      0.9725 0.9725 0.9725  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 12, 18, 19, 5,-1,
+		 5, 19, 18, 12, 0,-1,
+		 0, 5, 11, 6,-1,
+		 6, 11, 5, 0,-1,
+		 12, 0, 6, 7, 14,-1,
+		 14, 7, 6, 0, 12,-1,
+		 14, 7, 8, 15,-1,
+		 15, 8, 7, 14,-1,
+		 15, 8, 9, 20, 21,-1,
+		 21, 20, 9, 8, 15,-1,
+		 20, 9, 10, 22,-1,
+		 22, 10, 9, 20,-1,
+		 5, 19, 22, 10, 11,-1,
+		 11, 10, 22, 19, 5,-1,
+		 11, 10, 9, 8, 7, 6,-1,
+		 6, 7, 8, 9, 10, 11,-1,
+		 18, 12, 14, 15, 21,-1,
+		 21, 15, 14, 12, 18,-1,
+		 19, 18, 21, 20, 22,-1,
+		 22, 20, 21, 18, 19,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+Separator { #Polyhedron
+	DEF COORD52 Coordinate3 {
+		point [
+		 4.1148 0.0508 0.1524,
+		 3.5052 0.0508 0.4572,
+		 3.0480 0.0508 0.4572,
+		 3.0480 0.0508 -0.4572,
+		 3.8100 0.0508 -0.4572,
+		 4.1148 0.0000 0.1524,
+		 3.5052 0.0000 0.4572,
+		 3.0480 0.0000 0.4572,
+		 3.0480 0.0000 -0.4572,
+		 3.8100 0.0000 -0.4572
+		]
+	} #Coordinate3
+	Material {
+		ambientColor      0.1951 0.1951 0.1951  #ambientColor
+		diffuseColor      0.7804 0.7804 0.7804  #diffuseColor
+		transparency      0.0000                #transparency
+	} #Material
+
+	IndexedFaceSet {
+		coordIndex [ 
+		 0, 1, 2, 3, 4,-1,
+		 4, 3, 2, 1, 0,-1,
+		 0, 4, 9, 5,-1,
+		 5, 9, 4, 0,-1,
+		 1, 0, 5, 6,-1,
+		 6, 5, 0, 1,-1,
+		 2, 1, 6, 7,-1,
+		 7, 6, 1, 2,-1,
+		 3, 2, 7, 8,-1,
+		 8, 7, 2, 3,-1,
+		 4, 3, 8, 9,-1,
+		 9, 8, 3, 4,-1,
+		 9, 8, 7, 6, 5,-1,
+		 5, 6, 7, 8, 9,-1,
+		]
+	} #IndexedFaceSet
+} #Polyhedron
+}

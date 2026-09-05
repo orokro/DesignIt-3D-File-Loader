@@ -153,20 +153,44 @@ resize();
 // subject but dominates the packing, so every object ends up hundreds of feet
 // from its neighbour with nothing in between.
 //
-// The rule is relative, not a magic size: walking down from the largest piece,
-// drop it while it is more than CULL_FACTOR times the footprint of the next
-// one down and is itself over CULL_FLOOR inches. A pad is 5-40x the next
-// largest thing in its file; a scene that is genuinely big -- DEPARTME's store
-// floor, MOUNTAIN's terrain, OCEANFLR's water -- has a top-two ratio near 1
-// and keeps everything. Iterating handles a pad stacked on a bigger pad.
+// The rule is relative, not a magic size, and it is anchored on the MEDIAN
+// solid footprint: a pad is outsized relative to the CONTENT, so only solids
+// bigger than CULL_FACTOR x median (and over CULL_FLOOR inches) are even
+// candidates. Within that candidate set, cut at the LARGEST ratio gap.
+//
+// Two earlier rules were wrong in opposite directions:
+//   * Walking down and stopping at the first pair whose ratio was under
+//     CULL_FACTOR missed GRADUATED stacks. `CAMPUS_E` carries pads at 360,000 /
+//     360,000 / 188,760 / 182,160 / 177,240 inches before an 18.7x cliff down
+//     to its real content at 9,480 -- adjacent ratios of 1.91, 1.04, 1.03, so
+//     the walk stopped immediately and the scene stayed 5.7 MILES wide and was
+//     skipped entirely.
+//   * Taking the largest gap ANYWHERE fixed that and broke `Window.wsb`, whose
+//     solids run 1,596 down to 1,127 with no pad at all: the biggest ratio sat
+//     deep in the tail and it happily deleted twelve real objects. The median
+//     anchor is what stops that -- nothing in that file is 3x the median, so
+//     there are no candidates and nothing is dropped.
+//
+// CULL_GAP is deliberately HIGH. At 3x it deleted the Monopoly BOARD: a board
+// game's board is a big flat slab with small pieces sitting on it, which is
+// indistinguishable from a ground pad by footprint alone. `monoply.wsb` runs
+// 8,846 (tabletop) / 4,392 / 4,392 (the board, in two halves) / 1,359 (table
+// legs), and the biggest ratio in that ladder is only 3.23 -- so a 3x threshold
+// cut three real objects and left the money and houses floating. A genuine pad
+// stands much further clear: CAMPUS_E's is 18.7x, meiji's 7.5x. Requiring 4x
+// keeps both of those working and declines to guess on ladders like Monopoly's
+// or the Great Pyramid's, where the gaps are shallow and ambiguous.
+//
+// The bias is intentional: when the ladder is unclear, KEEP the geometry. A pad
+// left in makes one object too big; a wrong cut silently deletes the subject.
+//
+// Tie groups need no special case under this rule: pads come in matched sets
+// (APOLLO and SHUTTLE carry two or three identical slabs), and a cut inside a
+// tie has ratio 1.0, which can never be the largest gap.
 //
 // Cosmetic, and for the explorer only: nothing here touches the loader or the
 // geometry the parity harness measures.
-// CULL_TIE: pads come in matched sets -- APOLLO and SHUTTLE each carry two or
-// three identical slabs -- so a plain "bigger than the next one down" walk
-// stalls on the tie. Footprints within 5% of each other are one step and are
-// dropped or kept together.
-const CULL_FACTOR = 3, CULL_FLOOR = 1000, CULL_TIE = 1.05;
+const CULL_FACTOR = 3, CULL_FLOOR = 1000, CULL_GAP = 4;
 
 function cullOversized(meshes) {
   const solid = [], foot = [];
@@ -181,16 +205,19 @@ function cullOversized(meshes) {
   });
   if (solid.length < 2) return { meshes, culled: 0 };
   const order = solid.map((i, k) => k).sort((a, b) => foot[b] - foot[a]);
+  const desc = order.map((k) => foot[k]);
+  const median = desc[desc.length >> 1] || 1;
+  const limit = Math.max(CULL_FLOOR, CULL_FACTOR * median);
+  let n = 0;
+  while (n < desc.length && desc[n] > limit) n++;     // how many are pad-sized at all
   const drop = new Set();
-  for (let k = 0; k < order.length; ) {
-    const big = foot[order[k]];
-    if (big <= CULL_FLOOR) break;
-    let j = k;
-    while (j < order.length && foot[order[j]] > big / CULL_TIE) j++;   // the tie group
-    if (j >= order.length) break;                    // everything is this size: content
-    if (big <= CULL_FACTOR * foot[order[j]]) break;  // no clear gap: content
-    for (let t = k; t < j; t++) drop.add(solid[order[t]]);
-    k = j;
+  if (n && n < desc.length) {
+    let cut = 0, bestRatio = 0;
+    for (let k = 1; k <= n; k++) {
+      const r = desc[k - 1] / desc[k];
+      if (r > bestRatio && r >= CULL_GAP) { bestRatio = r; cut = k; }
+    }
+    for (let t = 0; t < cut; t++) drop.add(solid[order[t]]);
   }
   if (!drop.size) return { meshes, culled: 0 };
   // a decoration painted on a pad goes with it
@@ -283,7 +310,7 @@ async function buildFileBucket(manifest, cfg) {
       const box = new THREE.Box3().setFromObject(built.group);
       const s = box.getSize(new THREE.Vector3());
       if (!isFinite(s.x) || Math.max(s.x, s.y) > cfg.maxSpan) continue;   // still runaway
-      raw.push({ name: f.path.split('/').pop().replace(/\.VVR$/i, ''), built, box, size: [s.x, s.y, s.z] });
+      raw.push({ name: f.path.split('/').pop().replace(/\.(VVR|WSB)$/i, ''), built, box, size: [s.x, s.y, s.z] });
     } catch (e) { /* skip */ }
   }
   progress(0.9, `Packing ${raw.length} ${cfg.noun}…`);
@@ -304,13 +331,19 @@ async function buildFileBucket(manifest, cfg) {
   return { group, ground, items, extent, label: cfg.label, culled };
 }
 
+// maxSpan is the last-resort gate for geometry the cull could not tame. It was
+// 14,000 in, which quietly excluded twenty legitimate subjects once the corpus
+// tripled -- the Great Pyramid, Chichen Itza, a ziggurat, the White House,
+// Himeji Castle. With the cull anchored on the median, the largest thing that
+// survives anywhere in the corpus is 27,072 in, so 30,000 admits everything
+// real and still catches a runaway.
 const buildScenes = (m) => buildFileBucket(m, {
   bucket: 'scenes', label: 'Scenes', noun: 'scenes',
-  gap: 160, aisle: 320, maxSpan: 14000, groundColor: 0x5d6b4c });
+  gap: 160, aisle: 320, maxSpan: 30000, groundColor: 0x5d6b4c });
 
 const buildModels = (m) => buildFileBucket(m, {
   bucket: 'models', label: 'Models', noun: 'models',
-  gap: 90, aisle: 200, maxSpan: 14000, groundColor: 0x66705f });
+  gap: 90, aisle: 200, maxSpan: 30000, groundColor: 0x66705f });
 
 // The ground is OURS, not the file's -- the corpus has no world floor, every
 // object simply sits at z = 0. So a scene's own slab, patio or ground pad is
@@ -387,7 +420,15 @@ async function setMode(which) {
   explorer.yaw = 0; explorer.pitch = -0.18;
   scene.fog.near = span * 0.12;
   scene.fog.far = Math.max(24000, span * 1.6);
-  camera.far = Math.max(60000, span * 4);
+  // NEAR has to scale with FAR, not sit at 1 inch forever. Depth precision is
+  // governed by the near:far RATIO, and `far` already grows with the world --
+  // so once the corpus tripled and a packed field ran to ~200,000 inches, the
+  // ratio hit 1:800,000 and the depth buffer could barely separate anything
+  // past the first few feet. That is a large part of the z-fighting visible at
+  // distance. Pull `far` in to just past the fog (nothing beyond it is visible
+  // anyway) and tie `near` to it.
+  camera.far = Math.max(20000, scene.fog.far * 1.15);
+  camera.near = Math.min(40, Math.max(2, camera.far / 25000));
   camera.updateProjectionMatrix();
   explorer.speed = Math.max(260, span / 40);
   let tris = 0;

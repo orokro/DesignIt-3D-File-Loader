@@ -124,15 +124,22 @@ def compare(vvr, wrl, item=None):
 if __name__ == '__main__':
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     pairs = []
-    root = 'D3D/2026_New_Exports/VirVRML'
-    for w in sorted(glob.glob(f'{root}/**/*.[wW][rR][lL]', recursive=True)):
-        stem = os.path.splitext(os.path.basename(w))[0].upper()
-        for d in (os.path.dirname(w), os.path.dirname(os.path.dirname(w))):
-            hit = [p for p in glob.glob(os.path.join(d, '*'))
-                   if os.path.basename(p).upper() == stem + '.VVR']
-            if hit:
-                pairs.append((hit[0], w))
-                break
+    # 3D Website Builder ships its own WRL exports beside the .WSB sources, so
+    # it is more ground truth on the same terms -- pair on the stem, whichever
+    # scene extension sits next to it.
+    roots = ['D3D/2026_New_Exports/VirVRML', 'D3D/2026_New_Exports/3DWebBld']
+    seen = set()
+    for root in roots:
+        for w in sorted(glob.glob(f'{root}/**/*.[wW][rR][lL]', recursive=True)):
+            stem = os.path.splitext(os.path.basename(w))[0].upper()
+            for d in (os.path.dirname(w), os.path.dirname(os.path.dirname(w))):
+                hit = [p for p in glob.glob(os.path.join(d, '*'))
+                       if os.path.splitext(os.path.basename(p))[0].upper() == stem
+                       and os.path.splitext(p)[1].upper() in ('.VVR', '.WSB')]
+                if hit and (stem, root) not in seen:
+                    seen.add((stem, root))
+                    pairs.append((hit[0], w))
+                    break
     print(f'{len(pairs)} VVR/WRL ground-truth pairs\n')
     print(f'{"object":22s} {"app":>4} {"ours":>5} {"exact":>6} {"worst centre":>13} {"worst size":>11}')
     tot = ex = 0

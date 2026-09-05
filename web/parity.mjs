@@ -8,6 +8,15 @@ import { sceneMeshes, collect, options } from './src/geometry.js';
 options.applySlic = true; options.slicKeepNeg = false; options.drawSurf = process.env.SURF === "1";
 options.faceFrame = process.env.FRAME || 'azim';
 
+// Key by BUCKET/NAME, not by basename alone. Four names collide across
+// buckets in the corpus -- Art.wsb, mirror.wsb, LIBRARY.VVR and BASIC.WLB each
+// exist as both a scene and a model -- and a bare basename silently let one shadow
+// the other, so half of each pair was never actually compared.
+const keyOf = (rel) => {
+  const parts = rel.split(/[\\/]/);
+  return parts.length > 1 ? parts.slice(-2).join('/') : parts[0];
+};
+
 function digest(meshes) {
   let tris = 0, area = 0, vol = 0;
   const lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];
@@ -36,11 +45,11 @@ for (const rel of process.argv.slice(2)) {
     const root = parse(ab);
     if (rel.toUpperCase().endsWith('.WLB')) {
       for (const { name, chunk } of wlbItems(root)) {
-        out[`${path.basename(rel)}::${name}`] = digest(collect(chunk, []));
+        out[`${keyOf(rel)}::${name}`] = digest(collect(chunk, []));
       }
     } else {
-      out[path.basename(rel)] = digest(sceneMeshes(root));
+      out[keyOf(rel)] = digest(sceneMeshes(root));
     }
-  } catch (e) { out[path.basename(rel)] = { error: `${e.constructor.name}: ${e.message}` }; }
+  } catch (e) { out[keyOf(rel)] = { error: `${e.constructor.name}: ${e.message}` }; }
 }
 console.log(JSON.stringify(out));

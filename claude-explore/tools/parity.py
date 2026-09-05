@@ -34,7 +34,12 @@ def digest(meshes):
 
 out = {}
 for rel in sys.argv[1:]:
-    base = os.path.basename(rel)
+    # Key by BUCKET/NAME, not by basename alone. Four names collide across
+    # buckets in the corpus -- Art.wsb, mirror.wsb, LIBRARY.VVR and BASIC.WLB each
+    # exist as both a scene and a model -- and a bare basename silently let one shadow
+    # the other, so half of each pair was never actually compared.
+    parts = os.path.normpath(rel).replace(os.sep, '/').split('/')
+    base = '/'.join(parts[-2:]) if len(parts) > 1 else parts[-1]
     try:
         if rel.upper().endswith('.WLB'):
             for name, it in wlb.items(rel):
