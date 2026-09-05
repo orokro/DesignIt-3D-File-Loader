@@ -4,6 +4,14 @@ sys.path.insert(0, os.path.dirname(__file__))
 import numpy as np, iff, d3d, wlb
 
 d3d.SLIC_MODE = 'clip'; d3d.SLIC_KEEP_NEG = False; d3d.SLIC_FILTER = None; d3d.DRAW_SURF = os.environ.get('SURF') == '1'
+d3d.FACE_FRAME = os.environ.get('FRAME', d3d.FACE_FRAME)
+# The JS builds decoration overlays WITHOUT baking in the z-fight lift -- it
+# hands the renderer `normal` and `side` and biases depth there instead. So a
+# SURF=1 digest only compares like with like when the lift is off; leaving it
+# on shows every decorated file as a volume-only difference (identical area,
+# identical bounds) and hides any real placement bug in the noise.
+if os.environ.get('SURF_OFFSET') is not None:
+    d3d.SURF_OFFSET = float(os.environ['SURF_OFFSET'])
 
 
 def digest(meshes):

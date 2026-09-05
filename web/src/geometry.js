@@ -15,6 +15,7 @@ export const options = {
   slicKeepNeg: false,   // keep n.p + d >= 0
   drawSurf: true,       // build SURF/FEAT decoration overlays
   applySkew: true,      // POLY's oblique-sweep offset
+  faceFrame: 'azim',    // 'azim' | 'world' -- a face's 2D axes; mirrors d3d.FACE_FRAME
 };
 
 // ---- small vector helpers ----
@@ -436,6 +437,24 @@ export function faceFrame(verts, tris) {
   const ax = [0, 1, 2].filter((i) => i !== drop);
   let u = [0, 0, 0]; u[ax[0]] = 1;
   let v = [0, 0, 0]; v[ax[1]] = 1;
+  // The AZIMUTH frame: u = n x up, the horizontal direction lying in the face,
+  // v the one going up it -- so a decoration's x runs ACROSS a wall and its y
+  // runs UP it, at whatever angle the wall is turned. On a world-aligned face
+  // this is identical to the world-axis pair above, which is why that rule
+  // survived so long; on a facet turned 22.5 degrees it is not, which is why
+  // exactly half of SPACSTAT's window rows flew off into space. A HORIZONTAL
+  // face degenerates the cross product and keeps the world-axis pair.
+  if (options.faceFrame === 'azim') {
+    // `up x n`, NOT `n x up`. The two differ by a 180-degree turn about the
+    // normal, and only this order reproduces the old world-axis frame -- hand
+    // flip included -- on every axis-aligned face. Backwards, every decoration
+    // lands on the right face upside down and at the wrong end of it, and no
+    // containment oracle can see it: a 180-degree turn moves the origin to the
+    // opposite corner and fits exactly as well.
+    // 'azim_rev' is the wrong order, kept switchable for A/B measurement.
+    const h = options.faceFrame === 'azim_rev' ? cross(nrm, [0, 0, 1]) : cross([0, 0, 1], nrm);
+    if (len(h) > 1e-6) { u = norm(h); v = cross(nrm, u); }
+  }
   u = sub(u, mul(nrm, dot(u, nrm)));
   if (len(u) < 1e-9) return null;
   u = norm(u);

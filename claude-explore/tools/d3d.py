@@ -570,7 +570,7 @@ FACE_HAND = 'right'      # 'right' | 'raw' -- orient the face frame by its outwa
 # No oracle can see this -- facefit scores the two identically (464 misfits, 202
 # adrift, both ways) because face EXTENTS barely move. It took the eye.
 RING_Z = 'uniform'       # 'uniform' | 'angle' -- how curved-profile rings are spaced
-FACE_FRAME = 'world'     # 'world' | 'sweep_v' | 'sweep_u' -- a side face's 2D axes
+FACE_FRAME = 'azim'    # n x up: horizontal across the face, vertical up it
 FACE_BASE = 'cap0'       # 'cap0' (cap first, sides 1-based) | 'side0' (sides first, 0-based)
 SURF_OFFSET = 0.05      # inches to lift a decoration off its face, to beat z-fighting
 
@@ -643,6 +643,42 @@ def face_frame(verts, tris, sweep=None):
     # So keep the world-axis PAIR (it decides the in-plane direction) but fix the
     # ROLES: whichever of the two is more aligned with the sweep becomes `u`. A
     # cap face has no sweep component and is left alone.
+    # The AZIMUTH frame: u = n x up, the horizontal direction in the face plane.
+    #
+    # Measured over all 15,643 side-face decorations, the app does not use a
+    # world-axis PAIR at all. It builds the tangent frame from the normal the
+    # way a design tool would: `u` is the horizontal direction lying in the
+    # face, `v` is the one going up it -- so a decoration's x runs across the
+    # wall and its y runs up it, whatever angle the wall is turned to. On a
+    # world-aligned face that is indistinguishable from the world-axis rule,
+    # which is why the old frame survived so long; on a facet turned 22.5
+    # degrees it is not, which is why exactly half of `SPACSTAT`'s windows flew
+    # off. When the face is HORIZONTAL the cross product degenerates and the
+    # world-axis pair is used instead -- and the 42 decorations that rule gets
+    # wrong under any edge/sweep story are precisely the degenerate ones.
+    if FACE_FRAME.startswith('azim'):
+        up = np.zeros(3)
+        up[{'azimx': 0, 'azimy': 1}.get(FACE_FRAME.lower(), 2)] = 1.0
+        # `up x n`, NOT `n x up`. Both are continuous round a cylinder, but they
+        # differ by a 180-degree turn about the normal, and only this order
+        # reproduces the old world-axis frame -- INCLUDING its right-hand flip
+        # -- on every axis-aligned face. Getting it backwards put every
+        # decoration in the corpus on the right face upside down and at the
+        # wrong end of it, which no containment oracle can see: rotating a face
+        # frame 180 degrees moves the origin to the opposite corner and the fit
+        # is exactly as good. It took the user reading `VIRTUS` off the shuttle.
+        # 'azim_rev' is the WRONG order, kept switchable on purpose: it is the
+        # one A/B this codebase cannot do by editing the source, because the two
+        # spellings are the same number of BYTES. Python's bytecode cache
+        # invalidates on source mtime AND SIZE, so a same-length edit on a mount
+        # with coarse mtime silently reuses the stale .pyc and both halves of
+        # the comparison run the same code -- which is exactly what happened,
+        # and it reported "0 decorations moved" for a change that moves 16,000.
+        h = np.cross(nrm, up) if FACE_FRAME == 'azim_rev' else np.cross(up, nrm)
+        nh = float(np.linalg.norm(h))
+        if nh > 1e-6:
+            u = h / nh
+            v = np.cross(nrm, u)
     if FACE_FRAME in ('sweep_u', 'sweep_v') and sweep is not None:
         w = np.asarray(sweep, float)
         du, dv = abs(float(u @ w)), abs(float(v @ w))

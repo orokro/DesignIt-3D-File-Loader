@@ -469,6 +469,72 @@ inventing semantics for it.
 There is **one** placement convention: the outline is measured from the face's
 minimum corner, offset by `(tx, ty)`.
 
+#### The face's 2D frame is an AZIMUTH frame ✅
+
+Which two directions is that outline measured *along*? Not a pair of world axes.
+The app builds the frame from the face **normal**, the way a design tool would:
+
+```
+u = normalise(Zup x n)        # the HORIZONTAL direction lying in the face
+v = n x u                     # the one going UP it
+```
+
+So a decoration's x runs *across* a wall and its y runs *up* it, at whatever
+angle the wall happens to be turned to. When the face is horizontal the cross
+product degenerates and the world-axis pair is used instead.
+
+On a world-aligned face this is **indistinguishable** from "drop the axis the
+normal is most aligned with and keep the other two in ascending order", which is
+why that rule survived every sweep for so long. The two part company on a facet
+turned to an odd angle — and that is exactly where the corpus failed:
+
+| face frame | decorations adrift (> 15 in) | worst bucket |
+|---|---|---|
+| world-axis pair | 202 / 19 902 | `SPACSTAT` 60, `SPACESTA` 60 |
+| **azimuth (`Zup x n`)** | **64 / 19 902** | `BEACHCBN` 32 |
+
+`SPACSTAT`'s modules are octagonal, so four of the eight facets fall either side
+of the 45° line; the world rule handed those four a `u` along the sweep and the
+other four a `u` across it, and **exactly half** the window decals — 60 of 120 —
+flew off into space. Greg spotted it in the fly-through as "the pink decals on
+the space station are flying everywhere… but not all of them", and *not all of
+them* was the whole clue. The azimuth frame gives all eight facets the same
+convention and places all 120.
+
+**The cross-product ORDER is `Zup x n`, and getting it backwards is invisible to
+every fit oracle.** `n x Zup` is equally continuous and equally well-fitting —
+it differs by a 180-degree turn about the normal, which moves the origin to the
+opposite corner of the face and fits exactly as well. Shipped that way, every
+decoration in the corpus landed on the right face upside down and at the wrong
+end of it: `MISSION`'s `VIRTUS` moved off the shuttle's nose and down to its
+tail, reading upside down. `Zup x n` is the order that reproduces the OLD
+world-axis frame exactly — its right-hand flip included — on every axis-aligned
+face, so everything the old rule got right is untouched. Measured on decoration
+world positions: `Zup x n` moves **770 of 33,530** meshes relative to the world
+frame (the tilted facets, headed by the space station); `n x Zup` moves
+**16,006** — a global 180-degree turn.
+
+Two dead ends worth recording, because both looked plausible:
+
+* **Edge-versus-sweep.** Reading the frame as the face's own basis — one axis
+  along the polygon edge, one along the sweep — and letting an oracle pick the
+  better of the two per face scores 290 misfits against the world rule's 430,
+  so it looked like the answer. But no rule over the axis byte, the vertex
+  count, the aspect ratio or the world-alignment predicts the choice better
+  than 99.4 %, and the residue is stubborn. It is the wrong model: the app is
+  not choosing between two axes at all, it is projecting a normal.
+* **The origin corner.** A sweep over the four corners a face could be measured
+  from returns *identical* numbers for all four — flipping the origin maps
+  `[0, L]` onto itself, so a both-sides bounds test cannot see it. Any oracle
+  built on "does it fit" is blind to the origin corner and to mirroring; only a
+  render can settle those.
+
+What is left is not a frame problem. Of the 64 still adrift, all but a handful
+fit on **no face of their prism at all** — `BEACHCBN` has 24 decorations
+overhanging by 270 in on a prism whose largest face is far smaller. No choice of
+frame can place a decoration bigger than the solid it decorates, so that is a
+different mechanism, still open.
+
 Field 2 is a **rotation** in radians about the decoration's own origin —
 non-zero on 4.3 % of decals, with unmistakable values (π, π/2, −π/2, π/4, 5.359,
 −0.2618). Field 3 is zero on 99.7 % of the long records. Fields 4 and 5 are
@@ -618,11 +684,17 @@ Ensemble`). Treat it as the regression bar alongside IoU.
 `tools/decalfit.py` is the third oracle: every `FEAT` decal's world box must sit
 inside the box of the prism it decorates. Neither of the others can see a decal
 at all — IoU because 50×50 hides it, detach.py because it only looks at prisms.
-Current baseline: **94 of 2932 (3.2 %)**, down from 346 (11.8 %). Measured at
-the level of the 2D face frame rather than the world box it is 147 of 2520
-(5.8 %); six alternative face numberings were swept against that figure after
-the coordinate-convention and oblique-sweep fixes and none beat the current one,
-so whatever remains is not a global renumbering.
+Current baseline: **16 of 2944**, and read the *magnitudes*, not the count —
+the azimuth frame (§4.7) took the worst escape from 54 in to 11 in while nudging
+the count up from 11, because it moved eight `Jersey Cow` spots from just inside
+the box to 0–2 in outside it. A count that ignores distance will prefer the
+worse answer.
+
+`tools/facefit.py` is the fourth and sharpest oracle: which individual FACE does
+the outline fit on, rather than which box does it stay inside. It scans all
+19,902 decorations across galleries, scenes AND models. Current baseline: **324
+misfits, of which 64 adrift by more than 15 in**. Read its histogram — an
+overhang of a couple of inches is trim by design (`CAPECOD`, 110 times over).
 
 Note that decal geometry is deliberately **not** identical between the two
 implementations: Python lifts each decoration off its face by `SURF_OFFSET` and

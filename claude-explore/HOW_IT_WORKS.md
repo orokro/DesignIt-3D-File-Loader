@@ -365,8 +365,9 @@ The angles aren't needed for geometry and are ❓.
 
 ## 10. Surface decoration — `SURF` / `FEAT`, and the swamp
 
-This is where all the remaining bugs are. **113 of 2,932 decals (3.9 %) still
-land outside the prism they decorate.**
+This is where all the remaining bugs are — though far fewer than they were.
+**64 of 19,902 decorations (0.32 %) are still adrift**, and most of those are
+too big for any face of their own prism.
 
 ### 10.1 Face numbering ✅ (corrected — the old rule was wrong)
 
@@ -431,24 +432,29 @@ the second flank was then laid out along a 7-inch axis using a 59-inch
 coordinate, and flew off into space. Rejected alternatives, with their failure
 rates:
 
-Re-measured over the WHOLE corpus (19,902 decorations, not the 2,532 in the
-galleries), the world-axis rule beats every alternative by a wide margin:
+**The world-axis rule was an approximation.** ✅ The frame is not built from a
+pair of world axes at all — it is built from the normal alone:
 
-| frame | misfits / 19,902 |
-|---|---|
-| **world axes, ascending (current)** | **488 (2.5 %)** |
-| intrinsic: v = sweep, u = v × n | 2,009 |
-| intrinsic, swapped | 7,168 |
-| force u along the sweep on side faces | 7,120 |
-| force v along the sweep on side faces | 2,012 |
+```
+u = normalise(Zup x n)     # the HORIZONTAL direction lying in the face
+v = n x u                  # the one going UP it
+```
 
-And the corpus is close to unanimous about the convention. Of the 6,922
-decorations whose placement actually DISCRIMINATES between the two axis roles,
-**6,732 want the FEAT's x along the polygon EDGE and y along the sweep** — which
-is what the world rule already produces for `axis = 3`, the bulk of the corpus.
+A decoration's x runs *across* a wall and its y runs *up* it, whatever angle the
+wall is turned to. Horizontal faces degenerate the cross product and fall back
+to the world-axis pair. `(u, v, n)` is right-handed by construction, so the
+hand-flip above becomes a no-op rather than a correction.
 
-The exceptions are 143 decorations, and 120 of them are the two space-station
-files. See §10.5.
+| frame, over all 19,902 decorations | misfits | adrift (> 15 in) |
+|---|---|---|
+| world axes, ascending (old) | 464 | 202 |
+| **azimuth, `u = Zup × n` (current)** | **324** | **64** |
+| azimuth about world X | 6,426 | — |
+| azimuth about world Y | 4,017 | — |
+
+The two rules agree on every world-aligned face, which is why the wrong one
+survived so many sweeps; they part company exactly where the corpus was failing.
+`models/` alone goes from 130 misfits to 6.
 
 ### 10.5 What is actually left, measured properly 🟡
 
@@ -471,25 +477,65 @@ by exactly 2 inches, 110 times over. Read the histogram, not the headline:
 
 So the real population is ~207, and **120 of those are `SPACSTAT` / `SPACESTA`**.
 
-**The space station anomaly.** Its modules are 8-sided straight prisms, 720 long
-along the sweep with 160.4-inch facets. Every decoration sits at tx ≈ 620,
-ty ≈ 80 — so tx can only be the 720 axis. The app therefore puts the FEAT's x
-along the SWEEP on all eight facets. The world rule puts x along the sweep on
-the four diagonal facets and along the edge on the four axis-aligned ones, so
-exactly half the windows land and half fly: 60 of 120, twice over.
+**The space station anomaly — solved.** ✅ Its modules are 8-sided straight
+prisms, 720 long along the sweep with 160.4-inch facets, and under the world
+rule exactly half the window decals landed and half flew: 60 of 120, twice over.
+Greg reported it as *"the pink decals on the space station are flying
+everywhere… but not all of them"*, and **but not all of them** was the whole
+clue. Four of eight facets fall either side of the 45° line where the dropped
+axis changes, so the world rule handed those four the opposite convention from
+their neighbours. The azimuth frame is continuous round the prism — the defect
+this section predicted must exist — and places all 120.
 
-That is the opposite convention from the 6,732 decorations that agree on x =
-edge, and no rule tried so far separates them. Ruled out as the discriminator:
-the axis byte (both conventions appear at `axis = 2`), the polygon vertex count
-(n = 8 shows 132 wanting sweep and 322 wanting edge), whether the facet normal
-is world-axis-aligned, the face's aspect ratio, and expressing the same
-drop-the-dominant-axis rule in LOCAL (u, v, w) space instead of world space —
-that last one predicts x = edge for the space station too.
+**The order `Zup x n` is not cosmetic and no oracle can check it.** Both orders
+are continuous, and both fit equally well — they differ by a 180-degree turn
+about the normal, which moves the frame's origin to the opposite corner of the
+face, and a bounds test is symmetric under exactly that. Shipping `n x Zup` put
+every decoration in the corpus on the right face upside down and at the far end
+of it; `facefit.py` reported **identical** numbers for both. It took the user
+reading `VIRTUS` off the shuttle's nose. `Zup x n` reproduces the old world-axis
+frame — hand flip included — on every axis-aligned face, so the change is
+surgical: it moves 770 of 33,530 decoration meshes, all on tilted facets. The
+wrong order moves 16,006.
 
-**The frame is inconsistent going round a cylinder and that is a genuine defect**
-even where it does not yet show: the world-axis rule changes which axis is which
-as a facet's normal crosses 45°. Any correct model must be continuous around the
-prism. We have not found the one the application uses.
+Two methodological traps, both of which produced a confident wrong number:
+
+* **The parity digest cannot see a decal move.** With the z-fight lift off a
+  decoration is coplanar with its face, and a planar polygon's signed volume
+  depends only on its plane's distance from the origin — not on where in the
+  plane it sits. Area is blind too. So `world` and `azim` gave byte-identical
+  digests for 113 of 133 files while thousands of decals had moved. Compare
+  per-decoration world positions instead; `~/scratch/decalpos.py` does.
+* **A same-length source edit can be silently ignored.** `np.cross(up, nrm)` and
+  `np.cross(nrm, up)` are the same number of bytes. Python invalidates its
+  bytecode cache on source mtime AND SIZE, so on a mount with coarse mtime the
+  stale `.pyc` was reused and both halves of an A/B ran the *same* code —
+  reporting "0 decorations moved" for a change that moves 16,000. `FACE_FRAME`
+  now carries an explicit `'azim_rev'` value so the comparison is a flag, not an
+  edit.
+
+Two dead ends on the way, both of which looked like answers:
+
+* **Edge-versus-sweep.** Model the frame as the face's own basis, one axis along
+  the polygon edge and one along the sweep, and let an oracle pick the better of
+  the two per face: 290 misfits against the world rule's 430. Encouraging, and
+  wrong. Nothing predicts the per-face choice better than 99.4 % (the best being
+  the sweep's own world direction), and the residue never resolves. The app is
+  not choosing between two axes; it is projecting a normal, and the "choice"
+  is a side effect.
+* **The origin corner.** A sweep of the four corners a face might be measured
+  from returned *byte-identical* counts for all four. Flipping an origin maps
+  `[0, L]` onto itself, so a both-sides bounds test is structurally incapable of
+  seeing it — the same shape of mistake as the six numbering sweeps in §10.1,
+  caught this time before it produced a conclusion. **Any oracle built on "does
+  it fit" is blind to the origin corner and to mirroring.** Only a render
+  settles those.
+
+What remains is not a frame problem. Of the 64 decorations still adrift, all but
+a handful fit **no face of their prism at all**: `BEACHCBN` has 24 overhanging by
+270 in on a prism whose largest face is nowhere near that size, and `JENSONEX`
+two at 960 in. No frame can place a decoration larger than the solid it
+decorates. That is a different, still-unexplained mechanism.
 
 ### 10.3 Two coordinate conventions ✅
 

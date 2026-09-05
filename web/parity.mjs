@@ -6,6 +6,7 @@ import { parse, wlbItems } from './src/iff.js';
 import { sceneMeshes, collect, options } from './src/geometry.js';
 
 options.applySlic = true; options.slicKeepNeg = false; options.drawSurf = process.env.SURF === "1";
+options.faceFrame = process.env.FRAME || 'azim';
 
 function digest(meshes) {
   let tris = 0, area = 0, vol = 0;
