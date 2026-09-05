@@ -501,6 +501,27 @@ the space station are flying everywhere… but not all of them", and *not all of
 them* was the whole clue. The azimuth frame gives all eight facets the same
 convention and places all 120.
 
+**The face counts as horizontal by INTEGER quantisation, not by an angle.** ✅
+`seg28:0x5a59` builds a side face's normal as the raw perpendicular of the edge
+arriving at vertex `si` — un-normalised, no sweep component — and the binary
+stores it as three **int16**. That rounding IS the rule. `STAWAGON`'s roof
+perpendicular is `(-137.3494, -0.2431)`, stored as `(-137, 0)`, so the app sees
+an exactly horizontal face and uses the fallback; our floating-point normal was
+0.1 degrees off, `Zup x n` resolved to +Y instead of +X, and the five 65-inch
+roof-rack bars came out turned 90 degrees and hanging over the sides.
+
+No angular tolerance can substitute. `STAWAGON`'s roof is 0.14 degrees off
+horizontal and wants the fallback; `SPACSTAT`'s facets are 0.6 degrees off and
+want the azimuth frame. Only quantisation separates them — the roof's tilt comes
+from a 0.24 in edge offset that rounds to zero, the station's from a 12 in one
+that does not. Use `app_face_normals()` / `appFaceNormals()`.
+
+> Use the quantised normal ONLY to choose the in-plane direction, never as the
+> face's plane. The face's vertices are coplanar with respect to the TRUE
+> normal, so measuring the plane offset against the quantised one makes the
+> origin depend on which vertex you happen to pick — 69 inches apart between the
+> two implementations on `APOLLO`.
+
 **The cross-product ORDER is `Zup x n`, and getting it backwards is invisible to
 every fit oracle.** `n x Zup` is equally continuous and equally well-fitting —
 it differs by a 180-degree turn about the normal, which moves the origin to the
@@ -553,6 +574,52 @@ scale, exactly 1.0 on 94 % of them.
 Applying both took decals-outside-their-prism from **11.8 % to 3.2 %**
 (`tools/decalfit.py`) — though note that metric barely moved on the short-record
 fix itself, which is a fair warning about how little it sees (see section 9).
+
+### 4.4b Opacity — the byte everyone skips ✅
+
+Every colour record is **`(alpha, r, g, b)`**, and the alpha is load-bearing.
+
+**A `FEAT`'s COLR.** Byte 0 takes exactly three values corpus-wide:
+
+| alpha | count | meaning |
+|---|---|---|
+| 255 | 18,805 | opaque decoration |
+| 128 | 629 | translucent — glazing, screens |
+| **0** | **468** | **a HOLE cut through the face** |
+
+A zero-alpha `FEAT` is not decoration at all: the authors used it to cut an
+opening. `BEACHCBN`'s convertible gets its open cockpit that way, and the
+`Silo` its doorway. Drawn opaque it becomes a solid white slab across the car's
+seats — which is exactly what it was doing.
+
+**A `PRSM`'s COLR** is two such records with no prefix, and **record 1's alpha is
+0 in all 18,038 of them**: record 1 is the INSIDE of the surface, which a solid
+never shows, and record 2 is what you see. Record 2's alpha is 255 normally,
+128 on 36 prisms (translucent) and 0 on 15 (invisible).
+
+**A `SURF`'s COLR** has the 2-byte prefix, then one or two records; with two, the
+second is again the visible one:
+
+| record 2 | count | RGBs agree? |
+|---|---|---|
+| alpha 255 | 1,995 | all but **50** |
+| alpha 128 | 127 | yes |
+| alpha 0 | 2,348 | yes |
+
+Reading record 1 is right only by luck. The 50 exceptions are real: `INDYCAR`'s
+two wing end plates are a mirrored pair, one `00 03 | ff ff ff ff` (white) and
+the other `00 02 | 00 ff 00 00 | ff ff ff ff` — inside red, **outside white**.
+Record 1 painted the second plate red where the application shows white.
+
+❓ **Open:** what a record-2 alpha of 0 means for a FACE. On a `FEAT` it cuts a
+hole; if it does the same here, 2,348 faces should be invisible rather than
+painted. Not acted on — their two RGBs are identical in every case, so the
+rendered output is the same either way.
+
+❓ **Open: transparency does not yet cut.** A zero-alpha `FEAT` is currently
+skipped rather than subtracted from the face beneath it, so the convertible's
+cockpit is closed instead of open. Cutting the hole needs a polygon-with-holes
+triangulation of the face in its own 2D frame.
 
 ### 4.5 `COLR` (8 bytes)
 

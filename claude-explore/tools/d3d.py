@@ -456,6 +456,30 @@ def surf_colours(prsm):
     Reading a SURF COLR at the PRSM offsets picks up the prefix as part of the
     colour: `00 02 00 ff ff ff 00 ff ff ff` is white, but bytes 1-3 read it as
     (0x02, 0x00, 0xff), a dark blue.
+
+    Each record is `(alpha, r, g, b)`, and with TWO of them the SECOND is the one
+    you can see. Record 1's alpha is 0 in every one of the 18,038 PRSM colours
+    and every two-record SURF colour in the corpus -- it is the INSIDE of the
+    surface, which a solid never shows. Taking record 1's RGB is right only
+    because the two records almost always agree:
+
+        record 2 alpha 255, RGBs differ :   50   <- rendered with the WRONG colour
+        record 2 alpha 255, RGBs agree  : 1945
+        record 2 alpha 128, RGBs agree  :  127   <- translucent, drawn opaque
+        record 2 alpha   0, RGBs agree  : 2348   <- see below
+
+    The 50 are real: the `INDYCAR`'s two wing end plates are a mirrored pair, one
+    `00 03 | ff ff ff ff` (white) and the other
+    `00 02 | 00 ff 00 00 | ff ff ff ff` (inside red, OUTSIDE WHITE). Reading
+    record 1 painted the second plate red while the application shows white.
+
+    Because the RGBs agree everywhere except those 50, switching to record 2
+    changes nothing else.
+
+    OPEN: what a record-2 alpha of 0 means for a FACE. On a `FEAT` a zero alpha
+    cuts a hole (see surface_features); if it does the same here, 2,348 faces
+    should be invisible rather than painted. Not acted on -- their RGB matches
+    record 1 in every case, so the current output is unchanged either way.
     """
     out = {}
     for surf in prsm.kids('SURF'):
@@ -463,16 +487,19 @@ def surf_colours(prsm):
         if c is None or len(c.data) < 6:
             continue
         d = c.data
-        out[iff.u16(surf.hdr, 0)] = (d[3], d[4], d[5])
+        out[iff.u16(surf.hdr, 0)] = (d[7], d[8], d[9]) if len(d) >= 10 else (d[3], d[4], d[5])
     return out
 
 
 def color_of(prsm):
+    """A prism's own colour: the SECOND of its COLR's two (alpha, r, g, b)
+    records. Record 1 is the inside face -- its alpha is 0 in all 18,038 of
+    them -- and its RGB differs from record 2's on 8 prisms."""
     c = prsm.kid('COLR')
     if c is None or len(c.data) < 8:
         return (170, 170, 170)
     d = c.data
-    return (d[1], d[2], d[3])
+    return (d[5], d[6], d[7])
 
 
 COMPOSE = False   # see findings/hierarchy.md -- child POSN appears to be absolute
@@ -572,6 +599,8 @@ FACE_HAND = 'right'      # 'right' | 'raw' -- orient the face frame by its outwa
 RING_Z = 'uniform'       # 'uniform' | 'angle' -- how curved-profile rings are spaced
 FACE_FRAME = 'azim'    # n x up: horizontal across the face, vertical up it
 FACE_BASE = 'cap0'       # 'cap0' (cap first, sides 1-based) | 'side0' (sides first, 0-based)
+FACE_HORIZ_TOL = 1e-6   # |up x n| below this counts the face as HORIZONTAL
+DRAW_HOLES = False      # draw alpha==0 FEATs (hole cutters) as solid decoration
 SURF_OFFSET = 0.05      # inches to lift a decoration off its face, to beat z-fighting
 
 # FEAT's 2-byte header selects which side of the surface is decorated.
@@ -585,7 +614,58 @@ SURF_OFFSET = 0.05      # inches to lift a decoration off its face, to beat z-fi
 FEAT_INSIDE, FEAT_OUTSIDE, FEAT_BOTH = 0, 1, 2
 
 
-def face_frame(verts, tris, sweep=None):
+def app_face_normals(poly):
+    """Face normals the way the APPLICATION computes them, from `seg28:0x5a59`.
+
+    For a side face the app takes the edge ARRIVING at vertex si and uses its
+    raw perpendicular::
+
+        di = (si == 0) ? vertexCount - 1 : si - 1
+        normal = (vert[di].y - vert[si].y,  vert[si].x - vert[di].x,  0)
+
+    -- un-normalised, with NO component along the sweep -- then permutes it by
+    the sweep axis. The binary stores that as three **int16**, and the
+    quantisation is not an implementation detail, it is the rule: a face whose
+    perpendicular is (-137.3494, -0.2431) is stored as (-137, 0) and is
+    therefore EXACTLY axis-aligned as far as the app is concerned.
+
+    That is what decides whether a face counts as horizontal, and it has to be,
+    because no angular tolerance can work: `STAWAGON`'s roof is 0.1 degrees off
+    horizontal and wants the horizontal fallback, while `SPACSTAT`'s facets are
+    0.6 degrees off and want the azimuth frame. Quantisation separates them
+    exactly -- the roof's tilt comes from a 0.24 in edge offset that rounds to
+    zero, the station's from a 12 in one that does not.
+
+    -> {face_id: 3-vector, un-normalised, in object space}
+    """
+    A = axis_matrix(poly.axis)
+    V = poly.verts
+    n = len(V)
+    if n < 3:
+        return {}
+    rings = poly.rings()
+    nband = len(rings) - 1
+    ncap = (2 if poly.profile == STRAIGHT
+            else 1 if poly.profile in (POINTED, ROUNDED) else 0)
+    has_high = ncap == 2 or (ncap == 1 and poly.za <= poly.zb)
+    has_low = ncap == 2 or (ncap == 1 and not has_high)
+    first = 1 if has_high else 0
+    out = {}
+    if has_high:
+        out[0] = A @ np.array([0.0, 0.0, 1.0])
+    if has_low:
+        out[ncap + nband * n - 1] = A @ np.array([0.0, 0.0, -1.0])
+    for band in range(nband):
+        for j in range(n):
+            a, b = V[(j - 1) % n], V[j]
+            nx, ny = int(b[1] - a[1]), int(a[0] - b[0])    # int16 truncation
+            if nx == 0 and ny == 0:
+                continue                                   # edge under 1 unit
+            out[first + band * n + j] = A @ np.array([float(nx), float(ny), 0.0])
+    return out
+
+
+def face_frame(verts, tris, sweep=None, normal=None):
     """A 2D coordinate frame for one face of a prism.
 
     Drop the axis the face normal is most aligned with and keep the other two
@@ -615,6 +695,21 @@ def face_frame(verts, tris, sweep=None):
     nrm = acc / la if la > 1e-9 else nbest
     if nrm is None or best < 1e-9:
         return None
+    # The APP's own integer-quantised normal, used ONLY to choose the in-plane
+    # DIRECTION below -- never as the face's plane.
+    #
+    # Substituting it for `nrm` outright is wrong and expensively so: the face's
+    # vertices are coplanar with respect to the TRUE normal, not the quantised
+    # one, so the plane offset then depends on WHICH vertex you measure it from.
+    # Python sorted the face's vertex indices and the JS did not, and on
+    # `APOLLO` -- 17,000 units across -- that put the two implementations 69
+    # inches apart on the same decoration.
+    nq = None
+    if normal is not None:
+        q = np.asarray(normal, float)
+        ln = float(np.linalg.norm(q))
+        if ln > 1e-9:
+            nq = (-q if float(q @ nrm) < 0 else q) / ln
     # point the normal away from the solid so decorations sit on the outside
     if float(nrm @ (P.mean(0) - verts.mean(0))) < 0:
         nrm = -nrm
@@ -674,9 +769,10 @@ def face_frame(verts, tris, sweep=None):
         # with coarse mtime silently reuses the stale .pyc and both halves of
         # the comparison run the same code -- which is exactly what happened,
         # and it reported "0 decorations moved" for a change that moves 16,000.
-        h = np.cross(nrm, up) if FACE_FRAME == 'azim_rev' else np.cross(up, nrm)
+        na = nrm if nq is None else nq
+        h = np.cross(na, up) if FACE_FRAME == 'azim_rev' else np.cross(up, na)
         nh = float(np.linalg.norm(h))
-        if nh > 1e-6:
+        if nh > FACE_HORIZ_TOL:
             u = h / nh
             v = np.cross(nrm, u)
     if FACE_FRAME in ('sweep_u', 'sweep_v') and sweep is not None:
@@ -776,14 +872,19 @@ def surface_features(prsm, verts, faces, fids, W):
         byface.setdefault(fid, []).append(t)
 
     pc = prsm.kid('POLY')
-    sweep_dir = axis_matrix(Poly(pc).axis) @ np.array([0.0, 0.0, 1.0]) if pc else None
+    sweep_dir = appn = None
+    if pc is not None:
+        _p = Poly(pc)
+        sweep_dir = axis_matrix(_p.axis) @ np.array([0.0, 0.0, 1.0])
+        appn = app_face_normals(_p)
+    appn = appn or {}
 
     for surf in prsm.kids('SURF'):
         fid = iff.u16(surf.hdr, 0)
         tris = byface.get(fid)
         if not tris:
             continue
-        fr = face_frame(verts, tris, sweep=sweep_dir)
+        fr = face_frame(verts, tris, sweep=sweep_dir, normal=appn.get(fid))
         if fr is None:
             continue
         corner, u, v, nrm, middle = fr
@@ -796,6 +897,16 @@ def surface_features(prsm, verts, faces, fids, W):
             tx, ty, th, sx, sy = feat_transform(feat)
             col = feat.kid('COLR')
             rgb = (col.data[1], col.data[2], col.data[3]) if col and len(col.data) >= 4 else (0, 0, 0)
+            # Byte 0 of a FEAT's COLR is OPACITY, and it takes exactly three
+            # values corpus-wide: 255 opaque (18,805), 128 translucent (629) and
+            # 0 fully transparent (468). A zero is not decoration at all -- the
+            # authors used it to cut a HOLE through the face it sits on, which
+            # is how `BEACHCBN`'s convertible gets its open cockpit and how the
+            # `Silo` gets its doorway. Drawn opaque, that hole becomes a solid
+            # white slab across the car's seats.
+            alpha = col.data[0] if col and len(col.data) >= 4 else 255
+            if alpha == 0 and not DRAW_HOLES:
+                continue
 
             ct, st = math.cos(th), math.sin(th)
             pts2 = [(ct * (x * sx) - st * (y * sy) + tx,

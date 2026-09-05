@@ -498,6 +498,27 @@ frame — hand flip included — on every axis-aligned face, so the change is
 surgical: it moves 770 of 33,530 decoration meshes, all on tilted facets. The
 wrong order moves 16,006.
 
+**Horizontal is decided by INTEGER QUANTISATION, not by an angle.** ✅ The app
+builds a side face's normal as the raw perpendicular of its edge and stores it
+as three int16 (`seg28:0x5a59`), and that rounding is the rule. `STAWAGON`'s
+roof perpendicular is `(-137.3494, -0.2431)` → `(-137, 0)`, exactly horizontal,
+so the app uses the fallback frame; our float normal was 0.1 degrees off, so
+`Zup x n` resolved to +Y instead of +X and the five 65-inch roof-rack bars came
+out turned 90 degrees and overhanging. No tolerance can substitute: the roof is
+0.14 degrees off horizontal and wants the fallback, while `SPACSTAT`'s facets are
+0.6 degrees off and want the azimuth frame — quantisation separates them and an
+angle cannot. A sweep of tolerances confirms it: below 0.01 the wagon stays
+broken, above 0.02 the space station breaks again.
+
+One trap in the fix itself: **use the quantised normal only for the in-plane
+direction, never as the face's plane.** The face's vertices are coplanar with
+respect to the TRUE normal, so measuring the plane offset against the quantised
+one makes the origin depend on which vertex you pick — Python sorted the face's
+vertex indices, the JS did not, and on `APOLLO` (17,000 units across) that put
+the two implementations 69 inches apart on the same decoration. Decoration
+positions now agree to within 1.5 in on 13 of 18,047 meshes, all in a file the
+two already tessellate differently.
+
 Two methodological traps, both of which produced a confident wrong number:
 
 * **The parity digest cannot see a decal move.** With the z-fight lift off a
@@ -536,6 +557,35 @@ a handful fit **no face of their prism at all**: `BEACHCBN` has 24 overhanging b
 270 in on a prism whose largest face is nowhere near that size, and `JENSONEX`
 two at 960 in. No frame can place a decoration larger than the solid it
 decorates. That is a different, still-unexplained mechanism.
+
+### 10.6 Opacity — the byte everyone skips ✅
+
+Every colour record is `(alpha, r, g, b)`, and we were throwing the alpha away.
+
+A **`FEAT`**'s alpha takes exactly three values corpus-wide: 255 opaque
+(18,805), 128 translucent (629), and **0 on 468** — and a zero is not decoration
+at all. The authors cut openings with it. `BEACHCBN`'s convertible has a
+51 x 63 in zero-alpha decal over its cockpit; drawn opaque it is a solid white
+slab across the seats, which is exactly how the user found it. The user worked
+out the mechanism from the original app before we did.
+
+A **`PRSM`**'s 8-byte COLR is two such records, and **record 1's alpha is 0 in
+all 18,038 of them** — record 1 is the inside of the surface, which a solid
+never shows; record 2 is what you see. A **`SURF`**'s COLR is the same after its
+2-byte prefix. Reading record 1's RGB works only because the two records agree
+almost everywhere: of 4,470 two-record SURF colours, exactly **50 differ**, and
+`INDYCAR`'s wing end plates are among them — a mirrored pair, one plain white
+and one `00 02 | 00 ff 00 00 | ff ff ff ff`, inside red and outside white. We
+painted that plate red; the app shows white.
+
+Both implementations now read record 2. Colour sets agree across all 133 files.
+
+Still open, and worth doing: **transparency does not cut.** A zero-alpha FEAT is
+skipped rather than subtracted from the face under it, so the convertible's
+cockpit is closed instead of open. And 2,348 SURF faces have a record-2 alpha of
+0 — if that means the same thing it means on a FEAT, those faces should be
+holes. Their two RGBs are identical in every case, so nothing renders
+differently either way today, which is precisely why it is easy to get wrong.
 
 ### 10.3 Two coordinate conventions ✅
 

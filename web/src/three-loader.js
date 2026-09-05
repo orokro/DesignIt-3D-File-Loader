@@ -25,7 +25,9 @@ function buildGroup(meshes, { flatShading = true } = {}) {
     const bucket = m.isFeature ? feats : solids;
     // features are keyed by colour AND stack layer so each layer keeps its own
     // depth bias; solids merge by colour alone
-    const k = m.isFeature ? `${key(m.color)}/${m.layer ?? 0}` : key(m.color);
+    // alpha is part of the key: a translucent decal must not be merged into
+    // the same draw call as an opaque one of the same colour and layer.
+    const k = m.isFeature ? `${key(m.color)}/${m.layer ?? 0}/${m.alpha ?? 255}` : key(m.color);
     if (!bucket.has(k)) bucket.set(k, { pos: [], rgb: m.color, alpha: m.alpha ?? 255, layer: m.layer ?? 0 });
     const b = bucket.get(k);
     for (const [a, c, d] of m.faces) {

@@ -30,9 +30,9 @@ SLACK = 0.6      # inches; matches decalfit.py
 ADRIFT = 15.0    # inches; beyond this it is not trim, it is a bug
 
 
-def face_fit(verts, tris, poly2, tr, sweep=None):
+def face_fit(verts, tris, poly2, tr, sweep=None, normal=None):
     """Lay the outline out on this face; -> max overhang in inches (<0 = slack)."""
-    fr = d3d.face_frame(verts, tris, sweep=sweep)
+    fr = d3d.face_frame(verts, tris, sweep=sweep, normal=normal)
     if fr is None:
         return None
     corner, u, v, nrm, middle = fr
@@ -59,6 +59,7 @@ def _scan_item(item, name, bucket, rows):
                 if m:
                     verts, faces, poly, fids = m
                     swp = d3d.axis_matrix(poly.axis) @ np.array([0.0, 0.0, 1.0])
+                    appn = d3d.app_face_normals(poly)
                     byface = {}
                     for t, fid in zip(faces, fids):
                         byface.setdefault(fid, []).append(t)
@@ -79,7 +80,8 @@ def _scan_item(item, name, bucket, rows):
                                                  cause=('face id beyond the numbering' if fid > maxid
                                                         else 'face removed by clipping')))
                                 continue
-                            o = face_fit(verts, tris, p2, d3d.feat_transform(f), sweep=swp)
+                            o = face_fit(verts, tris, p2, d3d.feat_transform(f), sweep=swp,
+                                         normal=appn.get(fid))
                             if o is None:
                                 continue
                             rows.append(dict(bucket=bucket, name=name, fid=fid, over=o, cause=None))

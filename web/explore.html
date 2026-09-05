@@ -186,7 +186,9 @@ function meshesToGroup(meshes) {
   const solids = new Map(), feats = new Map();
   for (const m of meshes) {
     const bucket = m.isFeature ? feats : solids;
-    const k = m.isFeature ? `${m.color.join(',')}/${m.layer ?? 0}` : m.color.join(',');
+    // alpha is part of the key: a translucent decal must not be merged into
+    // the same draw call as an opaque one of the same colour and layer.
+    const k = m.isFeature ? `${m.color.join(',')}/${m.layer ?? 0}/${m.alpha ?? 255}` : m.color.join(',');
     if (!bucket.has(k)) bucket.set(k, { pos: [], rgb: m.color, layer: m.layer ?? 0, alpha: m.alpha ?? 255 });
     const b = bucket.get(k);
     for (const [a, c, d] of m.faces) {
@@ -209,6 +211,8 @@ function meshesToGroup(meshes) {
       mat.polygonOffsetFactor = -1 - e.layer;
       mat.polygonOffsetUnits = -4 * (e.layer + 1);
       mat.depthWrite = false;
+      // 128 = translucent (629 decorations corpus-wide: glazing, screens)
+      if (e.alpha < 250) { mat.transparent = true; mat.opacity = e.alpha / 255; }
     }
     const mesh = new THREE.Mesh(geo, mat);
     if (isFeature) { mesh.renderOrder = 1 + e.layer; mesh.userData.isFeature = true; }

@@ -16,6 +16,7 @@ export const options = {
   drawSurf: true,       // build SURF/FEAT decoration overlays
   applySkew: true,      // POLY's oblique-sweep offset
   faceFrame: 'azim',    // 'azim' | 'world' -- a face's 2D axes; mirrors d3d.FACE_FRAME
+  drawHoles: false,     // draw alpha==0 FEATs (hole cutters) as solid decoration
 };
 
 // ---- small vector helpers ----
@@ -389,15 +390,25 @@ export function surfColours(prsm) {
   for (const surf of prsm.kids('SURF')) {
     const c = surf.kid('COLR');
     if (!c || c.data.byteLength < 6) continue;
-    out.set(u16(surf.hdr, 0), [c.data.getUint8(3), c.data.getUint8(4), c.data.getUint8(5)]);
+    // Each record is (alpha, r, g, b) and with TWO of them the SECOND is the
+    // visible one: record 1 is the INSIDE of the surface and its alpha is 0 in
+    // every two-record colour in the corpus. The RGBs agree except on 50 faces
+    // -- INDYCAR's wing end plate is one, inside red and outside white, and
+    // reading record 1 painted it red where the app shows white.
+    const d = c.data;
+    out.set(u16(surf.hdr, 0), d.byteLength >= 10
+      ? [d.getUint8(7), d.getUint8(8), d.getUint8(9)]
+      : [d.getUint8(3), d.getUint8(4), d.getUint8(5)]);
   }
   return out;
 }
 
+/** A prism's colour: the SECOND of its COLR's two (alpha, r, g, b) records.
+ *  Record 1 is the inside face -- alpha 0 in all 18,038 of them. */
 export function colorOf(prsm) {
   const c = prsm.kid('COLR');
   if (!c || c.data.byteLength < 8) return [170, 170, 170];
-  return [c.data.getUint8(1), c.data.getUint8(2), c.data.getUint8(3)];
+  return [c.data.getUint8(5), c.data.getUint8(6), c.data.getUint8(7)];
 }
 
 // ---- SURF / FEAT ----
@@ -407,8 +418,49 @@ export function colorOf(prsm) {
  * keep the other two in ascending axis order, origin at the face's minimum
  * corner. Feature coordinates are expressed in this frame.
  */
-export function faceFrame(verts, tris) {
-  const idx = [...new Set(tris.flat())];
+/**
+ * Face normals the way the APPLICATION computes them (`seg28:0x5a59`).
+ *
+ * For a side face the app takes the edge ARRIVING at vertex si and uses its raw
+ * perpendicular -- un-normalised, with no component along the sweep -- then
+ * permutes it by the sweep axis. The binary stores that as three INT16, and the
+ * quantisation is the rule, not an implementation detail: a face whose
+ * perpendicular is (-137.3494, -0.2431) stores as (-137, 0) and is therefore
+ * exactly axis-aligned as far as the app is concerned.
+ *
+ * That is what decides whether a face counts as horizontal, and it has to be:
+ * no angular tolerance can work, because STAWAGON's roof is 0.1 degrees off
+ * horizontal and wants the horizontal fallback while SPACSTAT's facets are 0.6
+ * degrees off and want the azimuth frame. Quantisation separates them exactly.
+ *
+ * -> Map of face id -> un-normalised object-space vector.
+ */
+export function appFaceNormals(poly) {
+  const out = new Map();
+  const V = poly.verts, n = V.length;
+  if (n < 3) return out;
+  const rings = poly.rings();
+  const nband = rings.length - 1;
+  const ncap = poly.profile === STRAIGHT ? 2
+             : (poly.profile === POINTED || poly.profile === ROUNDED) ? 1 : 0;
+  const hasHigh = ncap === 2 || (ncap === 1 && poly.za <= poly.zb);
+  const hasLow = ncap === 2 || (ncap === 1 && !hasHigh);
+  const first = hasHigh ? 1 : 0;
+  if (hasHigh) out.set(0, axisMap(poly.axis, 0, 0, 1));
+  if (hasLow) out.set(ncap + nband * n - 1, axisMap(poly.axis, 0, 0, -1));
+  for (let band = 0; band < nband; band++) {
+    for (let j = 0; j < n; j++) {
+      const a = V[(j - 1 + n) % n], b = V[j];
+      const nx = Math.trunc(b[1] - a[1]), ny = Math.trunc(a[0] - b[0]);
+      if (nx === 0 && ny === 0) continue;          // edge under one unit
+      out.set(first + band * n + j, axisMap(poly.axis, nx, ny, 0));
+    }
+  }
+  return out;
+}
+
+export function faceFrame(verts, tris, normal) {
+  const idx = [...new Set(tris.flat())].sort((a, b) => a - b);   // match d3d.py
   // Area-weighted sum over the whole face, not the single largest triangle:
   // one triangle's cross product carries enough float noise to flip the
   // dominant-axis test below on a face sitting at exactly 45 degrees.
@@ -428,6 +480,15 @@ export function faceFrame(verts, tris) {
   const fc = [0, 0, 0];
   for (const i of idx) { fc[0] += verts[i][0] / idx.length; fc[1] += verts[i][1] / idx.length; fc[2] += verts[i][2] / idx.length; }
   if (dot(nrm, sub(fc, ctr)) < 0) nrm = mul(nrm, -1);
+  // The app's own integer-quantised normal, used ONLY to choose the in-plane
+  // direction below -- never as the face's plane. The face's vertices are
+  // coplanar with respect to the TRUE normal, not the quantised one, so using
+  // it as the plane makes the origin depend on which vertex you measure from.
+  let nq = null;
+  if (normal) {
+    const ln = len(normal);
+    if (ln > 1e-9) nq = mul(dot(normal, nrm) < 0 ? mul(normal, -1) : normal, 1 / ln);
+  }
 
   // Break an exact tie towards the LOWEST axis index, so that two mirrored
   // faces get mirrored frames instead of transposed ones -- see d3d.py.
@@ -452,7 +513,8 @@ export function faceFrame(verts, tris) {
     // containment oracle can see it: a 180-degree turn moves the origin to the
     // opposite corner and fits exactly as well.
     // 'azim_rev' is the wrong order, kept switchable for A/B measurement.
-    const h = options.faceFrame === 'azim_rev' ? cross(nrm, [0, 0, 1]) : cross([0, 0, 1], nrm);
+    const na = nq || nrm;
+    const h = options.faceFrame === 'azim_rev' ? cross(na, [0, 0, 1]) : cross([0, 0, 1], na);
     if (len(h) > 1e-6) { u = norm(h); v = cross(nrm, u); }
   }
   u = sub(u, mul(nrm, dot(u, nrm)));
@@ -532,11 +594,13 @@ export function surfaceFeatures(prsm, mesh) {
     if (!byFace.has(k)) byFace.set(k, []);
     byFace.get(k).push(t);
   });
+  const pc = prsm.kid('POLY');
+  const appn = pc ? appFaceNormals(new Poly(pc)) : new Map();
   for (const surf of prsm.kids('SURF')) {
     const fid = u16(surf.hdr, 0);
     const tris = byFace.get(fid);
     if (!tris) continue;
-    const fr = faceFrame(mesh.verts, tris);
+    const fr = faceFrame(mesh.verts, tris, appn.get(fid));
     if (!fr) continue;
     let layer = 0;
     for (const feat of surf.kids('FEAT')) {
@@ -547,7 +611,14 @@ export function surfaceFeatures(prsm, mesh) {
       const col = feat.kid('COLR');
       const rgb = col && col.data.byteLength >= 4
         ? [col.data.getUint8(1), col.data.getUint8(2), col.data.getUint8(3)] : [0, 0, 0];
+      // Byte 0 of a FEAT's COLR is OPACITY, and corpus-wide it takes exactly
+      // three values: 255 opaque (18,805), 128 translucent (629), 0 fully
+      // transparent (468). A zero is not decoration -- the authors used it to
+      // cut a HOLE through the face, which is how BEACHCBN's convertible gets
+      // its open cockpit and the Silo its doorway. Drawn opaque it becomes a
+      // white slab across the car's seats.
       const alpha = col && col.data.byteLength >= 4 ? col.data.getUint8(0) : 255;
+      if (alpha === 0 && !options.drawHoles) continue;
       const ct = Math.cos(th), st = Math.sin(th);
       const pts2 = poly.map(([x, y]) => [ct * (x * sx) - st * (y * sy) + tx,
                                          st * (x * sx) + ct * (y * sy) + ty]);
