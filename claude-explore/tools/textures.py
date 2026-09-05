@@ -7,7 +7,7 @@
         TXPD  [w:u16][h:u16][bpp:u16][pad][rowbytes:u32][size:u32]
                 CMAP  256 x (pad, r, g, b)
                 <pixels>      8-bit palette indices, rowbytes per row
-        TXST  43 B            unknown -- tiling/scale flags?
+        TXST  43 B            tiling: see tile_size()
 
     SUTX (in SURF) = TXID + TXOD + TATR    assign a texture to one FACE
     PLTX (in PRSM) = TXID + TXOD + TATR    assign to a whole prism
@@ -64,8 +64,31 @@ def decode_bitmap(body):
     return w, h, bytes(rgb)
 
 
+def tile_size(body):
+    """TXST -> (u, v) INCHES PER TILE.
+
+    These two fields are 8.24 fixed point, NOT the 16.16 the rest of the format
+    uses: `0x40000000` reads as 16384 under 16.16 and as 64 under 8.24, and the
+    corpus values -- 32, 45, 55, 64, 88, 90, 128 -- are sane inches-per-tile for
+    brick, stone and panelling. Bytes 20 and 24 are a pair of 1.0 scale factors
+    in the same format.
+
+    This was implemented in `web/src/textures.js` and never here, so the Python
+    silently fell back to 64 on every texture in the corpus while the JS used
+    the real value -- the two renderers disagreed about texture scale for weeks
+    and no oracle noticed, because parity measures geometry and geometry is
+    unaffected. Anything decoded in one implementation belongs in both the same
+    day.
+    """
+    if len(body) < 36:
+        return None
+    u = struct.unpack('>I', body[28:32])[0] / (1 << 24)
+    v = struct.unpack('>I', body[32:36])[0] / (1 << 24)
+    return (u if u > 0.01 else 64.0, v if v > 0.01 else 64.0)
+
+
 def table(root):
-    """Every texture in a file -> {id: {'name', 'w', 'h', 'rgb'}}"""
+    """Every texture in a file -> {id: {'name', 'w', 'h', 'rgb', 'tile'}}"""
     out = {}
     def walk(n):
         for k in n.children:
@@ -74,6 +97,7 @@ def table(root):
                     if tag != 'TXTE':
                         continue
                     tid = name = img = None
+                    tile = (64.0, 64.0)
                     for t2, b2 in subchunks(body):
                         if t2 == 'TXID' and len(b2) >= 4:
                             tid = struct.unpack('>I', b2[:4])[0]
@@ -81,8 +105,10 @@ def table(root):
                             name = b2.split(b'\0')[0].decode('latin1', 'replace')
                         elif t2 == 'TXPD':
                             img = decode_bitmap(b2)
+                        elif t2 == 'TXST':
+                            tile = tile_size(b2) or tile
                     if tid is not None:
-                        e = {'name': name}
+                        e = {'name': name, 'tile': tile}
                         if img:
                             e.update(w=img[0], h=img[1], rgb=img[2])
                         out[tid] = e

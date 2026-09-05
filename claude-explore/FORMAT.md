@@ -619,15 +619,61 @@ two wing end plates are a mirrored pair, one `00 03 | ff ff ff ff` (white) and
 the other `00 02 | 00 ff 00 00 | ff ff ff ff` — inside red, **outside white**.
 Record 1 painted the second plate red where the application shows white.
 
-❓ **Open:** what a record-2 alpha of 0 means for a FACE. On a `FEAT` it cuts a
-hole; if it does the same here, 2,348 faces should be invisible rather than
-painted. Not acted on — their two RGBs are identical in every case, so the
-rendered output is the same either way.
+**A record-2 alpha of 0 on a FACE means the face is not drawn.** ✅ The
+application's own words for the three states are Opaque, Translucent (drawn as a
+checkerboard dither, because it had an 8-bit palette and no blending) and
+Transparent, and its VRML exporter writes them out as `transparency 0.0000 /
+0.4980 / 1.0000`. Counting per-face transparency in the exports against the
+alphas we read gives an exact match everywhere the two can be compared:
 
-❓ **Open: transparency does not yet cut.** A zero-alpha `FEAT` is currently
-skipped rather than subtracted from the face beneath it, so the convertible's
-cockpit is closed instead of open. Cutting the hole needs a polygon-with-holes
-triangulation of the face in its own 2D frame.
+| file | app says open | we read | app says translucent | we read |
+|---|---|---|---|---|
+| `KITCHEN` | 1 | 1 | — | — |
+| `BEACHCBN` | 1 | 1 | — | — |
+| `DEALEY` | 3 | 3 | 3 | 3 |
+
+So the 2,348 alpha-0 faces really are open, and they are not an artefact of
+unset defaults even where a whole file is full of them: `JENSONIN` has 272, and
+they are the window panes of a Victorian house — closing them fills every window
+with a flat grey slab.
+
+**Translucency lives mostly on `FEAT`, not on `SURF`.** ✅ `REEVES` has 172
+faces at `transparency 0.4980` in the app's export and exactly 172 `FEAT`s at
+alpha 128 — a window is a decoration on a wall, not a face of its own. Both
+alpha 0 and alpha 128 therefore have to OPEN the face they sit on: a translucent
+pane must show what is behind the wall, not blend with the wall itself. The pane
+is then drawn back into the opening as its own translucent mesh.
+
+The opening is made with a **per-face stencil**, not by retriangulating the
+face: the geometry is left untouched and the renderer skips the pixels inside a
+hole. Retriangulation cannot cope with the corpus — `REEVES` has a wall with 82
+windows and hole-bridging destroys 86% of it — and holes are allowed to overlap
+(a bezel round a screen), which a single outer ring cannot express at all. A
+stencil is also the likelier reconstruction: a scanline renderer with no depth
+buffer makes a hole by leaving spans unpainted. See `HOLE_MODE` in
+`tools/d3d.py`.
+
+### 4.4c The application's light model ✅
+
+Its VRML exporter writes an `ambientColor` alongside every `diffuseColor`, and
+across **3,184 materials the ratio is exactly 0.25** (8,002 of 8,143 channels
+land on 0.250 and the rest are rounding at low values). So a face is
+
+    albedo x (0.25 + 0.75 * |n . L|)
+
+and nothing else — no second light, no tint. Note `|n . L|`, not
+`max(0, n . L)`: the application lit a face by how square-on it was and did not
+care which way it pointed.
+
+**The stored RGB is a true 24-bit albedo, not a palette index.** ✅ 619 distinct
+colours over 194 distinct byte values, and every colour we decode appears
+verbatim in the app's own export — `MYHOUSE2` 27/27, `REEVES` 8/8, `KITCHEN`
+14/14 exact, zero mismatches. Nothing needs normalising. What *does* shift the
+colours is the renderer: three.js lights in linear space by default and its
+post-r155 intensities carry a factor of PI, so matching the application means
+`ColorManagement.enabled = false`, `outputColorSpace = LinearSRGBColorSpace`,
+ambient `0.25 * PI` and a directional lamp hung twice facing each other at
+`0.75 * PI` — `max(0, n.L) + max(0, -n.L)` being exactly `|n . L|`.
 
 ### 4.5 `COLR` (8 bytes)
 

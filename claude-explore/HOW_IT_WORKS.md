@@ -580,12 +580,116 @@ painted that plate red; the app shows white.
 
 Both implementations now read record 2. Colour sets agree across all 133 files.
 
-Still open, and worth doing: **transparency does not cut.** A zero-alpha FEAT is
-skipped rather than subtracted from the face under it, so the convertible's
-cockpit is closed instead of open. And 2,348 SURF faces have a record-2 alpha of
-0 — if that means the same thing it means on a FEAT, those faces should be
-holes. Their two RGBs are identical in every case, so nothing renders
-differently either way today, which is precisely why it is easy to get wrong.
+**Transparency opens the face now, and so does translucency.** Both alpha 0 and
+alpha 128 open the face they sit on — a translucent pane has to show what is
+behind the wall, not blend with the wall itself — and the pane is then drawn
+back into the opening as its own translucent mesh.
+
+**How the opening is made: a STENCIL, not a retriangulation.** The face keeps
+every one of its triangles and gets a small bitmap in its own 2D frame, 255
+where the wall is solid and 0 where a decoration has punched through; the
+renderer skips those pixels (`alphaTest` on the GPU, a per-pixel test in
+`render.py`). `HOLE_MODE` / `options.holeMode` switches between `'mask'`,
+`'geom'` and `'off'`.
+
+The first attempt WAS a retriangulation — bridge each hole into the outer loop,
+rightmost first, then ear-clip — and it looked right on the two- and three-hole
+cases it was tested on. It does not survive the corpus. `REEVES` has a wall
+carrying **eighty-two** windows: every later bridge has to thread past the
+vertices the earlier ones spliced in, the ring self-intersects, and the clipper
+hands back a shredded face. Audited against the area each face should lose, that
+wall drops from 254,674 sq in to 34,079 where it should land at 209,079 — **86%
+of the wall destroyed** — and eight of the file's nine cut faces are wrong by
+more than 2%. On screen it is a wall with huge white wedges gouged out of it,
+which is how the user found it. No amount of bridge-ordering care fixes the
+general case, and holes are allowed to OVERLAP (a bezel round a screen, a frame
+round a picture), which a single outer ring cannot represent at all.
+
+The stencil has none of those failure modes and it is very probably what the
+application itself did: a 1993 scanline renderer with no depth buffer makes a
+hole by leaving spans unpainted, not by rebuilding the polygon. Corroborating
+that, the Virtus VRML exporter does not cut either — it writes the wall whole
+and lays a transparent quad on top, which is why its exports show no openings.
+Audited the same way, **706 of 727 stencilled faces open exactly the area their
+decorations ask for**; 20 of the remaining 21 open LESS, which is correct — a
+decoration hanging off the edge of its face is clipped by the face. And where
+the data is wrong the failure mode is now benign: `STUDIOHS` has a 324x480 in
+decal assigned to a 12x6 in face, and a stencil simply misses, where the
+retriangulation destroyed the face.
+
+**The lesson:** the two-and-three-hole unit tests were all green. Nothing in
+them was near the case that mattered. When a routine's cost is superlinear in
+some input, the test that counts is the largest instance the corpus actually
+contains — go and find it before shipping, not after.
+
+**The WRL exports settled the SURF question.** The 2,348 SURF faces at record-2
+alpha 0 really are open. The application calls the three states Opaque,
+Translucent and Transparent, and its VRML exporter writes them as
+`transparency 0.0000 / 0.4980 / 1.0000` — so the export is a per-face oracle for
+exactly the byte we were guessing at. Counting it: `KITCHEN` 1 open face and we
+read 1, `BEACHCBN` 1 and 1, `DEALEY` 3 open and 3 translucent, ours 3 and 3.
+Exact everywhere it can be checked.
+
+That mattered because the change was a side effect, not a decision: making
+alpha 128 work made alpha 0 vanish too, and that quietly removed 2,980 of
+217,071 triangles across 90 files. 1.37% is small enough to ship unnoticed and
+large enough to be a serious regression, so it got a before/after render as well
+as the counting. `JENSONIN` is the case that makes it obvious — 635 of those
+triangles are in one Victorian house, and with them drawn every window is a flat
+grey slab; with them open the panes and mullions appear.
+
+**The lesson, again:** a change enabled as a side effect needs the same evidence
+as one you set out to make. The counting told me how much moved; only the render
+told me which way was right.
+
+### 10.6b Two texture bugs the parity harness cannot see
+
+**`TXST`'s tile size was decoded in the JS and never in the Python.** For weeks
+`d3d.prism_uvs` fell back to 64 in/tile on every texture in the corpus while
+`geometry.js` used the real value — so the two renderers disagreed about texture
+scale and no oracle noticed, because parity measures geometry and geometry is
+unaffected. Anything decoded in one implementation belongs in both the same day.
+
+**A prism can wear more than one texture, and we only ever used the first.**
+`PLTX` textures the whole prism and a per-face `SUTX` overrides it; 13 of the
+229 textured prisms in the corpus carry more than one id and 9 have a `PLTX`
+that per-face records override. Taking one id for the whole prism painted those
+faces with the wrong bitmap or left them bare — `JENSONEX` went from 1 textured
+mesh to 44 once the id became part of the mesh grouping key rather than a
+boolean flag. That is what "some textures are missing" turned out to be.
+
+Not a bug, for the record: `JENSONIN.VVR` and the DESIGNIT `JENSONEX.VVR` carry
+**zero** textures — byte-identical across all three source discs — so the
+textured Jenson house only exists as `JENSONEX__kesign3d`. The application is
+not failing to load them; they are not in the file.
+
+### 10.7 Colour is exact; the LIGHT was what looked wrong ✅
+
+The user reported our colours as slightly off against the application's own
+palette swatches. They were not. The stored RGB is a true 24-bit albedo — 619
+distinct colours over 194 distinct byte values, far too many for a palette
+index — and **every colour we decode appears verbatim in the app's own VRML
+export**: `MYHOUSE2` 27/27, `REEVES` 8/8, `KITCHEN` 14/14, zero mismatches.
+
+What was off was the shading. The exporter also writes an `ambientColor` beside
+every `diffuseColor`, and over 3,184 materials that ratio is exactly 0.25 — so
+the application's whole light model is `albedo * (0.25 + 0.75 * |n . L|)`, one
+lamp, no tint. Our viewer had a stylised rig (hemisphere tint, warm key, cool
+fill, total intensity 3.5) that made white read blue on top and warm on the
+side. Three.js adds two more traps on top: it lights in LINEAR space by default,
+so a mid-tone comes out darker than the same multiply on the stored bytes, and
+since r155 its intensities are physical, where a lamp of intensity 1 lands as
+1/PI of the albedo. Matching the application means all four of:
+
+    THREE.ColorManagement.enabled = false
+    renderer.outputColorSpace     = THREE.LinearSRGBColorSpace
+    AmbientLight(0xffffff, 0.25 * Math.PI)
+    two DirectionalLights facing each other at 0.75 * Math.PI
+
+The two opposed lamps are the `|n . L|`: three.js clamps at zero, and
+`max(0, n.L) + max(0, -n.L)` is exactly the absolute value. Probed against a
+quad at 0 and 60 degrees for four albedos, the rendered pixel now equals
+`round(albedo * (0.25 + 0.75 * cos))` **to the byte on all eight**.
 
 ### 10.3 Two coordinate conventions ✅
 

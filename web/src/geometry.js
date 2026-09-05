@@ -6,6 +6,7 @@
  */
 import { fp, u16, u32 } from './iff.js';
 import { clipMesh } from './clip.js';
+import { textureTable, assignments } from './textures.js';
 
 export const STRAIGHT = 1, POINTED = 2, DIAMOND = 3, ROUNDED = 4, SPHERE = 5;
 export const PROFILE_NAME = { 1: 'straight', 2: 'pointed', 3: 'diamond', 4: 'rounded', 5: 'sphere' };
@@ -14,10 +15,17 @@ export const options = {
   applySlic: true,      // SLIC planes cut the prism
   slicKeepNeg: false,   // keep n.p + d >= 0
   drawSurf: true,       // build SURF/FEAT decoration overlays
+  drawTextures: true,   // sample the file's own TXTB bitmaps
+  // How an opening gets made. 'mask' rasterises the holes into a per-face
+  // stencil the renderer punches with alphaTest; 'geom' retriangulates the face
+  // around them; 'off' leaves it solid. See d3d.HOLE_MODE for why 'geom' loses:
+  // REEVES has a wall with 82 windows and bridging destroys 86% of it.
+  holeMode: 'mask',     // 'mask' | 'geom' | 'off'
+  maskPxPerInch: 2,
+  maskMax: 512,
   applySkew: true,      // POLY's oblique-sweep offset
   faceFrame: 'azim',    // 'azim' | 'world' -- a face's 2D axes; mirrors d3d.FACE_FRAME
   drawHoles: false,     // draw alpha==0 FEATs (hole cutters) as solid decoration
-  cutHoles: true,       // a zero-alpha FEAT actually cuts through the face
 };
 
 // ---- small vector helpers ----
@@ -230,6 +238,115 @@ export function triangulate(pts) {
   }
   if (idx.length === 3) tris.push([idx[0], idx[1], idx[2]]);
   return tris;
+}
+
+/** Punch one polygon to 0 in `mask`, even-odd, pixel centres. Mirrors
+ *  d3d._fill_polygon — each polygon is rasterised INDEPENDENTLY and OR-ed in,
+ *  because throwing every polygon's crossings into one even-odd pass would make
+ *  two overlapping holes cancel back to solid, and overlapping decorations are
+ *  ordinary here (a bezel round a screen, a frame round a picture). */
+function fillPolygon(mask, poly, w, h) {
+  const n = poly.length;
+  if (n < 3) return;
+  let lo = Infinity, hi = -Infinity;
+  for (const p of poly) { if (p[1] < lo) lo = p[1]; if (p[1] > hi) hi = p[1]; }
+  const y0 = Math.max(0, Math.floor(lo - 0.5));
+  const y1 = Math.min(h - 1, Math.ceil(hi + 0.5));
+  for (let y = y0; y <= y1; y++) {
+    const yc = y + 0.5;
+    const xs = [];
+    for (let i = 0; i < n; i++) {
+      const [ax, ay] = poly[i], [bx, by] = poly[(i + 1) % n];
+      if ((ay <= yc) !== (by <= yc)) xs.push(ax + (yc - ay) / (by - ay) * (bx - ax));
+    }
+    if (!xs.length) continue;
+    xs.sort((p, q) => p - q);
+    for (let i = 0; i + 1 < xs.length; i += 2) {
+      let a = Math.ceil(xs[i] - 0.5), b = Math.floor(xs[i + 1] - 0.5);
+      if (a < 0) a = 0;
+      if (b > w - 1) b = w - 1;
+      for (let x = a; x <= b; x++) mask[y * w + x] = 0;
+    }
+  }
+}
+
+/**
+ * Per-face opening stencils, and the UVs that address them. Mirrors
+ * d3d.face_masks.
+ *
+ * A face carrying transparent (alpha 0) or translucent (alpha 128) decorations
+ * gets a small bitmap in its OWN 2D frame: 255 where the face is solid, 0 where
+ * an opening has been punched. The geometry is left completely untouched.
+ *
+ * Translucent decorations punch the stencil too — the face has to be OPEN there
+ * so what lies behind the wall shows through, and the pane itself is drawn back
+ * into the opening as its own translucent mesh by surfaceFeatures. That is why
+ * the stencil only ever needs to be binary.
+ *
+ * -> { masks: Map(fid -> {w, h, a}), uv: [per-triangle [[u,v]x3] | null] } | null
+ */
+export function faceMasks(prsm, verts, faces, ids, poly) {
+  if (!ids) return null;
+  const holes = new Map();
+  for (const surf of prsm.kids('SURF')) {
+    const fid = u16(surf.hdr, 0);
+    for (const feat of surf.kids('FEAT')) {
+      const col = feat.kid('COLR');
+      if (!col || col.data.byteLength < 4) continue;
+      const a = col.data.getUint8(0);
+      if (a !== 0 && a !== 128) continue;
+      const p2 = featPolygon(feat);
+      if (!p2 || p2.length < 3) continue;
+      if (!holes.has(fid)) holes.set(fid, []);
+      holes.get(fid).push([p2, featTransform(feat)]);
+    }
+  }
+  if (!holes.size) return null;
+
+  const appn = appFaceNormals(poly);
+  const byFace = new Map();
+  ids.forEach((f, i) => { if (!byFace.has(f)) byFace.set(f, []); byFace.get(f).push(i); });
+
+  const masks = new Map();
+  const uv = new Array(faces.length).fill(null);
+  for (const [fid, cuts] of holes) {
+    const triI = byFace.get(fid);
+    if (!triI) continue;
+    const tris = triI.map((i) => faces[i]);
+    const fr = faceFrame(verts, tris, appn.get(fid));
+    if (!fr) continue;
+    const { origin, u, v } = fr;
+    const idx = [...new Set(tris.flat())];
+    let u0 = Infinity, u1 = -Infinity, v0 = Infinity, v1 = -Infinity;
+    for (const i of idx) {
+      const a = dot(verts[i], u), b = dot(verts[i], v);
+      if (a < u0) u0 = a; if (a > u1) u1 = a;
+      if (b < v0) v0 = b; if (b > v1) v1 = b;
+    }
+    const du = u1 - u0, dv = v1 - v0;
+    if (du < 1e-6 || dv < 1e-6) continue;
+    const w = Math.min(options.maskMax, Math.max(8, Math.round(du * options.maskPxPerInch)));
+    const h = Math.min(options.maskMax, Math.max(8, Math.round(dv * options.maskPxPerInch)));
+    const mask = new Uint8Array(w * h).fill(255);
+    const cu = dot(origin, u), cv = dot(origin, v);
+    for (const [p2, tr] of cuts) {
+      const [tx, ty, th, sx, sy] = tr;
+      const ct = Math.cos(th), st = Math.sin(th);
+      fillPolygon(mask, p2.map(([x, y]) => [
+        ((cu + ct * (x * sx) - st * (y * sy) + tx) - u0) / du * w,
+        ((cv + st * (x * sx) + ct * (y * sy) + ty) - v0) / dv * h,
+      ]), w, h);
+    }
+    let open = false;
+    for (let i = 0; i < mask.length; i++) if (!mask[i]) { open = true; break; }
+    if (!open) continue;                       // every opening missed the face
+    masks.set(fid, { w, h, a: mask });
+    for (const i of triI) {
+      uv[i] = faces[i].map((j) => [(dot(verts[j], u) - u0) / du,
+                                   (dot(verts[j], v) - v0) / dv]);
+    }
+  }
+  return masks.size ? { masks, uv } : null;
 }
 
 /**
@@ -477,7 +594,7 @@ export function prismMesh(prsm) {
       if (!F.length) break;
     }
   }
-  if (options.cutHoles) ({ V, F, ids } = cutHoles(prsm, V, F, ids, poly));
+  if (options.holeMode === 'geom') ({ V, F, ids } = cutHoles(prsm, V, F, ids, poly));
   ({ verts: V, faces: F } = compact(V, F));
   return { verts: V, faces: F, faceIds: ids, poly };
 }
@@ -491,7 +608,11 @@ function cutHoles(prsm, V, F, ids, poly) {
     const fid = u16(surf.hdr, 0);
     for (const feat of surf.kids('FEAT')) {
       const col = feat.kid('COLR');
-      if (!col || col.data.byteLength < 4 || col.data.getUint8(0) !== 0) continue;
+      // Both Transparent (0) and Translucent (128) open the face: a translucent
+      // window must show what is BEHIND the wall, not blend with the wall
+      // itself. The pane is then drawn back into the opening by surfaceFeatures.
+      const fa = col && col.data.byteLength >= 4 ? col.data.getUint8(0) : 255;
+      if (!col || col.data.byteLength < 4 || (fa !== 0 && fa !== 128)) continue;
       const p2 = featPolygon(feat);
       if (!p2 || p2.length < 3) continue;
       if (!holes.has(fid)) holes.set(fid, []);
@@ -589,6 +710,87 @@ export function surfColours(prsm) {
       : [d.getUint8(3), d.getUint8(4), d.getUint8(5)]);
   }
   return out;
+}
+
+/**
+ * The texture table of the file currently being walked. A gallery holds one
+ * TXTB for the whole .WLB, so a clip built on its own still has to be told
+ * about it -- see setTextures / loadClip.
+ */
+export let TEXTURES = new Map();
+export function setTextures(t) { TEXTURES = t || new Map(); }
+
+/**
+ * Per-TRIANGLE UVs for a textured prism.
+ *
+ * A prism is textured as a whole (PLTX) or per face (SUTX), and every face has
+ * its own frame, so the UVs cannot live on the vertices -- two faces sharing a
+ * corner want different coordinates there. They are INCHES along the face's own
+ * u/v axes divided by the tile size from TXST, so a brick wall repeats at its
+ * authored physical size instead of being stretched once across whatever face
+ * it lands on.
+ * -> { id, uv: [ [[u,v],[u,v],[u,v]] | null, ... ] } or null
+ */
+export function prismUVs(prsm, verts, faces, ids, poly) {
+  if (!TEXTURES.size || !ids) return null;
+  const { whole, faces: perface } = assignments(prsm, u16);
+  if (whole === null && !perface.size) return null;
+  const appn = appFaceNormals(poly);
+  const byFace = new Map();
+  ids.forEach((f, i) => { if (!byFace.has(f)) byFace.set(f, []); byFace.get(f).push(i); });
+  const uv = new Array(faces.length).fill(null);
+  const tids = new Array(faces.length).fill(null);
+  let any = false;
+  for (const [fid, triI] of byFace) {
+    // A per-face SUTX OVERRIDES the prism's PLTX, and a prism may wear several
+    // bitmaps at once -- 13 of the 229 textured prisms in the corpus do. Taking
+    // one id for the whole prism painted the rest wrong or left them bare.
+    const tid = perface.has(fid) ? perface.get(fid) : whole;
+    if (tid === null || tid === undefined) continue;
+    const ent = TEXTURES.get(tid);
+    if (!ent) continue;
+    let [tu, tv] = ent.tile || [64, 64];
+    if (!(tu > 0.01)) tu = 64;
+    if (!(tv > 0.01)) tv = 64;
+    const fr = faceFrame(verts, triI.map((i) => faces[i]), appn.get(fid));
+    if (!fr) continue;
+    for (const i of triI) {
+      uv[i] = faces[i].map((j) => [dot(verts[j], fr.u) / tu, dot(verts[j], fr.v) / tv]);
+      tids[i] = tid;
+      any = true;
+    }
+  }
+  return any ? { tids, uv } : null;
+}
+
+/**
+ * SURF face-index -> OPACITY of the visible record: 255, 128 or 0.
+ *
+ * The glass in `GLASHOUS` is here: its walls carry
+ * `00 02 | 00 ff ff ff | 80 ff ff ff` -- record 2 alpha 0x80, translucent
+ * white. The application calls the three states Opaque, Translucent (drawn as a
+ * checkerboard dither) and Transparent (an open face).
+ *
+ * Ground truth: the Virtus VRML exporter writes `transparency 0.0000 / 0.4980 /
+ * 1.0000` per face, and the counts match exactly -- KITCHEN 1 open face,
+ * BEACHCBN 1, DEALEY 3 open and 3 translucent. `JENSONIN`'s 272 open faces are
+ * the window panes of a Victorian house, not unset defaults.
+ */
+export function surfAlphas(prsm) {
+  const out = new Map();
+  for (const surf of prsm.kids('SURF')) {
+    const c = surf.kid('COLR');
+    if (!c || c.data.byteLength < 6) continue;
+    const d = c.data;
+    out.set(u16(surf.hdr, 0), d.byteLength >= 10 ? d.getUint8(6) : d.getUint8(2));
+  }
+  return out;
+}
+
+/** A prism's own opacity: the second COLR record's alpha. */
+export function prismAlpha(prsm) {
+  const c = prsm.kid('COLR');
+  return c && c.data.byteLength >= 8 ? c.data.getUint8(4) : 255;
 }
 
 /** A prism's colour: the SECOND of its COLR's two (alpha, r, g, b) records.
@@ -869,24 +1071,58 @@ export function collect(node, out = [], unit = null) {
         const world = m.verts.map((p) => apply(W, p));
         const base = colorOf(k);
         const over = surfColours(k);
-        if (over.size && m.faceIds) {
+        const alph = surfAlphas(k);
+        const balpha = prismAlpha(k);
+        // UVs are measured in the prism's OWN space, before W is applied, so
+        // they are the same whatever the object's placement or unit scale.
+        const tx = options.drawTextures
+          ? prismUVs(k, m.verts, m.faces, m.faceIds, m.poly) : null;
+        const mk = options.holeMode === 'mask'
+          ? faceMasks(k, m.verts, m.faces, m.faceIds, m.poly) : null;
+        const texOf = (tid) => {
+          const e = TEXTURES.get(tid);
+          return e ? { id: tid, name: e.name, w: e.w, h: e.h, rgba: e.rgba } : null;
+        };
+        if ((over.size || alph.size || tx || mk) && m.faceIds) {   // tx: any UVs at all
           const groups = new Map();
           m.faces.forEach((tri, i) => {
-            const col = over.get(m.faceIds[i]) || base;
-            const key = col.join(',');
-            if (!groups.has(key)) groups.set(key, { color: col, faces: [] });
+            const fid = m.faceIds[i];
+            const col = over.get(fid) || base;
+            const a = alph.has(fid) ? alph.get(fid) : balpha;
+            // A STENCILLED face is its own group: the mask is in that one
+            // face's frame, so merging two masked faces into a draw call would
+            // address the wrong bitmap.
+            const mf = mk && mk.uv[i] ? fid : -1;
+            // The TEXTURED flag is part of the key: within one prism some faces
+            // carry a SUTX and others none, and a GPU cannot sample a bitmap for
+            // half a draw call. Without the split the untextured faces sample
+            // texel (0, 0) -- which painted MYHOUSE2's white wall dark maroon.
+            // the texture ID is part of the key, not just a flag
+            const tf = tx && tx.uv[i] ? tx.tids[i] : -1;
+            const key = col.join(',') + ',' + a + ',' + tf + ',' + mf;
+            if (!groups.has(key)) groups.set(key, { color: col, alpha: a, tf, mf, faces: [], idx: [] });
             groups.get(key).faces.push(tri);
+            groups.get(key).idx.push(i);
           });
           // sorted: Python groups the same way, so the two stay comparable
           for (const key of [...groups.keys()].sort((a, b) => {
             const A = a.split(',').map(Number), B = b.split(',').map(Number);
-            return A[0] - B[0] || A[1] - B[1] || A[2] - B[2];
+            return A[0] - B[0] || A[1] - B[1] || A[2] - B[2] || A[3] - B[3]
+                || A[4] - B[4] || A[5] - B[5];
           })) {
             const g = groups.get(key);
-            out.push({ verts: world, faces: g.faces, color: g.color, poly: m.poly, isFeature: false });
+            const gm = g.mf >= 0 && mk.masks.has(g.mf)
+              ? Object.assign({}, mk.masks.get(g.mf), { uv: g.idx.map((i) => mk.uv[i]) })
+              : null;
+            out.push({ verts: world, faces: g.faces, color: g.color, alpha: g.alpha,
+                       poly: m.poly, isFeature: false,
+                       tex: g.tf >= 0 ? texOf(g.tf) : null,
+                       uv: g.tf >= 0 ? g.idx.map((i) => tx.uv[i]) : null,
+                       mask: gm });
           }
         } else {
-          out.push({ verts: world, faces: m.faces, color: base, poly: m.poly, isFeature: false });
+          out.push({ verts: world, faces: m.faces, color: base, alpha: balpha,
+                     poly: m.poly, isFeature: false, tex: null, uv: null, mask: null });
         }
         if (options.drawSurf) {
           for (const f of surfaceFeatures(k, m)) {
@@ -904,6 +1140,7 @@ export function collect(node, out = [], unit = null) {
 
 /** All meshes for a parsed file (a scene, or one gallery clip). */
 export function sceneMeshes(root) {
+  setTextures(options.drawTextures ? textureTable(root) : null);
   const roots = root.findAll('ROOT');
   const out = [];
   if (roots.length) for (const r of roots) collect(r, out);

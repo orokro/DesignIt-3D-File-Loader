@@ -59,6 +59,7 @@
     <label><input type="checkbox" id="optSlic" checked> SLIC cuts</label>
     <label><input type="checkbox" id="optSurf" checked> Surface decals</label>
     <label><input type="checkbox" id="optFlat" checked> Flat shading</label>
+    <label><input type="checkbox" id="optTex" checked> Textures</label>
     <label><input type="checkbox" id="optWire"> Wireframe</label>
     <label><input type="checkbox" id="optSpin"> Auto-rotate</label>
   </div>
@@ -91,13 +92,35 @@ scene.background = new THREE.Color(0x11161d);
 const camera = new THREE.PerspectiveCamera(38, 1, 0.5, 200000);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
-scene.add(new THREE.HemisphereLight(0xdfe9f5, 0x30383f, 1.5));
-const key = new THREE.DirectionalLight(0xffffff, 1.5);
-key.position.set(0.5, -1, 1.2);
+// The APPLICATION's own light model, read off its VRML exporter: every one of
+// the 3,184 materials in the Virtus exports writes `ambientColor` at exactly
+// 0.25 x `diffuseColor`, so a face is `albedo * (0.25 + 0.75 * lambert)` and
+// nothing else -- no hemisphere tint, no warm key, no fill. A stylised rig made
+// white read blue on top and warm on the side, which is what showed up as our
+// colours being slightly off against the application's palette.
+//
+// Colour management is off for the same reason. Three.js lights in LINEAR space
+// by default, so a 50%-lit mid-tone comes out darker than the same multiply
+// done on the stored bytes -- which is what a 1993 8-bit renderer did, and what
+// the Python reference in claude-explore/tools/render.py does.
+THREE.ColorManagement.enabled = false;
+renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
+//
+// The diffuse term is |n . L|, not max(0, n . L): the application lit a face by
+// how square-on it was and did not care which way it pointed, and so does the
+// Python reference. Three.js clamps at zero, so the same lamp is hung twice,
+// facing each other -- max(0, n.L) + max(0, -n.L) is exactly |n . L| -- rather
+// than leaving every surface turned away from the sun flat at ambient.
+// Intensities carry a factor of PI: since r155 three.js lights in physical
+// units, where a directional lamp of intensity 1 lands as 1/PI of the albedo.
+// 0.25 and 0.75 are the numbers that matter; PI is the unit conversion.
+scene.add(new THREE.AmbientLight(0xffffff, 0.25 * Math.PI));
+const key = new THREE.DirectionalLight(0xffffff, 0.75 * Math.PI);
+key.position.set(0.45, 0.35, 0.82);
 scene.add(key);
-const fill = new THREE.DirectionalLight(0xffffff, 0.5);
-fill.position.set(-1, 0.6, 0.4);
-scene.add(fill);
+const keyBack = new THREE.DirectionalLight(0xffffff, 0.75 * Math.PI);
+keyBack.position.set(-0.45, -0.35, -0.82);
+scene.add(keyBack);
 const grid = new THREE.GridHelper(4800, 50, 0x2a3644, 0x1c242e);
 grid.rotation.x = Math.PI / 2;
 scene.add(grid);
@@ -141,10 +164,23 @@ function disposeGroup(g) { g.traverse((o) => { if (o.geometry) o.geometry.dispos
 function applyToggles() {
   if (!current) return;
   const wire = $('optWire').checked, surf = $('optSurf').checked;
+  const tex = $('optTex').checked;
   current.group.traverse((o) => {
     if (!o.isMesh) return;
     o.material.wireframe = wire;
     if (o.userData.isFeature) o.visible = surf;
+    // A textured material is painted white so the bitmap shows through
+    // unmodified; with textures off it goes back to the face's own colour.
+    if (o.userData.tex) {
+      const want = tex ? o.userData.tex : null;
+      if (o.material.map !== want) {
+        o.material.map = want;
+        const c = o.userData.rgb;
+        if (tex) o.material.color.setRGB(1, 1, 1);
+        else o.material.color.setRGB(c[0] / 255, c[1] / 255, c[2] / 255);
+        o.material.needsUpdate = true;
+      }
+    }
   });
 }
 
@@ -233,7 +269,7 @@ async function openClip(f, name) {
   } catch (e) { els.err.textContent = `${name}: ${e.message}`; }
 }
 
-for (const id of ['optWire', 'optSurf']) $(id).onchange = applyToggles;
+for (const id of ['optWire', 'optSurf', 'optTex']) $(id).onchange = applyToggles;
 for (const id of ['optSlic', 'optFlat']) $(id).onchange = () => {
   options.applySlic = $('optSlic').checked;
   if (selected) {

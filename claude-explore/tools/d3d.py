@@ -407,7 +407,7 @@ def prism_uvs(prsm, verts, faces, fids, poly):
     vertex. Coordinates are inches along the face's own u/v axes divided by the
     tile size from TXST -- so the texture repeats at its authored physical size
     instead of being stretched once across whatever face it lands on.
-    -> (texture id, [(3,2) uv per triangle]) or (None, None)
+    -> (per-triangle texture id, [(3,2) uv per triangle]) or (None, None)
     """
     import textures as _tx
     whole = None
@@ -423,22 +423,27 @@ def prism_uvs(prsm, verts, faces, fids, poly):
                 perface[iff.u16(surf.hdr, 0)] = t
     if whole is None and not perface:
         return None, None
-    tid = whole if whole is not None else next(iter(perface.values()))
-    ent = TEXTURES.get(tid)
-    if ent is None or 'w' not in ent:
-        return None, None
-    tu, tv = ent.get('tile', (64.0, 64.0))
-    tu = tu if tu > 0.01 else 64.0
-    tv = tv if tv > 0.01 else 64.0
     appn = app_face_normals(poly)
     sweep = axis_matrix(poly.axis) @ np.array([0.0, 0.0, 1.0])
     byface = {}
     for i, f in enumerate(fids):
         byface.setdefault(f, []).append(i)
     uv = [None] * len(faces)
+    tids = [None] * len(faces)
     for fid, tri_i in byface.items():
-        if perface and fid not in perface and whole is None:
+        # A per-face SUTX OVERRIDES the prism's PLTX, and a prism may carry
+        # several different textures at once -- 13 of the 229 textured prisms
+        # in the corpus do. Taking one id for the whole prism painted the rest
+        # with the wrong bitmap or left them bare.
+        tid = perface.get(fid, whole)
+        if tid is None:
             continue
+        ent = TEXTURES.get(tid)
+        if ent is None or 'w' not in ent:
+            continue
+        tu, tv = ent.get('tile') or (64.0, 64.0)
+        tu = tu if tu > 0.01 else 64.0
+        tv = tv if tv > 0.01 else 64.0
         fr = face_frame(verts, [faces[i] for i in tri_i], sweep=sweep, normal=appn.get(fid))
         if fr is None:
             continue
@@ -446,9 +451,124 @@ def prism_uvs(prsm, verts, faces, fids, poly):
         for i in tri_i:
             t = faces[i]
             uv[i] = np.array([[float(verts[j] @ u) / tu, float(verts[j] @ v) / tv] for j in t])
+            tids[i] = tid
     if all(x is None for x in uv):
         return None, None
-    return tid, uv
+    return tids, uv
+
+
+def _fill_polygon(mask, poly, w, h):
+    """Punch one polygon to 0 in `mask`, even-odd, pixel centres.
+
+    Each polygon is rasterised INDEPENDENTLY and OR-ed in. Throwing every
+    polygon's crossings into one list and applying even-odd across the lot
+    would make two overlapping holes cancel back to solid -- and overlapping
+    decorations are ordinary here: a bezel round a screen, a frame round a
+    picture. Independent passes are also what let a hole sit inside a hole
+    without any winding bookkeeping.
+    """
+    n = len(poly)
+    if n < 3:
+        return
+    ys = [p[1] for p in poly]
+    y0 = max(0, int(math.floor(min(ys) - 0.5)))
+    y1 = min(h - 1, int(math.ceil(max(ys) + 0.5)))
+    for y in range(y0, y1 + 1):
+        yc = y + 0.5
+        xs = []
+        for i in range(n):
+            ax, ay = poly[i]
+            bx, by = poly[(i + 1) % n]
+            if (ay <= yc) != (by <= yc):
+                xs.append(ax + (yc - ay) / (by - ay) * (bx - ax))
+        if not xs:
+            continue
+        xs.sort()
+        for i in range(0, len(xs) - 1, 2):
+            a = int(math.ceil(xs[i] - 0.5))
+            b = int(math.floor(xs[i + 1] - 0.5))
+            if b < a:
+                continue
+            a = max(a, 0); b = min(b, w - 1)
+            if b >= a:
+                mask[y, a:b + 1] = 0
+
+
+def face_masks(prsm, verts, faces, fids, poly):
+    """Per-face opening stencils, and the UVs that address them.
+
+    A face carrying transparent (alpha 0) or translucent (alpha 128)
+    decorations gets a small bitmap in its OWN 2D frame: 255 where the face is
+    solid, 0 where an opening has been punched. The geometry is left completely
+    untouched -- which is the whole point, see HOLE_MODE.
+
+    Translucent decorations punch the stencil too. The face has to be OPEN
+    there so what lies behind the wall shows through; the pane itself is then
+    drawn back into the opening as its own translucent mesh by
+    `surface_features`, which is why the stencil only ever needs to be binary.
+
+    -> ({fid: {'w','h','a','uv'}}, per-triangle uv list) or ({}, None)
+    """
+    holes = {}
+    for surf in prsm.kids('SURF'):
+        fid = iff.u16(surf.hdr, 0)
+        for feat in surf.kids('FEAT'):
+            col = feat.kid('COLR')
+            if col is None or len(col.data) < 4 or col.data[0] not in (0, 128):
+                continue
+            p2 = feat_polygon(feat)
+            if not p2 or len(p2) < 3:
+                continue
+            holes.setdefault(fid, []).append((p2, feat_transform(feat)))
+    if not holes or fids is None:
+        return {}, None
+
+    appn = app_face_normals(poly)
+    sweep = axis_matrix(poly.axis) @ np.array([0.0, 0.0, 1.0])
+    byface = {}
+    for i, f in enumerate(fids):
+        byface.setdefault(f, []).append(i)
+
+    out = {}
+    uv = [None] * len(faces)
+    V = np.asarray(verts)
+    for fid, cuts in holes.items():
+        tri_i = byface.get(fid)
+        if not tri_i:
+            continue
+        tris = [faces[i] for i in tri_i]
+        fr = face_frame(V, tris, sweep=sweep, normal=appn.get(fid))
+        if fr is None:
+            continue
+        corner, u, v, _, _ = fr
+        idx = sorted({i for t in tris for i in t})
+        us = [float(V[i] @ u) for i in idx]
+        vs = [float(V[i] @ v) for i in idx]
+        u0, u1 = min(us), max(us)
+        v0, v1 = min(vs), max(vs)
+        du, dv = u1 - u0, v1 - v0
+        if du < 1e-6 or dv < 1e-6:
+            continue
+        w = int(min(MASK_MAX, max(8, round(du * MASK_PX_PER_INCH))))
+        h = int(min(MASK_MAX, max(8, round(dv * MASK_PX_PER_INCH))))
+        mask = np.full((h, w), 255, np.uint8)
+        cu, cv = float(corner @ u), float(corner @ v)
+        for p2, tr in cuts:
+            tx, ty, th, sx, sy = tr
+            ct, st = math.cos(th), math.sin(th)
+            px = []
+            for (x, y) in p2:
+                a = cu + ct * (x * sx) - st * (y * sy) + tx
+                b = cv + st * (x * sx) + ct * (y * sy) + ty
+                px.append(((a - u0) / du * w, (b - v0) / dv * h))
+            _fill_polygon(mask, px, w, h)
+        if not (mask == 0).any():
+            continue                      # every opening missed the face
+        out[fid] = {'w': w, 'h': h, 'a': mask.tobytes()}
+        for i in tri_i:
+            uv[i] = np.array([[(float(V[j] @ u) - u0) / du,
+                               (float(V[j] @ v) - v0) / dv] for j in faces[i]])
+    return out, (uv if out else None)
 
 
 def prsm_mesh(prsm):
@@ -631,7 +751,7 @@ def prsm_mesh(prsm):
                 if m.any():
                     verts = verts.copy()
                     verts[m] = (R @ (verts[m] - pivot).T).T + pivot
-    if CUT_HOLES:
+    if HOLE_MODE == 'geom':
         verts, faces, fids = _cut_holes(prsm, verts, faces, fids, poly)
     verts, faces = _compact(verts, faces)
     return verts, faces, poly, fids
@@ -649,7 +769,11 @@ def _cut_holes(prsm, verts, faces, fids, poly):
         fid = iff.u16(surf.hdr, 0)
         for feat in surf.kids('FEAT'):
             col = feat.kid('COLR')
-            if col is None or len(col.data) < 4 or col.data[0] != 0:
+            # Both Transparent (0) and Translucent (128) open the face: a
+            # translucent window must show what is BEHIND the wall, not blend
+            # with the wall itself. The translucent pane is then drawn back into
+            # the opening by surface_features.
+            if col is None or len(col.data) < 4 or col.data[0] not in (0, 128):
                 continue
             p2 = feat_polygon(feat)
             if not p2 or len(p2) < 3:
@@ -781,6 +905,30 @@ def surf_colours(prsm):
     return out
 
 
+def surf_alphas(prsm):
+    """SURF face-index -> OPACITY of the visible record. 255 / 128 / 0.
+
+    The glass in `GLASHOUS` is here: its four walls carry
+    `00 02 | 00 ff ff ff | 80 ff ff ff` -- record 2 alpha 0x80, translucent
+    white. The application calls the three states Opaque, Translucent (drawn as
+    a checkerboard dither) and Transparent (a hole).
+    """
+    out = {}
+    for surf in prsm.kids('SURF'):
+        c = surf.kid('COLR')
+        if c is None or len(c.data) < 6:
+            continue
+        d = c.data
+        out[iff.u16(surf.hdr, 0)] = d[6] if len(d) >= 10 else d[2]
+    return out
+
+
+def prism_alpha(prsm):
+    """A prism's own opacity: the second COLR record's alpha."""
+    c = prsm.kid('COLR')
+    return c.data[4] if c is not None and len(c.data) >= 8 else 255
+
+
 def color_of(prsm):
     """A prism's own colour: the SECOND of its COLR's two (alpha, r, g, b)
     records. Record 1 is the inside face -- its alpha is 0 in all 18,038 of
@@ -846,23 +994,45 @@ def collect(node, M, out, unit=None):
                 wv = (W @ vh.T).T[:, :3]
                 base = color_of(k)
                 over = surf_colours(k)
-                tid, uv = (prism_uvs(k, v, f, fids, poly)
-                           if (DRAW_TEXTURES and TEXTURES) else (None, None))
-                tex = None
-                if tid is not None:
+                tids, uv = (prism_uvs(k, v, f, fids, poly)
+                            if (DRAW_TEXTURES and TEXTURES) else (None, None))
+
+                def _tex(tid):
                     e = TEXTURES[tid]
-                    tex = {'id': tid, 'name': e.get('name'), 'w': e['w'], 'h': e['h'],
-                           'rgb': e['rgb']}
-                if over and fids is not None:
+                    return {'id': tid, 'name': e.get('name'), 'w': e['w'], 'h': e['h'],
+                            'rgb': e['rgb']}
+                al = surf_alphas(k)
+                ba = prism_alpha(k)
+                masks, muv = (face_masks(k, v, f, fids, poly)
+                              if HOLE_MODE == 'mask' else ({}, None))
+                # The TEXTURED flag is part of the grouping key. Within one
+                # prism some faces can carry a SUTX and others none, and a GPU
+                # cannot sample a bitmap for half a draw call -- so the two sets
+                # become separate meshes rather than one mesh with holes in its
+                # UV array. Splitting here keeps the JS port able to mirror this
+                # exactly instead of painting the untextured faces with texel
+                # (0, 0), which turned MYHOUSE2's white wall dark maroon.
+                if (over or al or masks or uv) and fids is not None:
                     groups = {}
-                    for i, (tri, fid) in enumerate(zip(f, fids)):
-                        groups.setdefault(over.get(fid, base), []).append(i)
-                    for col in sorted(groups):          # sorted: JS must match
-                        gi = groups[col]
-                        gt = dict(tex, uv=[uv[i] for i in gi]) if tex and uv else None
-                        out.append((wv, [f[i] for i in gi], col, poly, gt))
+                    for i, fid in enumerate(fids):
+                        # the texture ID is part of the key, not just a flag:
+                        # one prism can wear several bitmaps
+                        tflag = tids[i] if (uv and uv[i] is not None) else -1
+                        # A STENCILLED face is its own group: the mask is in
+                        # that one face's frame, so merging two masked faces
+                        # into a draw call would address the wrong bitmap.
+                        mkey = fid if (muv and muv[i] is not None) else -1
+                        groups.setdefault(
+                            (over.get(fid, base), al.get(fid, ba), tflag, mkey), []).append(i)
+                    for key in sorted(groups):          # sorted: JS must match
+                        col, a, tflag, mkey = key
+                        gi = groups[key]
+                        gt = dict(_tex(tflag), uv=[uv[i] for i in gi]) if tflag >= 0 else None
+                        gm = (dict(masks[mkey], uv=[muv[i] for i in gi])
+                              if mkey >= 0 and mkey in masks else None)
+                        out.append((wv, [f[i] for i in gi], col, poly, gt, a, gm))
                 else:
-                    out.append((wv, f, base, poly, dict(tex, uv=uv) if tex and uv else None))
+                    out.append((wv, f, base, poly, None, ba, None))
                 if DRAW_SURF:
                     out.extend(surface_features(k, v, f, fids, W))
         collect(k, W, out, u)
@@ -906,7 +1076,31 @@ FACE_FRAME = 'azim'    # n x up: horizontal across the face, vertical up it
 FACE_BASE = 'cap0'       # 'cap0' (cap first, sides 1-based) | 'side0' (sides first, 0-based)
 FACE_HORIZ_TOL = 1e-6   # |up x n| below this counts the face as HORIZONTAL
 DRAW_HOLES = False      # draw alpha==0 FEATs (hole cutters) as solid decoration
-CUT_HOLES = True        # a zero-alpha FEAT actually cuts through the face
+
+# How an opening gets made. 'mask' rasterises the holes into a per-face stencil
+# and the renderer skips those pixels; 'geom' retriangulates the face around
+# them; 'off' leaves the face solid.
+#
+# 'mask' is the default because 'geom' does not survive contact with the corpus.
+# `REEVES` has a wall carrying EIGHTY-TWO windows: bridging each hole into the
+# outer ring in turn means every later bridge has to thread past the vertices
+# the earlier ones spliced in, the ring self-intersects, and the ear clipper
+# hands back a shredded face. Audited, that wall drops from 254,674 sq in to
+# 34,079 when it should lose only its windows and land at 209,079 -- 86% of the
+# wall destroyed. Eight of the nine cut faces in the file are wrong by more
+# than 2%. No amount of bridge-ordering care fixes the general case, and holes
+# are allowed to OVERLAP (a bezel around a screen, a frame around a picture),
+# which a single outer ring cannot represent at all.
+#
+# A stencil has none of those failure modes, and it is very probably what the
+# application itself did: a 1993 scanline renderer with no depth buffer makes a
+# hole by leaving spans unpainted, not by retriangulating. Note the Virtus VRML
+# exporter does NOT cut either -- it writes the wall whole and lays a
+# transparent quad on top, which is why its exports show no openings at all.
+HOLE_MODE = 'mask'      # 'mask' | 'geom' | 'off'
+
+MASK_PX_PER_INCH = 2.0  # stencil resolution
+MASK_MAX = 512          # ... capped, per axis
 SURF_OFFSET = 0.05      # inches to lift a decoration off its face, to beat z-fighting
 
 # FEAT's 2-byte header selects which side of the surface is decorated.
@@ -1212,7 +1406,7 @@ def surface_features(prsm, verts, faces, fids, W):
             # white slab across the car's seats.
             alpha = col.data[0] if col and len(col.data) >= 4 else 255
             if alpha == 0 and not DRAW_HOLES:
-                continue
+                continue                      # a hole is cut, nothing is drawn
 
             ct, st = math.cos(th), math.sin(th)
             pts2 = [(ct * (x * sx) - st * (y * sy) + tx,
@@ -1244,5 +1438,5 @@ def surface_features(prsm, verts, faces, fids, W):
                     continue
                 vh = np.hstack([pv, np.ones((len(pv), 1))])
                 wv = (W @ vh.T).T[:, :3]
-                out.append((wv, tri, rgb, None))
+                out.append((wv, tri, rgb, None, None, alpha))
     return out

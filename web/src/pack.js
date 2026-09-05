@@ -14,6 +14,7 @@ export function shelfPack(items, { gap = 24, aisle = 60, targetAspect = 1.0 } = 
     h: Math.max(it.size[2], 1),
     ref: it,
   }));
+  if (!list.length) return { placed: [], extent: [0, 0], rows: 0 };
   // rows read better when the tall/deep things are grouped
   list.sort((a, b) => b.d - a.d || b.w - a.w);
 

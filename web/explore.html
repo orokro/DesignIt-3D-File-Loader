@@ -47,6 +47,7 @@
   <button id="mModels" aria-pressed="false">Models</button>
   <span class="sep"></span>
   <button id="mWire" aria-pressed="false" title="L">Edges</button>
+  <button id="mTex" aria-pressed="true" title="T">Textures</button>
 </div>
 <div id="hud" class="card">
   <b id="modeName">Gallery grid</b>
@@ -58,7 +59,7 @@
 <div id="help" class="card">
   <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move &nbsp; mouse look &nbsp; <kbd>Shift</kbd> sprint<br>
   <kbd>Space</kbd> up / jump &nbsp; <kbd>C</kbd> down &nbsp; <kbd>Tab</kbd> fly ↔ walk &nbsp; <kbd>Esc</kbd> release<br>
-  <kbd>L</kbd> edge overlay &nbsp; click to pin the object under the crosshair
+  <kbd>L</kbd> edge overlay &nbsp; <kbd>T</kbd> textures &nbsp; click to pin the object under the crosshair
 </div>
 <div id="here" class="card"></div>
 <div id="crosshair"></div>
@@ -79,6 +80,7 @@
 import * as THREE from 'three';
 import { parse, wlbItems } from './src/iff.js';
 import { sceneMeshes, collect, options } from './src/geometry.js';
+import { buildGroup } from './src/three-loader.js';
 import { shelfPack } from './src/pack.js';
 import { Explorer } from './src/controls.js';
 
@@ -97,20 +99,42 @@ scene.background = new THREE.Color(0x8fb8dc);
 scene.fog = new THREE.Fog(0x8fb8dc, 4000, 42000);
 const camera = new THREE.PerspectiveCamera(70, 1, 1, 60000);
 
-scene.add(new THREE.HemisphereLight(0xdfeaf6, 0x4a4438, 1.35));
-const sun = new THREE.DirectionalLight(0xfff4e0, 1.6);
-sun.position.set(0.4, -0.8, 1);
+// The APPLICATION's own light model, read off its VRML exporter: every one of
+// the 3,184 materials in the Virtus exports writes `ambientColor` at exactly
+// 0.25 x `diffuseColor`, so a face is `albedo * (0.25 + 0.75 * lambert)` and
+// nothing else -- no hemisphere tint, no warm key, no fill. A stylised rig made
+// white read blue on top and warm on the side, which is what showed up as our
+// colours being slightly off against the application's palette.
+//
+// Colour management is off for the same reason. Three.js lights in LINEAR space
+// by default, so a 50%-lit mid-tone comes out darker than the same multiply
+// done on the stored bytes -- which is what a 1993 8-bit renderer did, and what
+// the Python reference in claude-explore/tools/render.py does.
+THREE.ColorManagement.enabled = false;
+renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
+//
+// The diffuse term is |n . L|, not max(0, n . L): the application lit a face by
+// how square-on it was and did not care which way it pointed, and so does the
+// Python reference. Three.js clamps at zero, so the same lamp is hung twice,
+// facing each other -- max(0, n.L) + max(0, -n.L) is exactly |n . L| -- rather
+// than leaving every surface turned away from the sun flat at ambient.
+// Intensities carry a factor of PI: since r155 three.js lights in physical
+// units, where a directional lamp of intensity 1 lands as 1/PI of the albedo.
+// 0.25 and 0.75 are the numbers that matter; PI is the unit conversion.
+scene.add(new THREE.AmbientLight(0xffffff, 0.25 * Math.PI));
+const sun = new THREE.DirectionalLight(0xffffff, 0.75 * Math.PI);
+sun.position.set(0.45, 0.35, 0.82);
 scene.add(sun);
-const fill = new THREE.DirectionalLight(0xbcd4ee, 0.45);
-fill.position.set(-0.7, 0.5, 0.3);
-scene.add(fill);
+const sunBack = new THREE.DirectionalLight(0xffffff, 0.75 * Math.PI);
+sunBack.position.set(-0.45, -0.35, -0.82);
+scene.add(sunBack);
 
 const explorer = new Explorer(camera, renderer.domElement);
 explorer.onModeChange = (walk) => { $('mv').textContent = walk ? 'walking' : 'flying'; };
 $('mv').textContent = 'flying';
 
 let world = null;          // { group, ground, items: [{name,x,y,group,size}] }
-let wireOn = false;
+let wireOn = false, texOn = true;
 let pinned = null;
 function resize() {
   renderer.setSize(innerWidth, innerHeight, false);
@@ -182,46 +206,12 @@ function bigFeature(m) {
   return Math.max(hix - lox, hiy - loy) > CULL_FLOOR;
 }
 
+// The explorer used to keep its OWN copy of this, and it silently rotted:
+// textures, translucent solids and the coplanar depth fix all landed in
+// three-loader.js and none of them reached the fly-through. One builder now.
 function meshesToGroup(meshes) {
-  const solids = new Map(), feats = new Map();
-  for (const m of meshes) {
-    const bucket = m.isFeature ? feats : solids;
-    // alpha is part of the key: a translucent decal must not be merged into
-    // the same draw call as an opaque one of the same colour and layer.
-    const k = m.isFeature ? `${m.color.join(',')}/${m.layer ?? 0}/${m.alpha ?? 255}` : m.color.join(',');
-    if (!bucket.has(k)) bucket.set(k, { pos: [], rgb: m.color, layer: m.layer ?? 0, alpha: m.alpha ?? 255 });
-    const b = bucket.get(k);
-    for (const [a, c, d] of m.faces) {
-      const A = m.verts[a], B = m.verts[c], C = m.verts[d];
-      b.pos.push(A[0], A[1], A[2], B[0], B[1], B[2], C[0], C[1], C[2]);
-    }
-  }
-  const g = new THREE.Group();
-  let tris = 0;
-  const mk = (e, isFeature) => {
-    if (!e.pos.length) return;
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.Float32BufferAttribute(e.pos, 3));
-    geo.computeVertexNormals();
-    const mat = new THREE.MeshLambertMaterial({
-      color: new THREE.Color(e.rgb[0] / 255, e.rgb[1] / 255, e.rgb[2] / 255),
-      side: THREE.DoubleSide, flatShading: true });
-    if (isFeature) {
-      mat.polygonOffset = true;
-      mat.polygonOffsetFactor = -1 - e.layer;
-      mat.polygonOffsetUnits = -4 * (e.layer + 1);
-      mat.depthWrite = false;
-      // 128 = translucent (629 decorations corpus-wide: glazing, screens)
-      if (e.alpha < 250) { mat.transparent = true; mat.opacity = e.alpha / 255; }
-    }
-    const mesh = new THREE.Mesh(geo, mat);
-    if (isFeature) { mesh.renderOrder = 1 + e.layer; mesh.userData.isFeature = true; }
-    tris += e.pos.length / 9;
-    g.add(mesh);
-  };
-  for (const e of solids.values()) mk(e, false);
-  for (const e of feats.values()) mk(e, true);
-  return { group: g, triangles: tris };
+  const { group, triangles } = buildGroup(meshes, { flatShading: true });
+  return { group, triangles };
 }
 
 const bufCache = new Map();
@@ -392,6 +382,7 @@ async function setMode(which) {
   $('mScenes').setAttribute('aria-pressed', which === 'scenes');
   $('mModels').setAttribute('aria-pressed', which === 'models');
   setWire(wireOn);              // carry the overlay state across a mode switch
+  setTex(texOn);
   pinned = null; $('picked').textContent = '—';
   progress(1, 'Ready — click to look around');
   setTimeout(() => { $('splash').style.display = 'none'; }, 220);
@@ -459,7 +450,31 @@ function setWire(on) {
   });
 }
 $('mWire').onclick = () => setWire(!wireOn);
-addEventListener('keydown', (e) => { if (e.code === 'KeyL') setWire(!wireOn); });
+
+// ---- textures ----
+// On by default: unlike the edge overlay, the bitmaps are what the surface is
+// meant to look like. The geometry always carries its UVs, so this is a
+// material swap -- map back on, colour back to white -- not a rebuild.
+function setTex(on) {
+  texOn = on;
+  $('mTex').setAttribute('aria-pressed', on);
+  if (!world) return;
+  world.group.traverse((o) => {
+    if (!o.isMesh || !o.userData.tex) return;
+    const want = on ? o.userData.tex : null;
+    if (o.material.map === want) return;
+    o.material.map = want;
+    const c = o.userData.rgb || [255, 255, 255];
+    if (on) o.material.color.setRGB(1, 1, 1);
+    else o.material.color.setRGB(c[0] / 255, c[1] / 255, c[2] / 255);
+    o.material.needsUpdate = true;
+  });
+}
+$('mTex').onclick = () => setTex(!texOn);
+addEventListener('keydown', (e) => {
+  if (e.code === 'KeyL') setWire(!wireOn);
+  if (e.code === 'KeyT') setTex(!texOn);
+});
 
 // ---- loop ----
 let last = performance.now(), acc = 0;

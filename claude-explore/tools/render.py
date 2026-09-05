@@ -51,6 +51,8 @@ def render(meshes, size=(560, 440), azim=35.0, elev=22.0, dist=None, outline=Tru
     for _m in meshes:
         verts, faces, rgb, poly = _m[0], _m[1], _m[2], _m[3]
         tex = _m[4] if len(_m) > 4 else None
+        alpha = _m[5] if len(_m) > 5 and _m[5] is not None else 255
+        mask = _m[6] if len(_m) > 6 else None
         vh = np.hstack([verts, np.ones((len(verts), 1))])
         cam = (V @ vh.T).T[:, :3]
         z = -cam[:, 2]
@@ -72,7 +74,10 @@ def render(meshes, size=(560, 440), azim=35.0, elev=22.0, dist=None, outline=Tru
                 continue
             nrm = nrm / ln
             lam = abs(float(nrm @ light))
-            shade = 0.32 + 0.68 * lam
+            # The APPLICATION's own split, read off its VRML exporter: all
+            # 3,184 materials in the Virtus exports write `ambientColor` at
+            # exactly 0.25 x `diffuseColor`.
+            shade = 0.25 + 0.75 * lam
             col = np.clip(base * shade, 0, 255)
             x = np.array([sx[i0], sx[i1], sx[i2]]); y = np.array([sy[i0], sy[i1], sy[i2]])
             zz = np.array([z[i0], z[i1], z[i2]])
@@ -93,6 +98,19 @@ def render(meshes, size=(560, 440), azim=35.0, elev=22.0, dist=None, outline=Tru
             zt = l0*zz[0] + l1*zz[1] + l2*zz[2]
             sub = zbuf[y0:y1+1, x0:x1+1]
             upd = m & (zt < sub)
+            if mask is not None and mask['uv'][fi] is not None:
+                # The OPENING stencil. The face keeps all of its geometry and
+                # the pixels inside a hole are simply never painted -- which is
+                # how a renderer with no boolean geometry cuts a hole, and how
+                # this one almost certainly did it.
+                q = mask['uv'][fi]
+                mu = l0*q[0][0] + l1*q[1][0] + l2*q[2][0]
+                mv = l0*q[0][1] + l1*q[1][1] + l2*q[2][1]
+                mw, mh = mask['w'], mask['h']
+                mx = np.clip((mu*mw).astype(np.int32), 0, mw-1)
+                my = np.clip((mv*mh).astype(np.int32), 0, mh-1)
+                flatm = np.frombuffer(mask['a'], np.uint8).reshape(mh, mw)
+                upd = upd & (flatm[my, mx] >= 128)
             sub[upd] = zt[upd]
             if tex is not None and tex.get('uv') is not None and tex['uv'][fi] is not None:
                 # per-pixel texture sample: interpolate UV barycentrically, wrap,
@@ -106,8 +124,16 @@ def render(meshes, size=(560, 440), azim=35.0, elev=22.0, dist=None, outline=Tru
                 flat = np.frombuffer(tex['rgb'], np.uint8).reshape(th_, tw, 3)
                 samp = flat[py, px].astype(float) * shade
                 img[y0:y1+1, x0:x1+1][upd] = np.clip(samp, 0, 255).astype(np.uint8)[upd]
-            else:
+            elif alpha >= 250:
                 img[y0:y1+1, x0:x1+1][upd] = col.astype(np.uint8)
+            else:
+                # Translucent. The original dithered on a checkerboard; a real
+                # blend is the same idea without the 8-bit palette constraint.
+                a = alpha / 255.0
+                dst = img[y0:y1+1, x0:x1+1].astype(float)
+                blend = dst*(1-a) + col*a
+                img[y0:y1+1, x0:x1+1][upd] = np.clip(blend, 0, 255).astype(np.uint8)[upd]
+                sub[upd] = np.inf          # do not occlude what is behind it
         if outline:
             for (i0, i1, i2) in faces:
                 for a_, b_ in ((i0, i1), (i1, i2), (i2, i0)):

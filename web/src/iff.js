@@ -77,6 +77,13 @@ function parseSeq(buf, view, start, end, parent, strict) {
     }
     parent.children.push(c);
     off = stop;
+    // IFF-85 pads an odd-length chunk to an even boundary, and this format does
+    // too -- it simply never came up. Every chunk in the SoftKey corpus happens
+    // to have an even length, so "exact lengths, no padding" held for 393 files
+    // and got written into the spec as fact. The Virtus VRML content breaks it:
+    // VRAN carries a URL, and `file:///kitchen.wrl` is 19 bytes followed by a
+    // 00 before the next chunk. Without this, three tutorial files fail to parse.
+    if (len % 2 && off < end && view.getUint8(off) === 0) off += 1;
   }
 }
 
@@ -122,6 +129,7 @@ export function parse(buf) {
     }
     root.children.push(c);
     off = stop;
+    if (len % 2 && off < n && view.getUint8(off) === 0) off += 1;   // odd-length pad
   }
   return root;
 }
@@ -152,7 +160,9 @@ export function wlbItems(root) {
     for (const it of cat.children) {
       if (it.tag !== 'FORM' || it.formtype !== 'VCLP') continue;
       const nm = it.kid('NAME');
-      out.push({ name: nm ? pstring(nm.data) : '?', kind: it.subtype, chunk: it });
+      // `root` rides along: the gallery's TXTB sits above the clips, so a
+      // clip built on its own still needs a way back to the texture table.
+      out.push({ name: nm ? pstring(nm.data) : '?', kind: it.subtype, chunk: it, root });
     }
   }
   return out;
