@@ -644,11 +644,63 @@ told me which way was right.
 
 ### 10.6b Two texture bugs the parity harness cannot see
 
+**A texture is not always tiled — `TXST` bytes 39 and 40 are wrap flags.** ✅
+They split the corpus's 56 distinct textures cleanly, 42 at `01 01` and 14 at
+`00 00`, and the names say what the split is. Everything at 01 is a seamless
+MATERIAL — brick, marble, planks, tile, turf, checker, stripes. Everything at 00
+is a picture meant to be shown ONCE: `CloudScape 1.0`, `Mountains 1.0`,
+`Trees 1.0`, `VR Logo`, `Single Contemporary Door`, and `School Bk Depos 2`,
+which is a photograph of the Texas School Book Depository facade.
+
+A non-repeating texture is fitted once across the face's own bounding box
+instead of being measured in inches per tile — a photograph of a whole building
+has no physical tile size to be measured in, and the 32-inch value those entries
+carry is just an unused default. Untreated, `DEALEY` tiled that photograph
+thirty-odd times across a hundred feet of wall and the sky dome tiled a
+cloudscape into a crosshatch, which is what the user reported. Fitted, the
+facade reads as the building.
+
+The lead came from the user noticing that a texture *shouldn't repeat at all* —
+not from any oracle. Nothing measurable was wrong; the file parsed, the tile
+size decoded correctly, and the UVs were exactly what the tile size implied.
+
 **`TXST`'s tile size was decoded in the JS and never in the Python.** For weeks
 `d3d.prism_uvs` fell back to 64 in/tile on every texture in the corpus while
 `geometry.js` used the real value — so the two renderers disagreed about texture
 scale and no oracle noticed, because parity measures geometry and geometry is
 unaffected. Anything decoded in one implementation belongs in both the same day.
+
+**V runs DOWN the picture, so it has to be flipped against the face frame.** ✅
+The frame's v axis is world-UP for a vertical face — `v = n x u` with
+`u = Zup x n` — so the top of a wall is `v = 1`. But row 0 of a decoded bitmap
+is the TOP of the image, so sampling `row = v * h` puts the top of the picture
+at the bottom of the wall. `DEALEY`'s depository and every cloudscape in the
+corpus rendered upside down.
+
+It is a flip, not a 180° rotation, and that is checkable rather than guessable:
+for the depository's face the normal is `(-1, 0, 0)`, so a viewer outside it
+looks along `+X` and their right is `f x up = (0, -1, 0)` — which is exactly the
+frame's `u`. U was already correct; only V was wrong. Rendering the facade
+confirms it: the dark entrance sits right of centre in both the raw bitmap and
+the render.
+
+Note this cannot be fixed with three.js's `texture.flipY`. `UNPACK_FLIP_Y_WEBGL`
+has no effect on `texImage2D` calls that take an `ArrayBufferView`, which is
+exactly how a `DataTexture` uploads. The flip belongs in the UV, where both
+implementations can share one rule.
+
+**A DECORATION can carry its own texture, through `SFTX`, and we never drew
+one.** 92 assignments corpus-wide, and they are not a curiosity: `JENSONEX`'s
+half-timbered upper storey is 22 `WOOD2-3E` panels and 23 `STONE2` ones laid on
+the walls as decorations, so with `SFTX` unread the whole top floor of the house
+rendered flat brown while the storey below it was correctly brick. The user
+spotted it in a render, from the missing wood boarding.
+
+A repeating decoration texture is measured in the same face-frame inches the
+wall uses, so panelling on a decoration tiles in register with panelling on the
+surface under it. A non-repeating one is fitted across the DECORATION's own
+extent, not the face's — `VRLOGO`'s logo and the `Mountains 1.0` panel in
+`MYHOUSE` are pictures of themselves and the face they sit on is irrelevant.
 
 **A prism can wear more than one texture, and we only ever used the first.**
 `PLTX` textures the whole prism and a per-face `SUTX` overrides it; 13 of the

@@ -6,7 +6,7 @@
  */
 import { fp, u16, u32 } from './iff.js';
 import { clipMesh } from './clip.js';
-import { textureTable, assignments } from './textures.js';
+import { textureTable, assignments, featTexId } from './textures.js';
 
 export const STRAIGHT = 1, POINTED = 2, DIAMOND = 3, ROUNDED = 4, SPHERE = 5;
 export const PROFILE_NAME = { 1: 'straight', 2: 'pointed', 3: 'diamond', 4: 'rounded', 5: 'sphere' };
@@ -752,10 +752,39 @@ export function prismUVs(prsm, verts, faces, ids, poly) {
     let [tu, tv] = ent.tile || [64, 64];
     if (!(tu > 0.01)) tu = 64;
     if (!(tv > 0.01)) tv = 64;
+    const [wu, wv] = ent.wrap || [true, true];
     const fr = faceFrame(verts, triI.map((i) => faces[i]), appn.get(fid));
     if (!fr) continue;
+    // A NON-REPEATING texture is fitted ONCE across the face rather than
+    // measured in inches per tile: a photograph of a whole building or a whole
+    // sky has no physical tile size to be measured in.
+    let u0 = 0, du = 1, v0 = 0, dv = 1;
+    if (!wu || !wv) {
+      const idx = [...new Set(triI.map((i) => faces[i]).flat())];
+      let uMin = Infinity, uMax = -Infinity, vMin = Infinity, vMax = -Infinity;
+      for (const i of idx) {
+        const a = dot(verts[i], fr.u), b = dot(verts[i], fr.v);
+        if (a < uMin) uMin = a; if (a > uMax) uMax = a;
+        if (b < vMin) vMin = b; if (b > vMax) vMax = b;
+      }
+      u0 = uMin; du = (uMax - uMin) || 1;
+      v0 = vMin; dv = (vMax - vMin) || 1;
+    }
+    // V RUNS DOWN THE PICTURE, so it has to be flipped against the frame. The
+    // face frame's v axis is world-UP for a vertical face (v = n x u with
+    // u = Zup x n), so the top of a wall is v = 1; but row 0 of a decoded
+    // bitmap is the TOP of the image. Sampling row = v * h then puts the top of
+    // the picture at the bottom of the wall, and DEALEY's depository and every
+    // cloudscape in the corpus rendered upside down. Only V: u already points
+    // to the viewer's right on the outside of the face, so the image is
+    // flipped, NOT rotated 180. (Note this cannot be fixed with
+    // `texture.flipY` -- UNPACK_FLIP_Y_WEBGL has no effect on a DataTexture,
+    // whose pixels arrive as an ArrayBufferView.)
     for (const i of triI) {
-      uv[i] = faces[i].map((j) => [dot(verts[j], fr.u) / tu, dot(verts[j], fr.v) / tv]);
+      uv[i] = faces[i].map((j) => [
+        wu ? dot(verts[j], fr.u) / tu : (dot(verts[j], fr.u) - u0) / du,
+        wv ? -dot(verts[j], fr.v) / tv : 1 - (dot(verts[j], fr.v) - v0) / dv,
+      ]);
       tids[i] = tid;
       any = true;
     }
@@ -1020,14 +1049,60 @@ export function surfaceFeatures(prsm, mesh) {
       const pv = pts2.map(([a, b]) => add(add(base, mul(fr.u, a)), mul(fr.v, b)));
       const tri = triangulate(pv.map((p) => [dot(p, fr.u), dot(p, fr.v)]));
       if (!tri.length) continue;
+      // A decoration can carry its OWN texture, through SFTX. 92 of them do, and
+      // they are not a curiosity: JENSONEX's half-timbered top storey is 22
+      // WOOD2-3E panels and 23 STONE2 ones, so with SFTX unread the whole upper
+      // floor of the house rendered flat brown.
+      const ft = featTexture(feat);
+      const fuv = ft ? tri.map((t) => featUV(ft, pv, fr.u, fr.v, pts2, t)) : null;
       // Decorations stack: a roundel is concentric FEATs on ONE face, all
       // mutually coplanar. `layer` is their paint order within the SURF, so the
       // renderer can give each its own depth bias instead of letting them fight.
       out.push({ verts: pv, faces: tri, color: rgb, alpha, side, normal: fr.nrm,
-                 isFeature: true, layer: layer++ });
+                 isFeature: true, layer: layer++, tex: ft, uv: fuv });
     }
   }
   return out;
+}
+
+/** A decoration's own SFTX texture, as a mesh `tex` object. */
+function featTexture(feat) {
+  const tid = featTexId(feat);
+  const e = tid === null ? null : TEXTURES.get(tid);
+  if (!e) return null;
+  return { id: tid, name: e.name, w: e.w, h: e.h, rgba: e.rgba,
+           wrap: e.wrap || [true, true], tile: e.tile || [64, 64] };
+}
+
+/**
+ * UVs for one triangle of a textured decoration.
+ *
+ * A REPEATING texture is measured in the same face-frame inches the wall uses,
+ * so panelling on a decoration tiles in register with panelling on the surface
+ * under it. A NON-REPEATING one is fitted across the DECORATION's own extent,
+ * not the face's -- VRLOGO's logo and the Mountains panel in MYHOUSE are
+ * pictures of themselves, and the face they sit on is irrelevant to them.
+ */
+function featUV(tex, pv, u, v, pts2, tri) {
+  let [tu, tv] = tex.tile;
+  if (!(tu > 0.01)) tu = 64;
+  if (!(tv > 0.01)) tv = 64;
+  const [wu, wv] = tex.wrap;
+  let u0 = 0, du = 1, v0 = 0, dv = 1;
+  if (!wu || !wv) {
+    let a0 = Infinity, a1 = -Infinity, b0 = Infinity, b1 = -Infinity;
+    for (const [a, b] of pts2) {
+      if (a < a0) a0 = a; if (a > a1) a1 = a;
+      if (b < b0) b0 = b; if (b > b1) b1 = b;
+    }
+    u0 = a0; du = (a1 - a0) || 1;
+    v0 = b0; dv = (b1 - b0) || 1;
+  }
+  // V flipped, for the same reason as prismUVs.
+  return tri.map((j) => [
+    wu ? dot(pv[j], u) / tu : (pts2[j][0] - u0) / du,
+    wv ? -dot(pv[j], v) / tv : 1 - (pts2[j][1] - v0) / dv,
+  ]);
 }
 
 /**
@@ -1081,7 +1156,8 @@ export function collect(node, out = [], unit = null) {
           ? faceMasks(k, m.verts, m.faces, m.faceIds, m.poly) : null;
         const texOf = (tid) => {
           const e = TEXTURES.get(tid);
-          return e ? { id: tid, name: e.name, w: e.w, h: e.h, rgba: e.rgba } : null;
+          return e ? { id: tid, name: e.name, w: e.w, h: e.h, rgba: e.rgba,
+                       wrap: e.wrap || [true, true] } : null;
         };
         if ((over.size || alph.size || tx || mk) && m.faceIds) {   // tx: any UVs at all
           const groups = new Map();

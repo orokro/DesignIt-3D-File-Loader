@@ -444,13 +444,37 @@ def prism_uvs(prsm, verts, faces, fids, poly):
         tu, tv = ent.get('tile') or (64.0, 64.0)
         tu = tu if tu > 0.01 else 64.0
         tv = tv if tv > 0.01 else 64.0
+        wu, wv = ent.get('wrap', (True, True))
         fr = face_frame(verts, [faces[i] for i in tri_i], sweep=sweep, normal=appn.get(fid))
         if fr is None:
             continue
         _, u, v, _, _ = fr
+        # A NON-REPEATING texture is fitted ONCE across the face rather than
+        # measured in inches per tile: `School Bk Depos 2` is a photograph of
+        # the whole building and `CloudScape 1.0` a whole sky, and neither has
+        # a physical tile size to be measured in. Per axis, because the flags
+        # are per axis -- though the corpus only ever uses (1,1) or (0,0).
+        idx = sorted({i for t in (faces[i] for i in tri_i) for i in t})
+        V = np.asarray(verts)
+        if not wu or not wv:
+            us = [float(V[i] @ u) for i in idx]
+            vs = [float(V[i] @ v) for i in idx]
+            u0, du = min(us), (max(us) - min(us)) or 1.0
+            v0, dv = min(vs), (max(vs) - min(vs)) or 1.0
+        # V RUNS DOWN THE PICTURE, so it has to be flipped against the frame.
+        # The face frame's v axis is world-UP for a vertical face (v = n x u
+        # with u = Zup x n), so the top of a wall is v = 1; but row 0 of a
+        # decoded bitmap is the TOP of the image. Sampling row = v * h then puts
+        # the top of the picture at the bottom of the wall, and `DEALEY`'s
+        # depository and every cloudscape in the corpus rendered upside down.
+        # Only V: u already points to the viewer's right on the outside of the
+        # face, so the image is flipped, NOT rotated 180.
         for i in tri_i:
             t = faces[i]
-            uv[i] = np.array([[float(verts[j] @ u) / tu, float(verts[j] @ v) / tv] for j in t])
+            uv[i] = np.array([[
+                (float(V[j] @ u) / tu) if wu else ((float(V[j] @ u) - u0) / du),
+                (-float(V[j] @ v) / tv) if wv else (1.0 - (float(V[j] @ v) - v0) / dv),
+            ] for j in t])
             tids[i] = tid
     if all(x is None for x in uv):
         return None, None
@@ -1000,7 +1024,7 @@ def collect(node, M, out, unit=None):
                 def _tex(tid):
                     e = TEXTURES[tid]
                     return {'id': tid, 'name': e.get('name'), 'w': e['w'], 'h': e['h'],
-                            'rgb': e['rgb']}
+                            'rgb': e['rgb'], 'wrap': e.get('wrap', (True, True))}
                 al = surf_alphas(k)
                 ba = prism_alpha(k)
                 masks, muv = (face_masks(k, v, f, fids, poly)
@@ -1429,6 +1453,12 @@ def surface_features(prsm, verts, faces, fids, W):
             # whatever those come to -- 4x on a quarter-inch-unit object, 16x on
             # a sixteenth. That is what turned the `Microwave Oven`'s front into
             # z-fighting speckle the moment UNIT scaling was implemented.
+            # A decoration can carry its OWN texture, through SFTX. 92 of them
+            # do, and they are not a curiosity: `JENSONEX`'s half-timbered top
+            # storey is 22 WOOD2-3E panels and 23 STONE2 ones, so with SFTX
+            # unread the whole upper floor of the house rendered flat brown.
+            ftex = _feat_texture(feat)
+
             wn = np.linalg.norm(W[:3, :3] @ nrm) or 1.0
             for sgn in ((1, -1) if side == FEAT_BOTH else (1,) if side != FEAT_INSIDE else (-1,)):
                 off = nrm * (SURF_OFFSET * sgn / wn)
@@ -1438,5 +1468,53 @@ def surface_features(prsm, verts, faces, fids, W):
                     continue
                 vh = np.hstack([pv, np.ones((len(pv), 1))])
                 wv = (W @ vh.T).T[:, :3]
-                out.append((wv, tri, rgb, None, None, alpha))
+                gt = None
+                if ftex is not None:
+                    gt = dict(ftex, uv=[_feat_uv(ftex, pv, u, v, pts2, t) for t in tri])
+                out.append((wv, tri, rgb, None, gt, alpha, None))
     return out
+
+
+def _feat_texture(feat):
+    """A decoration's own SFTX texture, as a mesh-tuple `tex` dict."""
+    sf = feat.kid('SFTX')
+    if sf is None:
+        return None
+    try:
+        import textures as _tx
+        tid = _tx._tex_id(sf)
+    except Exception:
+        return None
+    e = TEXTURES.get(tid) if tid is not None else None
+    if e is None or 'w' not in e:
+        return None
+    return {'id': tid, 'name': e.get('name'), 'w': e['w'], 'h': e['h'],
+            'rgb': e['rgb'], 'wrap': e.get('wrap', (True, True)),
+            'tile': e.get('tile') or (64.0, 64.0)}
+
+
+def _feat_uv(tex, pv, u, v, pts2, tri):
+    """UVs for one triangle of a textured decoration.
+
+    A REPEATING texture is measured in the same face-frame inches the wall uses,
+    so panelling on a decoration tiles in register with panelling on the surface
+    under it. A NON-REPEATING one is fitted across the DECORATION's own extent,
+    not the face's -- `VRLOGO`'s logo and the `Mountains 1.0` panel in `MYHOUSE`
+    are pictures of themselves, and the face they sit on is irrelevant to them.
+    """
+    tu, tv = tex['tile']
+    tu = tu if tu > 0.01 else 64.0
+    tv = tv if tv > 0.01 else 64.0
+    wu, wv_ = tex['wrap']
+    if not wu or not wv_:
+        us = [a for (a, _) in pts2]; vs = [b for (_, b) in pts2]
+        u0, du = min(us), (max(us) - min(us)) or 1.0
+        v0, dv = min(vs), (max(vs) - min(vs)) or 1.0
+    out = []
+    for j in tri:
+        a, b = pts2[j]
+        # V flipped, for the same reason as prism_uvs: row 0 of a bitmap is the
+        # TOP of the picture and the frame's v axis points UP.
+        out.append([(float(pv[j] @ u) / tu) if wu else ((a - u0) / du),
+                    (-float(pv[j] @ v) / tv) if wv_ else (1.0 - (b - v0) / dv)])
+    return np.array(out)

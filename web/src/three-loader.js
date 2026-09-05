@@ -41,7 +41,10 @@ export function buildGroup(meshes, { flatShading = true } = {}) {
     // A stencilled face never merges with anything: its mask is in that one
     // face's own frame. `maskSeq` keys it uniquely without needing a face id.
     const ms = m.mask ? `@${maskSeq++}` : '';
-    const k = m.isFeature ? `${key(m.color)}/${m.layer ?? 0}/${m.alpha ?? 255}`
+    // The texture belongs in the FEATURE key too: a decoration can carry its
+    // own bitmap through SFTX, and two decorations of the same colour and layer
+    // may well wear different ones.
+    const k = m.isFeature ? `${key(m.color)}/${m.layer ?? 0}/${m.alpha ?? 255}${t}`
                           : `${key(m.color)}/${m.alpha ?? 255}${t}${ms}`;
     if (!bucket.has(k)) bucket.set(k, { pos: [], uv: [], muv: [], rgb: m.color,
                                         alpha: m.alpha ?? 255, layer: m.layer ?? 0,
@@ -70,7 +73,12 @@ export function buildGroup(meshes, { flatShading = true } = {}) {
   const makeTex = (t) => {
     if (texCache.has(t.id)) return texCache.get(t.id);
     const tx = new THREE.DataTexture(t.rgba, t.w, t.h, THREE.RGBAFormat);
-    tx.wrapS = tx.wrapT = THREE.RepeatWrapping;
+    // Backdrops and photo-textures are fitted once to the face and must CLAMP:
+    // a UV a hair outside 0..1 at the seam would otherwise wrap the far edge of
+    // the sky round to the near one. See textures.js wrapFlags.
+    const [wu, wv] = t.wrap || [true, true];
+    tx.wrapS = wu ? THREE.RepeatWrapping : THREE.ClampToEdgeWrapping;
+    tx.wrapT = wv ? THREE.RepeatWrapping : THREE.ClampToEdgeWrapping;
     tx.magFilter = THREE.LinearFilter;
     tx.minFilter = THREE.LinearMipmapLinearFilter;
     tx.generateMipmaps = true;

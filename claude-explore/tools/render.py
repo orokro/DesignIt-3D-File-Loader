@@ -119,8 +119,12 @@ def render(meshes, size=(560, 440), azim=35.0, elev=22.0, dist=None, outline=Tru
                 uu = l0*q[0][0] + l1*q[1][0] + l2*q[2][0]
                 vv = l0*q[0][1] + l1*q[1][1] + l2*q[2][1]
                 tw, th_ = tex['w'], tex['h']
-                px = np.mod((uu*tw).astype(np.int32), tw)
-                py = np.mod((vv*th_).astype(np.int32), th_)
+                wu, wv = tex.get('wrap', (True, True))
+                # a backdrop is fitted once to the face and must CLAMP, not wrap
+                px = (np.mod((uu*tw).astype(np.int32), tw) if wu
+                      else np.clip((uu*tw).astype(np.int32), 0, tw-1))
+                py = (np.mod((vv*th_).astype(np.int32), th_) if wv
+                      else np.clip((vv*th_).astype(np.int32), 0, th_-1))
                 flat = np.frombuffer(tex['rgb'], np.uint8).reshape(th_, tw, 3)
                 samp = flat[py, px].astype(float) * shade
                 img[y0:y1+1, x0:x1+1][upd] = np.clip(samp, 0, 255).astype(np.uint8)[upd]

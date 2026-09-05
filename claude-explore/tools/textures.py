@@ -64,6 +64,25 @@ def decode_bitmap(body):
     return w, h, bytes(rgb)
 
 
+def wrap_flags(body):
+    """TXST -> (repeat_u, repeat_v) as booleans.
+
+    Bytes 39 and 40 split the corpus's 56 distinct textures cleanly into 42 at
+    `01 01` and 14 at `00 00`, and the names say what the split is: everything
+    at 01 is a seamless MATERIAL (brick, marble, planks, tile, turf, checker,
+    stripes) and everything at 00 is a picture meant to be shown ONCE --
+    `CloudScape 1.0`, `Mountains 1.0`, `Trees 1.0`, `VR Logo`, `Single
+    Contemporary Door`, and `School Bk Depos 2`, which is a photograph of the
+    Texas School Book Depository stretched over the building in `DEALEY`.
+
+    Without this the depository tiles a 32-inch photo across a hundred feet of
+    wall, which is what it was doing.
+    """
+    if len(body) < 41:
+        return (True, True)
+    return (body[39] != 0, body[40] != 0)
+
+
 def tile_size(body):
     """TXST -> (u, v) INCHES PER TILE.
 
@@ -88,7 +107,7 @@ def tile_size(body):
 
 
 def table(root):
-    """Every texture in a file -> {id: {'name', 'w', 'h', 'rgb', 'tile'}}"""
+    """Every texture in a file -> {id: {'name', 'w', 'h', 'rgb', 'tile', 'wrap'}}"""
     out = {}
     def walk(n):
         for k in n.children:
@@ -98,6 +117,7 @@ def table(root):
                         continue
                     tid = name = img = None
                     tile = (64.0, 64.0)
+                    wrap = (True, True)
                     for t2, b2 in subchunks(body):
                         if t2 == 'TXID' and len(b2) >= 4:
                             tid = struct.unpack('>I', b2[:4])[0]
@@ -107,8 +127,9 @@ def table(root):
                             img = decode_bitmap(b2)
                         elif t2 == 'TXST':
                             tile = tile_size(b2) or tile
+                            wrap = wrap_flags(b2)
                     if tid is not None:
-                        e = {'name': name, 'tile': tile}
+                        e = {'name': name, 'tile': tile, 'wrap': wrap}
                         if img:
                             e.update(w=img[0], h=img[1], rgb=img[2])
                         out[tid] = e

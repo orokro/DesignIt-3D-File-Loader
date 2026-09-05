@@ -77,6 +77,23 @@ export function decodeBitmap(dv, off, len) {
  * of the format uses: 0x40000000 reads as 16384 under 16.16 and as 64 under
  * 8.24, and 64 / 88 / 80 / 32 are sane inches-per-tile for brick and panelling.
  */
+/**
+ * TXST bytes 39 and 40 -> [repeatU, repeatV].
+ *
+ * They split the corpus's 56 distinct textures cleanly into 42 at `01 01` and
+ * 14 at `00 00`, and the names say what the split is: everything at 01 is a
+ * seamless MATERIAL (brick, marble, planks, tile, turf, checker) and everything
+ * at 00 is a picture meant to be shown ONCE -- `CloudScape 1.0`,
+ * `Mountains 1.0`, `Trees 1.0`, `VR Logo`, `Single Contemporary Door`, and
+ * `School Bk Depos 2`, a photograph of the Texas School Book Depository
+ * stretched over the building in `DEALEY`. Without this the depository tiles a
+ * 32-inch photo across a hundred feet of wall.
+ */
+function wrapFlags(dv, off, len) {
+  if (len < 41) return [true, true];
+  return [dv.getUint8(off + 39) !== 0, dv.getUint8(off + 40) !== 0];
+}
+
 function tileSize(dv, off, len) {
   if (len < 40) return [64, 64];
   const u = dv.getUint32(off + 28, false) / (1 << 24);
@@ -92,7 +109,7 @@ export function textureTable(root) {
       if (k.tag === 'TXTB' && k.data) {
         for (const e of subchunks(k.data)) {
           if (e.tag !== 'TXTE') continue;
-          let id = null, name = null, img = null, tile = [64, 64];
+          let id = null, name = null, img = null, tile = [64, 64], wrap = [true, true];
           for (const f of subchunks(k.data, e.off, e.off + e.len)) {
             if (f.tag === 'TXID' && f.len >= 4) id = k.data.getUint32(f.off, false);
             else if (f.tag === 'TXNM') {
@@ -104,9 +121,12 @@ export function textureTable(root) {
               }
               name = s;
             } else if (f.tag === 'TXPD') img = decodeBitmap(k.data, f.off, f.len);
-            else if (f.tag === 'TXST') tile = tileSize(k.data, f.off, f.len);
+            else if (f.tag === 'TXST') {
+              tile = tileSize(k.data, f.off, f.len);
+              wrap = wrapFlags(k.data, f.off, f.len);
+            }
           }
-          if (id !== null && img) out.set(id, { name, ...img, tile });
+          if (id !== null && img) out.set(id, { name, ...img, tile, wrap });
         }
       }
       walk(k);
@@ -135,6 +155,11 @@ function texId(chunk) {
 }
 
 /** -> { whole: id|null, faces: Map(faceId -> id) } */
+/** A decoration's own texture id, from its SFTX. -> id | null */
+export function featTexId(feat) {
+  return texId(feat.kid('SFTX'));
+}
+
 export function assignments(prsm, u16) {
   const faces = new Map();
   for (const surf of prsm.kids('SURF')) {

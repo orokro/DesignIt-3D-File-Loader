@@ -312,11 +312,28 @@ const buildModels = (m) => buildFileBucket(m, {
   bucket: 'models', label: 'Models', noun: 'models',
   gap: 90, aisle: 200, maxSpan: 14000, groundColor: 0x66705f });
 
+// The ground is OURS, not the file's -- the corpus has no world floor, every
+// object simply sits at z = 0. So a scene's own slab, patio or ground pad is
+// exactly coplanar with it and the two z-fight across the whole view.
+//
+// Two things, because either alone leaves cases: drop the plane a hair, and
+// give it a positive polygonOffset so it is pushed AWAY from the camera in
+// depth and can never win a tie. Losing every contest is the correct behaviour
+// for a backdrop, and the offset is in depth units only -- the plane does not
+// move, so walk mode still lands the player on z = 0.
+//
+// This does not touch the z-fighting BETWEEN objects in a scene: those are
+// coplanar in the original data, which was drawn by a painter's algorithm with
+// no depth buffer at all. That is a separate problem and needs a plan.
+const GROUND_DROP = 0.05;      // inches
+
 function makeGround(size, color) {
-  const g = new THREE.Mesh(
-    new THREE.PlaneGeometry(size, size),
-    new THREE.MeshLambertMaterial({ color }));
-  g.position.z = 0;
+  const mat = new THREE.MeshLambertMaterial({ color });
+  mat.polygonOffset = true;
+  mat.polygonOffsetFactor = 4;
+  mat.polygonOffsetUnits = 8;
+  const g = new THREE.Mesh(new THREE.PlaneGeometry(size, size), mat);
+  g.position.z = -GROUND_DROP;
   g.userData.isGround = true;
   return g;
 }
