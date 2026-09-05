@@ -48,7 +48,9 @@ def render(meshes, size=(560, 440), azim=35.0, elev=22.0, dist=None, outline=Tru
     light = np.array([0.45, 0.35, 0.82]); light /= np.linalg.norm(light)
     edges = []
 
-    for verts, faces, rgb, poly in meshes:
+    for _m in meshes:
+        verts, faces, rgb, poly = _m[0], _m[1], _m[2], _m[3]
+        tex = _m[4] if len(_m) > 4 else None
         vh = np.hstack([verts, np.ones((len(verts), 1))])
         cam = (V @ vh.T).T[:, :3]
         z = -cam[:, 2]
@@ -60,7 +62,7 @@ def render(meshes, size=(560, 440), azim=35.0, elev=22.0, dist=None, outline=Tru
                 sx = W / 2 + cam[:, 0] * fpx / z
                 sy = H / 2 - cam[:, 1] * fpx / z
         base = np.array(rgb, float)
-        for (i0, i1, i2) in faces:
+        for fi, (i0, i1, i2) in enumerate(faces):
             if not ortho and (z[i0] <= .01 or z[i1] <= .01 or z[i2] <= .01):
                 continue
             p0, p1, p2 = verts[i0], verts[i1], verts[i2]
@@ -92,7 +94,20 @@ def render(meshes, size=(560, 440), azim=35.0, elev=22.0, dist=None, outline=Tru
             sub = zbuf[y0:y1+1, x0:x1+1]
             upd = m & (zt < sub)
             sub[upd] = zt[upd]
-            img[y0:y1+1, x0:x1+1][upd] = col.astype(np.uint8)
+            if tex is not None and tex.get('uv') is not None and tex['uv'][fi] is not None:
+                # per-pixel texture sample: interpolate UV barycentrically, wrap,
+                # and shade with the same lambert term the flat path uses
+                q = tex['uv'][fi]
+                uu = l0*q[0][0] + l1*q[1][0] + l2*q[2][0]
+                vv = l0*q[0][1] + l1*q[1][1] + l2*q[2][1]
+                tw, th_ = tex['w'], tex['h']
+                px = np.mod((uu*tw).astype(np.int32), tw)
+                py = np.mod((vv*th_).astype(np.int32), th_)
+                flat = np.frombuffer(tex['rgb'], np.uint8).reshape(th_, tw, 3)
+                samp = flat[py, px].astype(float) * shade
+                img[y0:y1+1, x0:x1+1][upd] = np.clip(samp, 0, 255).astype(np.uint8)[upd]
+            else:
+                img[y0:y1+1, x0:x1+1][upd] = col.astype(np.uint8)
         if outline:
             for (i0, i1, i2) in faces:
                 for a_, b_ in ((i0, i1), (i1, i2), (i2, i0)):

@@ -249,6 +249,208 @@ def triangulate(poly2d):
     return tris
 
 
+def face_boundary(tris):
+    """The outline of a face, from its triangles: edges used once, chained.
+
+    A face's triangles come from the fan/quad builder and then from SLIC
+    clipping, so the outline is not known up front -- but an interior edge is
+    shared by two triangles and a boundary edge by one.
+    -> list of vertex indices in order, or None if it is not a single loop.
+    """
+    use = {}
+    for t in tris:
+        for a, b in ((t[0], t[1]), (t[1], t[2]), (t[2], t[0])):
+            use[(a, b)] = use.get((a, b), 0) + 1
+    edges = [e for e, n in use.items() if n == 1 and use.get((e[1], e[0]), 0) == 0]
+    if not edges:
+        return None
+    nxt = {}
+    for a, b in edges:
+        if a in nxt:
+            return None                      # a vertex leaving twice: not a simple loop
+        nxt[a] = b
+    start = edges[0][0]
+    loop, cur = [start], nxt.get(start)
+    while cur is not None and cur != start and len(loop) <= len(nxt):
+        loop.append(cur)
+        cur = nxt.get(cur)
+    return loop if cur == start and len(loop) == len(nxt) else None
+
+
+def triangulate_with_holes(outer, holes):
+    """Ear-clip a polygon that has holes, by BRIDGING each hole into the outline.
+
+    The format has no boolean subtraction: the ONLY way to make an opening
+    through a surface is a fully transparent decal (see surface_features). To
+    render that as a real hole the face has to be retriangulated around it.
+
+    Bridge construction is the standard one: take the hole's rightmost vertex,
+    cast a ray to +u, find the nearest outer edge it crosses, and splice the two
+    loops together at the best visible outer vertex. The result is one simple
+    (degenerate but valid) polygon that ordinary ear clipping handles.
+
+    `outer` and `holes` are lists of (u, v). -> index triples into
+    `outer + holes[0] + holes[1] + ...`.
+    """
+    def area(p):
+        return sum(p[i][0] * p[(i + 1) % len(p)][1] - p[(i + 1) % len(p)][0] * p[i][1]
+                   for i in range(len(p))) / 2
+
+    poly = [list(outer)] + [list(h) for h in holes]
+    # outer counter-clockwise, holes clockwise
+    if area(poly[0]) < 0:
+        poly[0].reverse()
+    for i in range(1, len(poly)):
+        if area(poly[i]) > 0:
+            poly[i].reverse()
+
+    # index bookkeeping so the caller can map back to its own vertices
+    idx = [list(range(len(outer)))]
+    base = len(outer)
+    for h in holes:
+        idx.append(list(range(base, base + len(h))))
+        base += len(h)
+    if area(list(outer)) < 0:
+        idx[0].reverse()
+    for i, h in enumerate(holes, 1):
+        if area(list(h)) > 0:
+            idx[i].reverse()
+
+    def seg_hits(p, q, ring, skip):
+        """Does the bridge p-q cross any edge of the current ring?"""
+        def o(a, b, c):
+            v = (b[0]-a[0])*(c[1]-a[1]) - (b[1]-a[1])*(c[0]-a[0])
+            return 0 if abs(v) < 1e-9 else (1 if v > 0 else -1)
+        for i in range(len(ring)):
+            j = (i + 1) % len(ring)
+            if i in skip or j in skip:
+                continue
+            a, b = ring[i], ring[j]
+            o1, o2, o3, o4 = o(p, q, a), o(p, q, b), o(a, b, p), o(a, b, q)
+            if o1 != o2 and o3 != o4 and o1 and o2 and o3 and o4:
+                return True
+        return False
+
+    ring, ridx = poly[0], idx[0]
+    # Bridge the RIGHTMOST hole first: after a splice the ring contains the
+    # previous hole's vertices, and a later bridge that lands on one of those
+    # can produce a self-intersecting ring. Two holes in one face then loses a
+    # cut entirely (199 of an expected 175 square inches, in the unit test).
+    rest = sorted(range(1, len(poly)), key=lambda i: -max(p[0] for p in poly[i]))
+    for hi in rest:
+        hole, hidx = poly[hi], idx[hi]
+        m = max(range(len(hole)), key=lambda i: hole[i][0])
+        hp = hole[m]
+        order = sorted(range(len(ring)),
+                       key=lambda j: (ring[j][0]-hp[0])**2 + (ring[j][1]-hp[1])**2)
+        bj = None
+        for j in order:
+            if ring[j][0] < hp[0] - 1e-9:
+                continue
+            if not seg_hits(hp, ring[j], ring, {j}):
+                bj = j
+                break
+        if bj is None:
+            bj = order[0]
+        ring = ring[:bj + 1] + hole[m:] + hole[:m + 1] + ring[bj:]
+        ridx = ridx[:bj + 1] + hidx[m:] + hidx[:m + 1] + ridx[bj:]
+    # Ear clipping with its own containment test. The shared `triangulate` is
+    # not usable here: bridging DUPLICATES two vertices, so points sit exactly
+    # on the ear's edges, its inside-test counts those as contained, and every
+    # ear is blocked -- it returns zero triangles.
+    n = len(ring)
+    if n < 3:
+        return []
+    live = list(range(n))
+    cross = lambda o, a, b: (a[0]-o[0])*(b[1]-o[1]) - (a[1]-o[1])*(b[0]-o[0])
+
+    def strictly_inside(p, a, b, c):
+        if (abs(p[0]-a[0]) < 1e-9 and abs(p[1]-a[1]) < 1e-9) or \
+           (abs(p[0]-b[0]) < 1e-9 and abs(p[1]-b[1]) < 1e-9) or \
+           (abs(p[0]-c[0]) < 1e-9 and abs(p[1]-c[1]) < 1e-9):
+            return False                      # a bridge duplicate, not an intruder
+        d1, d2, d3 = cross(a, b, p), cross(b, c, p), cross(c, a, p)
+        return (d1 > 1e-9 and d2 > 1e-9 and d3 > 1e-9) or \
+               (d1 < -1e-9 and d2 < -1e-9 and d3 < -1e-9)
+
+    out, guard = [], 0
+    while len(live) > 3 and guard < 4 * n * n:
+        guard += 1
+        cut = False
+        for k in range(len(live)):
+            i0, i1, i2 = live[k-1], live[k], live[(k+1) % len(live)]
+            a, b, c = ring[i0], ring[i1], ring[i2]
+            if cross(a, b, c) <= 1e-12:
+                continue
+            if any(strictly_inside(ring[j], a, b, c) for j in live if j not in (i0, i1, i2)):
+                continue
+            out.append((i0, i1, i2))
+            live.pop(k)
+            cut = True
+            break
+        if not cut:
+            break
+    if len(live) == 3:
+        out.append((live[0], live[1], live[2]))
+    return [(ridx[a], ridx[b], ridx[c]) for a, b, c in out]
+
+
+TEXTURES = {}           # {id: {'name','w','h','rgb','tile'}} for the file being built
+DRAW_TEXTURES = True    # sample assigned textures when rendering
+
+
+def prism_uvs(prsm, verts, faces, fids, poly):
+    """Per-triangle UVs for a textured prism.
+
+    A prism is textured as a whole (`PLTX`) or per face (`SUTX`), and each face
+    needs its OWN frame, so the UVs are stored per triangle rather than per
+    vertex. Coordinates are inches along the face's own u/v axes divided by the
+    tile size from TXST -- so the texture repeats at its authored physical size
+    instead of being stretched once across whatever face it lands on.
+    -> (texture id, [(3,2) uv per triangle]) or (None, None)
+    """
+    import textures as _tx
+    whole = None
+    pl = prsm.kid('PLTX')
+    if pl is not None:
+        whole = _tx._tex_id(pl)
+    perface = {}
+    for surf in prsm.kids('SURF'):
+        su = surf.kid('SUTX')
+        if su is not None:
+            t = _tx._tex_id(su)
+            if t is not None:
+                perface[iff.u16(surf.hdr, 0)] = t
+    if whole is None and not perface:
+        return None, None
+    tid = whole if whole is not None else next(iter(perface.values()))
+    ent = TEXTURES.get(tid)
+    if ent is None or 'w' not in ent:
+        return None, None
+    tu, tv = ent.get('tile', (64.0, 64.0))
+    tu = tu if tu > 0.01 else 64.0
+    tv = tv if tv > 0.01 else 64.0
+    appn = app_face_normals(poly)
+    sweep = axis_matrix(poly.axis) @ np.array([0.0, 0.0, 1.0])
+    byface = {}
+    for i, f in enumerate(fids):
+        byface.setdefault(f, []).append(i)
+    uv = [None] * len(faces)
+    for fid, tri_i in byface.items():
+        if perface and fid not in perface and whole is None:
+            continue
+        fr = face_frame(verts, [faces[i] for i in tri_i], sweep=sweep, normal=appn.get(fid))
+        if fr is None:
+            continue
+        _, u, v, _, _ = fr
+        for i in tri_i:
+            t = faces[i]
+            uv[i] = np.array([[float(verts[j] @ u) / tu, float(verts[j] @ v) / tv] for j in t])
+    if all(x is None for x in uv):
+        return None, None
+    return tid, uv
+
+
 def prsm_mesh(prsm):
     """Build (verts Nx3 in local object space, faces list) for one PRSM."""
     pc = prsm.kid('POLY')
@@ -429,8 +631,80 @@ def prsm_mesh(prsm):
                 if m.any():
                     verts = verts.copy()
                     verts[m] = (R @ (verts[m] - pivot).T).T + pivot
+    if CUT_HOLES:
+        verts, faces, fids = _cut_holes(prsm, verts, faces, fids, poly)
     verts, faces = _compact(verts, faces)
     return verts, faces, poly, fids
+
+
+def _cut_holes(prsm, verts, faces, fids, poly):
+    """Subtract every fully transparent FEAT from the face it sits on.
+
+    A zero-alpha decoration is not decoration: it is an OPENING, and it is the
+    only subtractive operation the format has. `BEACHCBN`'s convertible gets its
+    open cockpit this way and the `Silo` its doorway. 468 of them corpus-wide.
+    """
+    holes = {}
+    for surf in prsm.kids('SURF'):
+        fid = iff.u16(surf.hdr, 0)
+        for feat in surf.kids('FEAT'):
+            col = feat.kid('COLR')
+            if col is None or len(col.data) < 4 or col.data[0] != 0:
+                continue
+            p2 = feat_polygon(feat)
+            if not p2 or len(p2) < 3:
+                continue
+            holes.setdefault(fid, []).append((p2, feat_transform(feat)))
+    if not holes:
+        return verts, faces, fids
+    byface = {}
+    for i, (t, f) in enumerate(zip(faces, fids)):
+        byface.setdefault(f, []).append(i)
+    appn = app_face_normals(poly)
+    sweep = axis_matrix(poly.axis) @ np.array([0.0, 0.0, 1.0])
+    verts = list(verts)
+    drop, add, addid = set(), [], []
+    for fid, cuts in holes.items():
+        tri_i = byface.get(fid)
+        if not tri_i:
+            continue
+        tris = [faces[i] for i in tri_i]
+        loop = face_boundary(tris)
+        fr = face_frame(np.asarray(verts), tris, sweep=sweep, normal=appn.get(fid))
+        if loop is None or fr is None:
+            continue                          # not a simple loop: leave the face alone
+        corner, u, v, nrm, _ = fr
+        V = np.asarray(verts)
+        outer = [(float(V[i] @ u), float(V[i] @ v)) for i in loop]
+        cu, cv = float(corner @ u), float(corner @ v)
+        hs = []
+        for p2, tr in cuts:
+            tx, ty, th, sx, sy = tr
+            ct, st = math.cos(th), math.sin(th)
+            hs.append([(cu + ct*(x*sx) - st*(y*sy) + tx,
+                        cv + st*(x*sx) + ct*(y*sy) + ty) for (x, y) in p2])
+        try:
+            tt = triangulate_with_holes(outer, hs)
+        except Exception:
+            continue
+        if not tt:
+            continue
+        plane = float(V[loop[0]] @ nrm)
+        newidx = list(loop)
+        for h in hs:
+            for (a, b) in h:
+                verts.append(u*a + v*b + nrm*plane)
+                newidx.append(len(verts) - 1)
+        for (a, b, c) in tt:
+            add.append((newidx[a], newidx[b], newidx[c]))
+            addid.append(fid)
+        drop.update(tri_i)
+    if not add:
+        return np.asarray(verts), faces, fids
+    keep = [i for i in range(len(faces)) if i not in drop]
+    return (np.asarray(verts),
+            [faces[i] for i in keep] + add,
+            [fids[i] for i in keep] + addid)
 
 
 def _compact(verts, faces):
@@ -572,14 +846,23 @@ def collect(node, M, out, unit=None):
                 wv = (W @ vh.T).T[:, :3]
                 base = color_of(k)
                 over = surf_colours(k)
+                tid, uv = (prism_uvs(k, v, f, fids, poly)
+                           if (DRAW_TEXTURES and TEXTURES) else (None, None))
+                tex = None
+                if tid is not None:
+                    e = TEXTURES[tid]
+                    tex = {'id': tid, 'name': e.get('name'), 'w': e['w'], 'h': e['h'],
+                           'rgb': e['rgb']}
                 if over and fids is not None:
                     groups = {}
-                    for tri, fid in zip(f, fids):
-                        groups.setdefault(over.get(fid, base), []).append(tri)
+                    for i, (tri, fid) in enumerate(zip(f, fids)):
+                        groups.setdefault(over.get(fid, base), []).append(i)
                     for col in sorted(groups):          # sorted: JS must match
-                        out.append((wv, groups[col], col, poly))
+                        gi = groups[col]
+                        gt = dict(tex, uv=[uv[i] for i in gi]) if tex and uv else None
+                        out.append((wv, [f[i] for i in gi], col, poly, gt))
                 else:
-                    out.append((wv, f, base, poly))
+                    out.append((wv, f, base, poly, dict(tex, uv=uv) if tex and uv else None))
                 if DRAW_SURF:
                     out.extend(surface_features(k, v, f, fids, W))
         collect(k, W, out, u)
@@ -587,6 +870,12 @@ def collect(node, M, out, unit=None):
 
 def scene_meshes(path_or_chunk):
     r = iff.load(path_or_chunk) if isinstance(path_or_chunk, str) else path_or_chunk
+    global TEXTURES
+    try:
+        import textures as _tx
+        TEXTURES = _tx.table(r) if DRAW_TEXTURES else {}
+    except Exception:
+        TEXTURES = {}
     out = []
     roots = r.find_all('ROOT')
     if roots:
@@ -617,6 +906,7 @@ FACE_FRAME = 'azim'    # n x up: horizontal across the face, vertical up it
 FACE_BASE = 'cap0'       # 'cap0' (cap first, sides 1-based) | 'side0' (sides first, 0-based)
 FACE_HORIZ_TOL = 1e-6   # |up x n| below this counts the face as HORIZONTAL
 DRAW_HOLES = False      # draw alpha==0 FEATs (hole cutters) as solid decoration
+CUT_HOLES = True        # a zero-alpha FEAT actually cuts through the face
 SURF_OFFSET = 0.05      # inches to lift a decoration off its face, to beat z-fighting
 
 # FEAT's 2-byte header selects which side of the surface is decorated.

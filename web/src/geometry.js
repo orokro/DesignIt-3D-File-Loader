@@ -17,11 +17,13 @@ export const options = {
   applySkew: true,      // POLY's oblique-sweep offset
   faceFrame: 'azim',    // 'azim' | 'world' -- a face's 2D axes; mirrors d3d.FACE_FRAME
   drawHoles: false,     // draw alpha==0 FEATs (hole cutters) as solid decoration
+  cutHoles: true,       // a zero-alpha FEAT actually cuts through the face
 };
 
 // ---- small vector helpers ----
 const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+const add3 = add;
 const mul = (a, s) => [a[0] * s, a[1] * s, a[2] * s];
 const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
 const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
@@ -239,6 +241,130 @@ export function triangulate(pts) {
  *   bands*n + 1        cap at the LOW end
  *   bands*n + 2 + j    face created by SLIC cut j
  */
+/** The outline of a face, from its triangles: an interior edge is shared by two
+ *  triangles, a boundary edge by one. -> ordered vertex indices, or null. */
+export function faceBoundary(tris) {
+  const use = new Map();
+  const key = (a, b) => `${a},${b}`;
+  for (const t of tris) {
+    for (const [a, b] of [[t[0], t[1]], [t[1], t[2]], [t[2], t[0]]]) {
+      use.set(key(a, b), (use.get(key(a, b)) || 0) + 1);
+    }
+  }
+  const nxt = new Map();
+  for (const [k, n] of use) {
+    const [a, b] = k.split(',').map(Number);
+    if (n !== 1 || use.get(key(b, a))) continue;
+    if (nxt.has(a)) return null;
+    nxt.set(a, b);
+  }
+  if (!nxt.size) return null;
+  const start = nxt.keys().next().value;
+  const loop = [start];
+  let cur = nxt.get(start);
+  while (cur !== undefined && cur !== start && loop.length <= nxt.size) {
+    loop.push(cur);
+    cur = nxt.get(cur);
+  }
+  return cur === start && loop.length === nxt.size ? loop : null;
+}
+
+/** Ear-clip a polygon with holes, bridging each hole into the outline.
+ *  Mirrors d3d.triangulate_with_holes -- see there for why the shared
+ *  `triangulate` cannot be reused (bridging duplicates vertices). */
+export function triangulateWithHoles(outer, holes) {
+  const area = (p) => {
+    let a = 0;
+    for (let i = 0; i < p.length; i++) {
+      const j = (i + 1) % p.length;
+      a += p[i][0] * p[j][1] - p[j][0] * p[i][1];
+    }
+    return a / 2;
+  };
+  const rings = [outer.slice()], idxs = [outer.map((_, i) => i)];
+  let base = outer.length;
+  for (const h of holes) {
+    rings.push(h.slice());
+    idxs.push(h.map((_, i) => base + i));
+    base += h.length;
+  }
+  if (area(rings[0]) < 0) { rings[0].reverse(); idxs[0].reverse(); }
+  for (let i = 1; i < rings.length; i++) {
+    if (area(rings[i]) > 0) { rings[i].reverse(); idxs[i].reverse(); }
+  }
+  const orient = (a, b, c) => {
+    const v = (b[0]-a[0])*(c[1]-a[1]) - (b[1]-a[1])*(c[0]-a[0]);
+    return Math.abs(v) < 1e-9 ? 0 : (v > 0 ? 1 : -1);
+  };
+  const segHits = (p, q, ring, skip) => {
+    for (let i = 0; i < ring.length; i++) {
+      const j = (i + 1) % ring.length;
+      if (i === skip || j === skip) continue;
+      const a = ring[i], b = ring[j];
+      const o1 = orient(p, q, a), o2 = orient(p, q, b);
+      const o3 = orient(a, b, p), o4 = orient(a, b, q);
+      if (o1 !== o2 && o3 !== o4 && o1 && o2 && o3 && o4) return true;
+    }
+    return false;
+  };
+  let ring = rings[0], ridx = idxs[0];
+  // rightmost hole first -- see d3d.py
+  const order = [...rings.keys()].slice(1)
+    .sort((a, b) => Math.max(...rings[b].map((p) => p[0])) - Math.max(...rings[a].map((p) => p[0])));
+  for (const hi of order) {
+    const hole = rings[hi], hidx = idxs[hi];
+    let m = 0;
+    for (let i = 1; i < hole.length; i++) if (hole[i][0] > hole[m][0]) m = i;
+    const hp = hole[m];
+    const cand = [...ring.keys()].sort((a, b) =>
+      ((ring[a][0]-hp[0])**2 + (ring[a][1]-hp[1])**2) - ((ring[b][0]-hp[0])**2 + (ring[b][1]-hp[1])**2));
+    let bj = null;
+    for (const j of cand) {
+      if (ring[j][0] < hp[0] - 1e-9) continue;
+      if (!segHits(hp, ring[j], ring, j)) { bj = j; break; }
+    }
+    if (bj === null) bj = cand[0];
+    ring = ring.slice(0, bj + 1).concat(hole.slice(m), hole.slice(0, m + 1), ring.slice(bj));
+    ridx = ridx.slice(0, bj + 1).concat(hidx.slice(m), hidx.slice(0, m + 1), ridx.slice(bj));
+  }
+  const n = ring.length;
+  if (n < 3) return [];
+  const live = [...Array(n).keys()];
+  const same = (p, q) => Math.abs(p[0]-q[0]) < 1e-9 && Math.abs(p[1]-q[1]) < 1e-9;
+  const inside = (p, a, b, c) => {
+    if (same(p, a) || same(p, b) || same(p, c)) return false;
+    const d1 = (b[0]-a[0])*(p[1]-a[1])-(b[1]-a[1])*(p[0]-a[0]);
+    const d2 = (c[0]-b[0])*(p[1]-b[1])-(c[1]-b[1])*(p[0]-b[0]);
+    const d3 = (a[0]-c[0])*(p[1]-c[1])-(a[1]-c[1])*(p[0]-c[0]);
+    return (d1 > 1e-9 && d2 > 1e-9 && d3 > 1e-9) || (d1 < -1e-9 && d2 < -1e-9 && d3 < -1e-9);
+  };
+  const out = [];
+  let guard = 0;
+  while (live.length > 3 && guard < 4 * n * n) {
+    guard++;
+    let cut = false;
+    for (let k = 0; k < live.length; k++) {
+      const i0 = live[(k - 1 + live.length) % live.length], i1 = live[k],
+            i2 = live[(k + 1) % live.length];
+      const a = ring[i0], b = ring[i1], c = ring[i2];
+      if ((b[0]-a[0])*(c[1]-a[1]) - (b[1]-a[1])*(c[0]-a[0]) <= 1e-12) continue;
+      let bad = false;
+      for (const j of live) {
+        if (j === i0 || j === i1 || j === i2) continue;
+        if (inside(ring[j], a, b, c)) { bad = true; break; }
+      }
+      if (bad) continue;
+      out.push([i0, i1, i2]);
+      live.splice(k, 1);
+      cut = true;
+      break;
+    }
+    if (!cut) break;
+  }
+  if (live.length === 3) out.push([live[0], live[1], live[2]]);
+  return out.map(([a, b, c]) => [ridx[a], ridx[b], ridx[c]]);
+}
+
 export function prismMesh(prsm) {
   const pc = prsm.kid('POLY');
   if (!pc || pc.data.byteLength < 32) return null;
@@ -351,8 +477,70 @@ export function prismMesh(prsm) {
       if (!F.length) break;
     }
   }
+  if (options.cutHoles) ({ V, F, ids } = cutHoles(prsm, V, F, ids, poly));
   ({ verts: V, faces: F } = compact(V, F));
   return { verts: V, faces: F, faceIds: ids, poly };
+}
+
+/** Subtract every fully transparent FEAT from the face it sits on.
+ *  A zero-alpha decoration is an OPENING -- the only subtractive operation the
+ *  format has. Mirrors d3d._cut_holes. */
+function cutHoles(prsm, V, F, ids, poly) {
+  const holes = new Map();
+  for (const surf of prsm.kids('SURF')) {
+    const fid = u16(surf.hdr, 0);
+    for (const feat of surf.kids('FEAT')) {
+      const col = feat.kid('COLR');
+      if (!col || col.data.byteLength < 4 || col.data.getUint8(0) !== 0) continue;
+      const p2 = featPolygon(feat);
+      if (!p2 || p2.length < 3) continue;
+      if (!holes.has(fid)) holes.set(fid, []);
+      holes.get(fid).push([p2, featTransform(feat)]);
+    }
+  }
+  if (!holes.size) return { V, F, ids };
+  const byFace = new Map();
+  F.forEach((t, i) => {
+    const k = ids[i];
+    if (!byFace.has(k)) byFace.set(k, []);
+    byFace.get(k).push(i);
+  });
+  const appn = appFaceNormals(poly);
+  const verts = V.slice(), drop = new Set(), add = [], addId = [];
+  for (const [fid, cuts] of holes) {
+    const triI = byFace.get(fid);
+    if (!triI) continue;
+    const tris = triI.map((i) => F[i]);
+    const loop = faceBoundary(tris);
+    const fr = faceFrame(verts, tris, appn.get(fid));
+    if (!loop || !fr) continue;
+    const { origin, u, v, nrm } = fr;
+    const outer = loop.map((i) => [dot(verts[i], u), dot(verts[i], v)]);
+    const cu = dot(origin, u), cv = dot(origin, v);
+    const hs = cuts.map(([p2, tr]) => {
+      const [tx, ty, th, sx, sy] = tr;
+      const ct = Math.cos(th), st = Math.sin(th);
+      return p2.map(([x, y]) => [cu + ct * (x * sx) - st * (y * sy) + tx,
+                                 cv + st * (x * sx) + ct * (y * sy) + ty]);
+    });
+    let tt;
+    try { tt = triangulateWithHoles(outer, hs); } catch (e) { continue; }
+    if (!tt.length) continue;
+    const plane = dot(verts[loop[0]], nrm);
+    const newIdx = loop.slice();
+    for (const h of hs) {
+      for (const [a, b] of h) {
+        verts.push(add3(add3(mul(u, a), mul(v, b)), mul(nrm, plane)));
+        newIdx.push(verts.length - 1);
+      }
+    }
+    for (const [a, b, c] of tt) { add.push([newIdx[a], newIdx[b], newIdx[c]]); addId.push(fid); }
+    for (const i of triI) drop.add(i);
+  }
+  if (!add.length) return { V: verts, F, ids };
+  const keep = F.map((_, i) => i).filter((i) => !drop.has(i));
+  return { V: verts, F: keep.map((i) => F[i]).concat(add),
+           ids: keep.map((i) => ids[i]).concat(addId) };
 }
 
 /**
