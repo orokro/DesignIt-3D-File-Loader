@@ -55,6 +55,8 @@
   <button id="mWire" aria-pressed="false" title="L">Edges</button>
   <button id="mTex" aria-pressed="true" title="T">Textures</button>
   <span class="sep"></span>
+  <button id="mAll" aria-pressed="false" title="U — show every copy, including duplicates">Show all</button>
+  <span class="sep"></span>
   <button id="mMark" aria-pressed="false" title="M">De-dupe</button>
   <span class="sep"></span>
   <button id="mFull" aria-pressed="false" title="F — also stops Ctrl+W closing the tab">Fullscreen</button>
@@ -78,7 +80,8 @@
 <div id="help" class="card">
   <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move &nbsp; mouse look &nbsp; <kbd>Shift</kbd> sprint<br>
   <kbd>Space</kbd> up / jump &nbsp; <kbd>C</kbd> down &nbsp; <kbd>Tab</kbd> fly ↔ walk &nbsp; <kbd>Esc</kbd> release<br>
-  <kbd>L</kbd> edge overlay &nbsp; <kbd>T</kbd> textures &nbsp; <kbd>M</kbd> de-dupe marking &nbsp; click to pin the object under the crosshair<br>
+  <kbd>L</kbd> edge overlay &nbsp; <kbd>T</kbd> textures &nbsp; <kbd>M</kbd> de-dupe marking &nbsp; <kbd>U</kbd> show every copy<br>
+  click to pin the object under the crosshair<br>
   <kbd>F</kbd> fullscreen — stops <kbd>Ctrl</kbd>+<kbd>W</kbd> closing the tab while you fly
 </div>
 <div id="here" class="card"></div>
@@ -159,6 +162,15 @@ explorer.onModeChange = (walk) => { $('mv').textContent = walk ? 'walking' : 'fl
 $('mv').textContent = 'flying';
 
 let world = null;          // { group, ground, items: [{name,x,y,group,size}] }
+let mode = 'gallery';
+// The corpus ships the same object many times over -- one product reissued
+// another's libraries under new names, and a few galleries repeat a clip
+// inside one file. `data/dedupe.json` lists the copies to skip so the grid
+// shows each object once. NOTHING IS DELETED: the files are untouched and
+// `Show all` ignores the list entirely.
+let hidden = new Set();
+let showAll = false;
+let suppressed = 0;
 let wireOn = false, texOn = true;
 let pinned = null;
 function resize() {
@@ -278,7 +290,7 @@ function progress(frac, text) {
 }
 
 async function buildGallery(manifest) {
-  const files = manifest.files.filter((f) => f.bucket === 'galleries3d' && !f.path.split('/').pop().startsWith('ID'));
+  const files = manifest.files.filter((f) => f.bucket === 'galleries3d');
   const raw = [];
   for (let i = 0; i < files.length; i++) {
     const f = files[i];
@@ -304,6 +316,7 @@ async function buildGallery(manifest) {
         const nth = (seen.get(name) || 0) + 1;
         seen.set(name, nth);
         const path = nth === 1 ? `${f.path}::${name}` : `${f.path}::${name}#${nth}`;
+        if (!showAll && hidden.has(path)) { suppressed++; continue; }
         const label = nth === 1 ? name : `${name} #${nth}`;   // so the HUD tells them apart
         raw.push({ name: label, path, built, box, size: [s.x, s.y, s.z] });
       }
@@ -334,7 +347,8 @@ async function buildGallery(manifest) {
 // `models` (single subjects). They differ only in label, spacing and how big a
 // leftover is worth keeping, so they share the code.
 async function buildFileBucket(manifest, cfg) {
-  const files = manifest.files.filter((f) => f.bucket === cfg.bucket && f.bounds);
+  const files = manifest.files.filter((f) => f.bucket === cfg.bucket && f.bounds)
+    .filter((f) => { if (showAll || !hidden.has(f.path)) return true; suppressed++; return false; });
   const raw = [];
   let culled = 0;
   for (let i = 0; i < files.length; i++) {
@@ -428,9 +442,18 @@ function nearbyPicker(w) {
 }
 
 async function setMode(which) {
+  mode = which;
+  suppressed = 0;
   $('splash').style.display = 'grid';
   progress(0, 'Loading manifest…');
   const manifest = await (await fetch(DATA + 'manifest.json')).json();
+  if (!hidden.size) {
+    // absent is fine -- the grid just shows every copy
+    try {
+      const d = await fetch(DATA + 'dedupe.json');
+      if (d.ok) hidden = new Set((await d.json()).hide || []);
+    } catch (e) { /* no list */ }
+  }
   if (world) { scene.remove(world.group); }
   world = which === 'scenes' ? await buildScenes(manifest)
         : which === 'models' ? await buildModels(manifest)
@@ -477,7 +500,9 @@ async function setMode(which) {
   world.group.traverse((o) => { if (o.isMesh && o.geometry.attributes.position) tris += o.geometry.attributes.position.count / 3; });
   $('modeName').textContent = world.label;
   $('counts').textContent = `${world.items.length} objects · ${Math.round(tris).toLocaleString()} triangles`
-    + (world.culled ? ` · ${world.culled} ground pads culled` : '');
+    + (world.culled ? ` · ${world.culled} ground pads culled` : '')
+    + (suppressed ? ` · ${suppressed} duplicates hidden` : '')
+    + (showAll && hidden.size ? ' · showing every copy' : '');
   $('mGallery').setAttribute('aria-pressed', which === 'gallery');
   $('mScenes').setAttribute('aria-pressed', which === 'scenes');
   $('mModels').setAttribute('aria-pressed', which === 'models');
@@ -608,6 +633,17 @@ function setMark(on) {
   renderMarks();
 }
 $('mMark').onclick = () => setMark(!markMode);
+
+// Show all: rebuild the current mode with the suppression list ignored. The
+// marks survive because they are keyed by path in localStorage, so a duplicate
+// marked in one pass is still marked when it reappears here.
+function setAll(on) {
+  if (on === showAll) return;
+  showAll = on;
+  $('mAll').setAttribute('aria-pressed', on);
+  setMode(mode).catch((e) => { $('progress').textContent = 'Failed: ' + e.message; });
+}
+$('mAll').onclick = () => setAll(!showAll);
 $('markCopy').onclick = async () => {
   const text = $('markList').value;
   try { await navigator.clipboard.writeText(text); flash(`copied ${marks.size} paths`); }
@@ -645,6 +681,7 @@ addEventListener('keydown', (e) => {
   if (e.code === 'KeyT') setTex(!texOn);
   if (e.code === 'KeyM') setMark(!markMode);
   if (e.code === 'KeyF') { e.preventDefault(); toggleFull(); }
+  if (e.code === 'KeyU') setAll(!showAll);
 });
 
 // ---- Ctrl+W ----

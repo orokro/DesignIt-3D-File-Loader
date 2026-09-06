@@ -63,3 +63,30 @@ constrains them — so a "fixed" file would parse cleanly while carrying silentl
 wrong geometry, which is worse than not having it. **Re-extracting that one file
 from the ISO in binary mode would recover it properly.** The same zero-`0x0A`
 test over all 775 binaries in the project finds no other affected file.
+
+## Duplicates: `dedupe.json`
+
+The corpus ships the same object many times over. 3DWebBld reissued whole
+Design-It! libraries under new lowercase names (`equip1.wlb` is `EQPMENT1.WLB`),
+a few galleries repeat a clip inside one file (`Chairs1.wlb` holds five
+identical `Adirondack Chair`s), and thirteen scenes exist twice under different
+filenames. Across `galleries3d`, `models` and `scenes` that is **279 redundant
+copies of 1157 distinct objects**.
+
+**Nothing here is deleted.** `dedupe.json` simply lists the copies the explorer
+skips, so the grid shows each object once; its `Show all` toggle ignores the
+list and the files themselves are untouched. Editing a 1993 vendor file to
+remove a clip would make this tree useless as evidence for any future format
+question, which is the whole reason it exists.
+
+Two things are deliberately NOT duplicates. Rotations: `BASIC_F` / `BASIC_R` are
+the Front and Right working views of one primitive, offered by the app as
+separate library entries. And textures: Design-It! and Kesign3D ship
+geometrically identical models where only the Kesign3D copy is textured
+(`APOLLO.VVR` vs `APOLLO__kesign3d.VVR`), so a texture's name and pixels are
+part of the fingerprint.
+
+Regenerate after any change to the corpus, since `build_data.py` adds files but
+never prunes this list:
+
+    python claude-explore/tools/dedupe.py suppress galleries3d models scenes
