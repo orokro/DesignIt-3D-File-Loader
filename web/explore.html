@@ -286,6 +286,12 @@ async function buildGallery(manifest) {
     await sleep();
     try {
       const root = parse(await fetchBuf(f.path));
+      // Four galleries repeat a clip name inside one file (Chairs1 has five
+      // "Adirondack Chair", Lighting two "Side Table Lamp"), so name alone is
+      // not an address: without the suffix every copy shares one path and they
+      // mark, unmark and tint as a single object. The first keeps the bare
+      // name so existing lists stay valid; repeats get #2, #3, ...
+      const seen = new Map();
       for (const { name, chunk } of wlbItems(root)) {
         const meshes = collect(chunk, []);
         if (!meshes.length) continue;
@@ -295,7 +301,11 @@ async function buildGallery(manifest) {
         if (!isFinite(s.x) || s.x > 4000 || s.y > 4000) continue;   // stray oversize clips
         // `path` is what the de-dupe list reports. A gallery clip is not a
         // file, so it is addressed as `<gallery path>::<clip name>`.
-        raw.push({ name, path: `${f.path}::${name}`, built, box, size: [s.x, s.y, s.z] });
+        const nth = (seen.get(name) || 0) + 1;
+        seen.set(name, nth);
+        const path = nth === 1 ? `${f.path}::${name}` : `${f.path}::${name}#${nth}`;
+        const label = nth === 1 ? name : `${name} #${nth}`;   // so the HUD tells them apart
+        raw.push({ name: label, path, built, box, size: [s.x, s.y, s.z] });
       }
     } catch (e) { /* skip unreadable gallery */ }
   }
