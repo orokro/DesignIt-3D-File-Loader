@@ -92,35 +92,40 @@ scene.background = new THREE.Color(0x11161d);
 const camera = new THREE.PerspectiveCamera(38, 1, 0.5, 200000);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
-// The APPLICATION's own light model, read off its VRML exporter: every one of
-// the 3,184 materials in the Virtus exports writes `ambientColor` at exactly
-// 0.25 x `diffuseColor`, so a face is `albedo * (0.25 + 0.75 * lambert)` and
-// nothing else -- no hemisphere tint, no warm key, no fill. A stylised rig made
-// white read blue on top and warm on the side, which is what showed up as our
-// colours being slightly off against the application's palette.
+// The APPLICATION's OWN LIGHT RIG, read straight out of its VRML exporter --
+// all 53 exports in the corpus carry the same four lights, byte for byte:
 //
-// Colour management is off for the same reason. Three.js lights in LINEAR space
-// by default, so a 50%-lit mid-tone comes out darker than the same multiply
-// done on the stored bytes -- which is what a 1993 8-bit renderer did, and what
-// the Python reference in claude-explore/tools/render.py does.
+//   colour 0.4  direction 0 0 0          <- zero direction: this is the ambient
+//   colour 0.5  direction   34 -247 -57
+//   colour 0.4  direction -209 -104 105
+//   colour 0.5  direction    5  119 -226
+//
+// All three real directions have length ~256, so they are stored as normalised
+// vectors. VRML `direction` is the direction light TRAVELS and three.js wants
+// where it comes FROM, so each is negated; app -> our axes is (x, -z, y), the
+// same mapping wrlfit uses. That works out as two lamps above (one steep, one
+// at 45 degrees) and a fill from below -- a real three-point rig.
+//
+// This replaces a single axis lit as |n . L|, which was wrong in a way that
+// only showed on a complicated model: with one axis the poorly-lit normals are
+// an entire GREAT CIRCLE, so every face perpendicular to it went to ambient at
+// once. On the `Farmer` that was most of his front, and it read as being lit
+// from below. Three spread lamps leave only a small cone dark.
+//
+// Intensities are scaled by 1/0.7978 so the brightest reachable face lands on
+// full albedo instead of 80% of it, and by PI because r155+ three.js lights in
+// physical units. The 0.25 ambientColor/diffuseColor ratio from the materials
+// is folded into the ambient term (0.4 x 0.25 = 0.1).
 THREE.ColorManagement.enabled = false;
 renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
-//
-// The diffuse term is |n . L|, not max(0, n . L): the application lit a face by
-// how square-on it was and did not care which way it pointed, and so does the
-// Python reference. Three.js clamps at zero, so the same lamp is hung twice,
-// facing each other -- max(0, n.L) + max(0, -n.L) is exactly |n . L| -- rather
-// than leaving every surface turned away from the sun flat at ambient.
-// Intensities carry a factor of PI: since r155 three.js lights in physical
-// units, where a directional lamp of intensity 1 lands as 1/PI of the albedo.
-// 0.25 and 0.75 are the numbers that matter; PI is the unit conversion.
-scene.add(new THREE.AmbientLight(0xffffff, 0.25 * Math.PI));
-const key = new THREE.DirectionalLight(0xffffff, 0.75 * Math.PI);
-key.position.set(0.45, 0.35, 0.82);
-scene.add(key);
-const keyBack = new THREE.DirectionalLight(0xffffff, 0.75 * Math.PI);
-keyBack.position.set(-0.45, -0.35, -0.82);
-scene.add(keyBack);
+scene.add(new THREE.AmbientLight(0xffffff, 0.1253 * Math.PI));
+for (const [i, p] of [[0.6267, [-0.1329, -0.2229, 0.9657]],
+                      [0.5014, [ 0.8165,  0.4102, 0.4063]],
+                      [0.6267, [-0.0196, -0.8847, -0.4658]]]) {
+  const L = new THREE.DirectionalLight(0xffffff, i * Math.PI);
+  L.position.set(p[0], p[1], p[2]);
+  scene.add(L);
+}
 const grid = new THREE.GridHelper(4800, 50, 0x2a3644, 0x1c242e);
 grid.rotation.x = Math.PI / 2;
 scene.add(grid);

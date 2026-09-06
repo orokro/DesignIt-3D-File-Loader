@@ -20,6 +20,12 @@
   #pickedRow{margin-top:6px;padding-top:6px;border-top:1px solid var(--line);color:var(--dim);font-size:11.5px}
   #picked{color:#ffd479;font-weight:600}
   #hud{right:14px;top:14px;min-width:210px}
+  #marks{right:14px;top:210px;width:430px}
+  #marks .hint{color:var(--dim);font-size:11px;margin:2px 0 6px}
+  #marks textarea{width:100%;height:230px;resize:vertical;font:11px/1.45 ui-monospace,Menlo,Consolas,monospace;
+    background:#0e1116;color:#cfd8e3;border:1px solid #2a323d;border-radius:6px;padding:6px}
+  #marks .row{display:flex;gap:6px;margin-top:6px}
+  #marks button{flex:1}
   #hud b{color:var(--accent);font-weight:600}
   #hud div{color:var(--dim);font-size:11.5px}
   #help{left:14px;bottom:14px;color:var(--dim);font-size:11.5px;line-height:1.7}
@@ -48,6 +54,10 @@
   <span class="sep"></span>
   <button id="mWire" aria-pressed="false" title="L">Edges</button>
   <button id="mTex" aria-pressed="true" title="T">Textures</button>
+  <span class="sep"></span>
+  <button id="mMark" aria-pressed="false" title="M">De-dupe</button>
+  <span class="sep"></span>
+  <button id="mFull" aria-pressed="false" title="F — also stops Ctrl+W closing the tab">Fullscreen</button>
 </div>
 <div id="hud" class="card">
   <b id="modeName">Gallery grid</b>
@@ -56,10 +66,20 @@
   <div id="mv"></div>
   <div id="pickedRow"><span id="pickedLabel">picked</span> <b id="picked">—</b></div>
 </div>
+<div id="marks" class="card" hidden>
+  <b>De-dupe list <span id="markCount">0</span></b>
+  <div class="hint">left-click marks &middot; right-click unmarks &middot; survives mode switches</div>
+  <textarea id="markList" readonly spellcheck="false"></textarea>
+  <div class="row">
+    <button id="markCopy">Copy</button>
+    <button id="markClear">Clear</button>
+  </div>
+</div>
 <div id="help" class="card">
   <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move &nbsp; mouse look &nbsp; <kbd>Shift</kbd> sprint<br>
   <kbd>Space</kbd> up / jump &nbsp; <kbd>C</kbd> down &nbsp; <kbd>Tab</kbd> fly ↔ walk &nbsp; <kbd>Esc</kbd> release<br>
-  <kbd>L</kbd> edge overlay &nbsp; <kbd>T</kbd> textures &nbsp; click to pin the object under the crosshair
+  <kbd>L</kbd> edge overlay &nbsp; <kbd>T</kbd> textures &nbsp; <kbd>M</kbd> de-dupe marking &nbsp; click to pin the object under the crosshair<br>
+  <kbd>F</kbd> fullscreen — stops <kbd>Ctrl</kbd>+<kbd>W</kbd> closing the tab while you fly
 </div>
 <div id="here" class="card"></div>
 <div id="crosshair"></div>
@@ -99,35 +119,40 @@ scene.background = new THREE.Color(0x8fb8dc);
 scene.fog = new THREE.Fog(0x8fb8dc, 4000, 42000);
 const camera = new THREE.PerspectiveCamera(70, 1, 1, 60000);
 
-// The APPLICATION's own light model, read off its VRML exporter: every one of
-// the 3,184 materials in the Virtus exports writes `ambientColor` at exactly
-// 0.25 x `diffuseColor`, so a face is `albedo * (0.25 + 0.75 * lambert)` and
-// nothing else -- no hemisphere tint, no warm key, no fill. A stylised rig made
-// white read blue on top and warm on the side, which is what showed up as our
-// colours being slightly off against the application's palette.
+// The APPLICATION's OWN LIGHT RIG, read straight out of its VRML exporter --
+// all 53 exports in the corpus carry the same four lights, byte for byte:
 //
-// Colour management is off for the same reason. Three.js lights in LINEAR space
-// by default, so a 50%-lit mid-tone comes out darker than the same multiply
-// done on the stored bytes -- which is what a 1993 8-bit renderer did, and what
-// the Python reference in claude-explore/tools/render.py does.
+//   colour 0.4  direction 0 0 0          <- zero direction: this is the ambient
+//   colour 0.5  direction   34 -247 -57
+//   colour 0.4  direction -209 -104 105
+//   colour 0.5  direction    5  119 -226
+//
+// All three real directions have length ~256, so they are stored as normalised
+// vectors. VRML `direction` is the direction light TRAVELS and three.js wants
+// where it comes FROM, so each is negated; app -> our axes is (x, -z, y), the
+// same mapping wrlfit uses. That works out as two lamps above (one steep, one
+// at 45 degrees) and a fill from below -- a real three-point rig.
+//
+// This replaces a single axis lit as |n . L|, which was wrong in a way that
+// only showed on a complicated model: with one axis the poorly-lit normals are
+// an entire GREAT CIRCLE, so every face perpendicular to it went to ambient at
+// once. On the `Farmer` that was most of his front, and it read as being lit
+// from below. Three spread lamps leave only a small cone dark.
+//
+// Intensities are scaled by 1/0.7978 so the brightest reachable face lands on
+// full albedo instead of 80% of it, and by PI because r155+ three.js lights in
+// physical units. The 0.25 ambientColor/diffuseColor ratio from the materials
+// is folded into the ambient term (0.4 x 0.25 = 0.1).
 THREE.ColorManagement.enabled = false;
 renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
-//
-// The diffuse term is |n . L|, not max(0, n . L): the application lit a face by
-// how square-on it was and did not care which way it pointed, and so does the
-// Python reference. Three.js clamps at zero, so the same lamp is hung twice,
-// facing each other -- max(0, n.L) + max(0, -n.L) is exactly |n . L| -- rather
-// than leaving every surface turned away from the sun flat at ambient.
-// Intensities carry a factor of PI: since r155 three.js lights in physical
-// units, where a directional lamp of intensity 1 lands as 1/PI of the albedo.
-// 0.25 and 0.75 are the numbers that matter; PI is the unit conversion.
-scene.add(new THREE.AmbientLight(0xffffff, 0.25 * Math.PI));
-const sun = new THREE.DirectionalLight(0xffffff, 0.75 * Math.PI);
-sun.position.set(0.45, 0.35, 0.82);
-scene.add(sun);
-const sunBack = new THREE.DirectionalLight(0xffffff, 0.75 * Math.PI);
-sunBack.position.set(-0.45, -0.35, -0.82);
-scene.add(sunBack);
+scene.add(new THREE.AmbientLight(0xffffff, 0.1253 * Math.PI));
+for (const [i, p] of [[0.6267, [-0.1329, -0.2229, 0.9657]],
+                      [0.5014, [ 0.8165,  0.4102, 0.4063]],
+                      [0.6267, [-0.0196, -0.8847, -0.4658]]]) {
+  const L = new THREE.DirectionalLight(0xffffff, i * Math.PI);
+  L.position.set(p[0], p[1], p[2]);
+  scene.add(L);
+}
 
 const explorer = new Explorer(camera, renderer.domElement);
 explorer.onModeChange = (walk) => { $('mv').textContent = walk ? 'walking' : 'flying'; };
@@ -268,7 +293,9 @@ async function buildGallery(manifest) {
         const box = new THREE.Box3().setFromObject(built.group);
         const s = box.getSize(new THREE.Vector3());
         if (!isFinite(s.x) || s.x > 4000 || s.y > 4000) continue;   // stray oversize clips
-        raw.push({ name, built, box, size: [s.x, s.y, s.z] });
+        // `path` is what the de-dupe list reports. A gallery clip is not a
+        // file, so it is addressed as `<gallery path>::<clip name>`.
+        raw.push({ name, path: `${f.path}::${name}`, built, box, size: [s.x, s.y, s.z] });
       }
     } catch (e) { /* skip unreadable gallery */ }
   }
@@ -283,8 +310,10 @@ async function buildGallery(manifest) {
     // centre on the cell and sit the bounding box ON the ground
     it.built.group.position.set(p.x - c.x - extent[0] / 2, p.y - c.y - extent[1] / 2, -it.box.min.z);
     it.built.group.userData.itemName = it.name;
+    it.built.group.userData.itemPath = it.path;
     group.add(it.built.group);
-    items.push({ name: it.name, x: p.x - extent[0] / 2, y: p.y - extent[1] / 2, group: it.built.group, size: it.size });
+    items.push({ name: it.name, path: it.path, x: p.x - extent[0] / 2, y: p.y - extent[1] / 2,
+                 group: it.built.group, size: it.size });
   }
   const ground = makeGround(Math.max(extent[0], extent[1]) * 3.2, 0x6f7d5a);
   group.add(ground);
@@ -310,7 +339,8 @@ async function buildFileBucket(manifest, cfg) {
       const box = new THREE.Box3().setFromObject(built.group);
       const s = box.getSize(new THREE.Vector3());
       if (!isFinite(s.x) || Math.max(s.x, s.y) > cfg.maxSpan) continue;   // still runaway
-      raw.push({ name: f.path.split('/').pop().replace(/\.(VVR|WSB)$/i, ''), built, box, size: [s.x, s.y, s.z] });
+      raw.push({ name: f.path.split('/').pop().replace(/\.(VVR|WSB)$/i, ''),
+                 path: f.path, built, box, size: [s.x, s.y, s.z] });
     } catch (e) { /* skip */ }
   }
   progress(0.9, `Packing ${raw.length} ${cfg.noun}…`);
@@ -323,8 +353,10 @@ async function buildFileBucket(manifest, cfg) {
     const c = it.box.getCenter(new THREE.Vector3());
     it.built.group.position.set(p.x - c.x - extent[0] / 2, p.y - c.y - extent[1] / 2, -it.box.min.z);
     it.built.group.userData.itemName = it.name;
+    it.built.group.userData.itemPath = it.path;
     group.add(it.built.group);
-    items.push({ name: it.name, x: p.x - extent[0] / 2, y: p.y - extent[1] / 2, group: it.built.group, size: it.size });
+    items.push({ name: it.name, path: it.path, x: p.x - extent[0] / 2, y: p.y - extent[1] / 2,
+                 group: it.built.group, size: it.size });
   }
   const ground = makeGround(Math.max(extent[0], extent[1]) * 2.6, cfg.groundColor);
   group.add(ground);
@@ -441,6 +473,10 @@ async function setMode(which) {
   $('mModels').setAttribute('aria-pressed', which === 'models');
   setWire(wireOn);              // carry the overlay state across a mode switch
   setTex(texOn);
+  renderMarks();                // re-tint anything already marked in this mode
+  // Test hooks. The page is a module, so its scope is otherwise unreachable
+  // from a headless driver and there is no way to assert on any of this.
+  window.__world = world; window.__mark = mark; window.__unmark = unmark;
   pinned = null; $('picked').textContent = '—';
   progress(1, 'Ready — click to look around');
   setTimeout(() => { $('splash').style.display = 'none'; }, 220);
@@ -464,21 +500,27 @@ function candidatesNear(pos, radius) {
   }
   return out;
 }
-function nameOf(obj) {
-  for (let o = obj; o; o = o.parent) if (o.userData && o.userData.itemName) return o.userData.itemName;
+function itemOf(obj) {
+  for (let o = obj; o; o = o.parent)
+    if (o.userData && o.userData.itemName)
+      return { name: o.userData.itemName, path: o.userData.itemPath || o.userData.itemName };
   return null;
 }
 function lookingAt() {
   camera.getWorldDirection(fwd);
   pickRay.set(camera.position, fwd);
   const hits = pickRay.intersectObjects(candidatesNear(camera.position, 2400), false);
-  for (const h of hits) { const n = nameOf(h.object); if (n) return n; }
+  for (const h of hits) { const it = itemOf(h.object); if (it) return it; }
   return null;
 }
-renderer.domElement.addEventListener('mousedown', () => {
-  const n = lookingAt();
-  if (n) { pinned = n; $('picked').textContent = n; }
+renderer.domElement.addEventListener('mousedown', (e) => {
+  const it = lookingAt();
+  if (!it) return;
+  if (markMode) { e.button === 2 ? unmark(it) : mark(it); return; }
+  pinned = it.name; $('picked').textContent = it.name;
 });
+// right-click must not raise the browser menu -- it is the "remove" button
+renderer.domElement.addEventListener('contextmenu', (e) => e.preventDefault());
 
 // ---- edge overlay ----
 // EdgesGeometry keeps only edges where adjacent faces differ by more than the
@@ -509,6 +551,64 @@ function setWire(on) {
 }
 $('mWire').onclick = () => setWire(!wireOn);
 
+// ---- de-dupe marking mode ----
+// The corpus now carries a lot of near-duplicates that the hash-based dedupe in
+// build_data.py could not catch -- same model, different bytes. Flying the
+// world and clicking them is far quicker than any automated similarity pass,
+// so this collects a list of FULL PATHS to hand back for analysis.
+//
+// The list lives in localStorage, so it survives a mode switch AND a reload:
+// walking Scenes, Models and Gallery in one sitting builds one list. A gallery
+// clip is not a file, so it is addressed as `<gallery path>::<clip name>`.
+const MARK_KEY = 'd3d.dedupe.marks';
+let markMode = false;
+let marks = new Map();          // path -> name
+try {
+  const raw = localStorage.getItem(MARK_KEY);
+  if (raw) marks = new Map(JSON.parse(raw));
+} catch (e) { /* private mode, or corrupt: start empty */ }
+
+function saveMarks() {
+  try { localStorage.setItem(MARK_KEY, JSON.stringify([...marks])); } catch (e) {}
+}
+function renderMarks() {
+  $('markCount').textContent = marks.size;
+  $('markList').value = [...marks].map(([p, n]) => p).join('\n');
+  for (const it of (world ? world.items : []))
+    tintItem(it, markMode && marks.has(it.path));
+}
+// A marked object is tinted through `emissive` rather than `color`, so the
+// object keeps its real albedo and the mark is obviously an overlay. Restoring
+// is exact because emissive starts black on every material we build.
+function tintItem(it, on) {
+  it.group.traverse((o) => {
+    if (!o.isMesh || !o.material.emissive) return;
+    o.material.emissive.setRGB(on ? 0.35 : 0, on ? 0.12 : 0, on ? 0 : 0);
+  });
+}
+function mark(it)   { marks.set(it.path, it.name); saveMarks(); renderMarks(); flash(`marked ${it.name}`); }
+function unmark(it) { if (marks.delete(it.path)) { saveMarks(); renderMarks(); flash(`unmarked ${it.name}`); } }
+function flash(msg) { $('picked').textContent = msg; }
+
+function setMark(on) {
+  markMode = on;
+  $('mMark').setAttribute('aria-pressed', on);
+  $('marks').hidden = !on;
+  $('pickedLabel').textContent = on ? 'de-dupe' : 'picked';
+  renderMarks();
+}
+$('mMark').onclick = () => setMark(!markMode);
+$('markCopy').onclick = async () => {
+  const text = $('markList').value;
+  try { await navigator.clipboard.writeText(text); flash(`copied ${marks.size} paths`); }
+  catch (e) {
+    // clipboard needs focus and a secure context; the textarea always works
+    $('markList').focus(); $('markList').select();
+    flash('press Ctrl+C — selected for you');
+  }
+};
+$('markClear').onclick = () => { marks.clear(); saveMarks(); renderMarks(); flash('list cleared'); };
+
 // ---- textures ----
 // On by default: unlike the edge overlay, the bitmaps are what the surface is
 // meant to look like. The geometry always carries its UVs, so this is a
@@ -530,8 +630,41 @@ function setTex(on) {
 }
 $('mTex').onclick = () => setTex(!texOn);
 addEventListener('keydown', (e) => {
+  if (e.target && e.target.tagName === 'TEXTAREA') return;   // let Ctrl+C work
   if (e.code === 'KeyL') setWire(!wireOn);
   if (e.code === 'KeyT') setTex(!texOn);
+  if (e.code === 'KeyM') setMark(!markMode);
+  if (e.code === 'KeyF') { e.preventDefault(); toggleFull(); }
+});
+
+// ---- Ctrl+W ----
+// Ctrl is 'descend', so flying forward and down is Ctrl+W -- which the
+// browser eats to close the tab. A page cannot preventDefault that: the only
+// API that actually delivers it to us is Keyboard Lock, and Keyboard Lock is
+// only granted in fullscreen. So fullscreen is the real fix, and a
+// beforeunload guard (armed only while the pointer is locked, i.e. while you
+// are actually flying) is the fallback everywhere else: it cannot stop the
+// close, but it turns it into a 'Leave site?' prompt you can cancel.
+const LOCK_KEYS = ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyT', 'KeyN', 'KeyP'];
+const stopUnload = (e) => { e.preventDefault(); e.returnValue = ''; };
+document.addEventListener('pointerlockchange', () => {
+  removeEventListener('beforeunload', stopUnload);
+  if (document.pointerLockElement) addEventListener('beforeunload', stopUnload);
+});
+
+function toggleFull() {
+  if (document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen().catch(() => {});
+}
+$('mFull').onclick = toggleFull;
+document.addEventListener('fullscreenchange', async () => {
+  const on = !!document.fullscreenElement;
+  $('mFull').setAttribute('aria-pressed', String(on));
+  if (!navigator.keyboard || !navigator.keyboard.lock) return;   // Firefox/Safari
+  try {
+    if (on) await navigator.keyboard.lock(LOCK_KEYS);
+    else navigator.keyboard.unlock();
+  } catch (_) { /* not a secure context, or the UA said no */ }
 });
 
 // ---- loop ----
@@ -544,8 +677,11 @@ function tick(now) {
     acc = 0;
     const p = camera.position;
     $('pos').textContent = `x ${p.x.toFixed(0)}  y ${p.y.toFixed(0)}  z ${p.z.toFixed(0)} in`;
+    // lookingAt() returns {name, path} now, not a bare string -- this label
+    // wants the name, and printing the object gave "[object Object]".
     const target = lookingAt();
-    $('here').textContent = target || '';
+    $('here').textContent = target
+      ? (markMode && marks.has(target.path) ? '\u2713 ' + target.name : target.name) : '';
     $('here').classList.toggle('on', !!target);
   }
   renderer.render(scene, camera);

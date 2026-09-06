@@ -45,7 +45,16 @@ def render(meshes, size=(560, 440), azim=35.0, elev=22.0, dist=None, outline=Tru
 
     zbuf = np.full((H, W), np.inf)
     img = np.zeros((H, W, 3), np.uint8); img[:] = BG
-    light = np.array([0.45, 0.35, 0.82]); light /= np.linalg.norm(light)
+    # The APPLICATION's OWN rig, from its VRML exporter -- all 53 exports carry
+    # the same four lights: an ambient at 0.4 (written as a zero-direction
+    # light) and three directionals at 0.5 / 0.4 / 0.5. Directions are stored as
+    # 256-length vectors; VRML gives the direction light TRAVELS, so these are
+    # negated, and app -> our axes is (x, -z, y). Scaled by 1/0.7978 so the
+    # brightest face reaches full albedo. See web/index.html for the full note.
+    LIGHTS = [(0.6267, np.array([-0.1329, -0.2229,  0.9657])),
+              (0.5014, np.array([ 0.8165,  0.4102,  0.4063])),
+              (0.6267, np.array([-0.0196, -0.8847, -0.4658]))]
+    AMBIENT = 0.1253
     edges = []
 
     for _m in meshes:
@@ -73,11 +82,9 @@ def render(meshes, size=(560, 440), azim=35.0, elev=22.0, dist=None, outline=Tru
             if ln < 1e-9:
                 continue
             nrm = nrm / ln
-            lam = abs(float(nrm @ light))
-            # The APPLICATION's own split, read off its VRML exporter: all
-            # 3,184 materials in the Virtus exports write `ambientColor` at
-            # exactly 0.25 x `diffuseColor`.
-            shade = 0.25 + 0.75 * lam
+            # DoubleSide: the app had no backface culling, so a face is lit
+            # by whichever way it points -- take the normal that faces each lamp.
+            shade = AMBIENT + sum(c * abs(float(nrm @ L)) for c, L in LIGHTS)
             col = np.clip(base * shade, 0, 255)
             x = np.array([sx[i0], sx[i1], sx[i2]]); y = np.array([sy[i0], sy[i1], sy[i2]])
             zz = np.array([z[i0], z[i1], z[i2]])
