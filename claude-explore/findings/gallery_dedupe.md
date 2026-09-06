@@ -266,3 +266,85 @@ hash had correctly separated.
   decision: the app offers `_F`/`_R` views and `L`/`R` handed parts as separate
   library entries, so the explorer does too. 42 rotated and 9 reflected pairs
   are listed by `dedupe.py pairs`.
+
+## Second pass: the scenes/models marks
+
+Fourteen marks, checked one by one. Three classes.
+
+**Textured vs untextured — keep both** (your own rule, and the marks go against
+it here; the textured copy is the one marked):
+
+```
+LUNARMOD__kesign3d [2 tex]   vs  LUNARMOD.VVR  [0]
+VOYAGER__kesign3d  [1]       vs  VOYAGER.VVR   [0]
+SPLASHDN__kesign3d [1]       vs  SPLASHDN.VVR  [0]
+HUBBLE__kesign3d   [1]       vs  HUBBLE.VVR    [0]
+SCLPTHAL__kesign3d [6]       vs  SCLPTHAL.VVR  [0]
+SPACSTAT.VVR       [0]       vs  SPACESTA.VVR  [1]   <- this one marks the UNtextured copy
+```
+
+**Revisions, not copies.** Same name, genuinely different geometry:
+
+```
+BATHC.VVR   632 tris / 78 meshes   vs  BATHC__virvrml   632 / 77
+ATTIC.VVR    99 tris               vs  ATTIC__virvrml    94
+CNCLUB.VVR  3057 tris, 14286x16296 vs  CNCLUB__virvrml  3105 tris, 6600x6600 (a different site)
+ADRNDACK.VVR 3832 tris / 15 tex    vs  adiron.wsb       5042 / 0
+SHUTTLE.VVR 2530 / 0               vs  SHUTTLE__kesign3d 2458 / 3   vs  launch__3dwebbld 2458 / 3 at a different extent
+```
+
+BATHC and ATTIC differ by a handful of meshes with different triangle counts and
+colours — small edits, not noise.
+
+**The ocean floors — nearly right.** `OCEANFLR__kesign3d` and
+`OCEANFLR__virvrml` have identical geometry, identical colours and seven
+textures each. They differ by one bitmap: Kesign3D carries two `Water-Pool 1.0`
+variants and uses both, VirVRML dropped one and uses the other twice, on a
+different tile size (60" vs 32"). One face is watered differently. Both kept.
+
+Chasing that turned up something worth knowing: **the two products store the
+same texture with different palettes.** `Tile 3.0` is quantised to six channel
+levels in the Kesign3D copy (0, 64, 128, 192, 224, 255) and sixteen in the
+VirVRML one (multiples of 17) — the same picture, correlation 0.976, not one
+byte alike. VirVRML also renames as it stores: `Water-Pool 1.0` becomes
+`Water-Pool 1.0¥8+¥ 128x64`. A pixel-exact texture key would have called
+every re-encoded pair distinct. The key is now the stripped name, the pixel
+dimensions, and a mean colour rounded to 32 levels.
+
+### The bedrooms
+
+Five files, and the difference really is one side table:
+
+```
+BEDROOMA.VVR           680 tris  0 tex     table, untextured
+BEDRMTIL.VVR           680 tris  6 tex     same geometry, textured table
+BEDROOMA__kesign3d     920 tris  6 tex
+BEDROOMA__virvrml      920 tris  0 tex     same geometry as above, untextured
+BEDRMTIL__virvrml      552 tris  0 tex     NO table
+```
+
+Not marking them was right. All five are distinct.
+
+## Invisible geometry and the parachute
+
+Design-It! drew an edge on every polygon whether or not the polygon was painted,
+and some models depend on it: `SPLASHDN`'s parachute shrouds are the facet edges
+of a fully transparent 14-triangle cone, 441 x 441 x 444 inches. The loader was
+dropping opacity-0 solids outright (`continue`), so the cone never existed and
+the strings went with it.
+
+Now the mesh is built and its **material** is made invisible rather than the
+object -- `object.visible = false` would hide the subtree, including the edge
+overlay that is the only reason the mesh is still there. The edge toggle then
+outlines it like anything else.
+
+Two guards came with it. Invisible geometry is excluded from the crosshair pick
+and from the walker's floor raycast, so a construction box you cannot see is
+never what you are standing on or naming. And the group's bounding box counts
+only painted meshes: 1,880 opacity-0 solids exist across 175 scenes -- 165 in
+`STUDIOHS.VVR` alone -- and they are routinely an order of magnitude larger than
+the model, so letting them into the box would resize objects in the packed grid.
+
+They are drawn only when Edges is on, which is what you were expecting. Making
+them always-on would be more faithful to the original, but `STUDIOHS` would then
+show 165 wireframe boxes indoors.

@@ -434,7 +434,12 @@ function nearbyPicker(w) {
     const out = [w.ground];
     for (const it of w.items) {
       if (Math.abs(it.x - pos.x) < 260 && Math.abs(it.y - pos.y) < 260) {
-        it.group.traverse((o) => { if (o.isMesh && !o.userData.isFeature) out.push(o); });
+        // Invisible (opacity-0) geometry is skipped: it is kept so the edge
+      // overlay can outline it, but a construction box you cannot see must not
+      // be what the crosshair reports, nor a floor the walker stands on.
+      it.group.traverse((o) => {
+        if (o.isMesh && !o.userData.isFeature && !o.userData.isOpen) out.push(o);
+      });
       }
     }
     return out;
@@ -530,7 +535,12 @@ function candidatesNear(pos, radius) {
   if (!world) return out;
   for (const it of world.items) {
     if (Math.abs(it.x - pos.x) < radius && Math.abs(it.y - pos.y) < radius) {
-      it.group.traverse((o) => { if (o.isMesh && !o.userData.isFeature) out.push(o); });
+      // Invisible (opacity-0) geometry is skipped: it is kept so the edge
+      // overlay can outline it, but a construction box you cannot see must not
+      // be what the crosshair reports, nor a floor the walker stands on.
+      it.group.traverse((o) => {
+        if (o.isMesh && !o.userData.isFeature && !o.userData.isOpen) out.push(o);
+      });
     }
   }
   return out;
@@ -571,18 +581,22 @@ function setWire(on) {
   world.group.traverse((o) => {
     if (o.isLineSegments) { o.visible = on; return; }
     if (!o.isMesh || o.userData.isFeature || o.userData.isGround) return;
+    // opacity-0 geometry draws nothing but its edges -- and those ARE the model
+    // (SPLASHDN's parachute shrouds), so it gets an outline like anything else
+    if (o.userData.isOpen) { if (on && !o.userData.edges) addEdges(o); return; }
     o.material.polygonOffset = on;
     o.material.polygonOffsetFactor = on ? 1 : 0;
     o.material.polygonOffsetUnits = on ? 1 : 0;
     o.material.needsUpdate = true;
-    if (on && !o.userData.edges) {
-      const eg = new THREE.EdgesGeometry(o.geometry, 12);
-      const ls = new THREE.LineSegments(eg, new THREE.LineBasicMaterial({ color: 0x1a1f26 }));
-      ls.userData.isEdges = true;
-      o.add(ls);
-      o.userData.edges = ls;
-    }
+    if (on && !o.userData.edges) addEdges(o);
   });
+}
+function addEdges(o) {
+  const eg = new THREE.EdgesGeometry(o.geometry, 12);
+  const ls = new THREE.LineSegments(eg, new THREE.LineBasicMaterial({ color: 0x1a1f26 }));
+  ls.userData.isEdges = true;
+  o.add(ls);
+  o.userData.edges = ls;
 }
 $('mWire').onclick = () => setWire(!wireOn);
 

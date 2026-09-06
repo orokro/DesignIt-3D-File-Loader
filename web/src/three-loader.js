@@ -34,7 +34,12 @@ export function buildGroup(meshes, { flatShading = true } = {}) {
     // see-through. A face at opacity 0 is simply not drawn -- the application
     // calls that state Transparent, and the Virtus VRML exporter agrees, writing
     // `transparency 1.0000` for exactly those faces.
-    if (!m.isFeature && (m.alpha ?? 255) === 0) continue;
+    // ...but it is still KEPT, with its material invisible. Design-It! drew an
+    // edge on every polygon whether or not the polygon itself was painted, and
+    // some models depend on that: SPLASHDN's parachute shrouds are the edges of
+    // a fully transparent cone, and dropping the cone dropped the strings. The
+    // geometry has to survive for the edge overlay to have something to outline.
+    const invisible = !m.isFeature && (m.alpha ?? 255) === 0;
     // A textured mesh keeps its own bucket: the UV attribute only makes sense
     // alongside the bitmap it was measured against.
     const t = m.tex && m.uv ? `#${m.tex.id}` : '';
@@ -48,7 +53,8 @@ export function buildGroup(meshes, { flatShading = true } = {}) {
                           : `${key(m.color)}/${m.alpha ?? 255}${t}${ms}`;
     if (!bucket.has(k)) bucket.set(k, { pos: [], uv: [], muv: [], rgb: m.color,
                                         alpha: m.alpha ?? 255, layer: m.layer ?? 0,
-                                        tex: t ? m.tex : null, mask: m.mask || null });
+                                        tex: t ? m.tex : null, mask: m.mask || null,
+                                        invisible });
     const b = bucket.get(k);
     m.faces.forEach(([a, c, d], fi) => {
       const A = m.verts[a], B = m.verts[c], C = m.verts[d];
@@ -158,8 +164,13 @@ export function buildGroup(meshes, { flatShading = true } = {}) {
       mat.opacity = entry.alpha / 255;
       mat.depthWrite = false;
     }
+    // An opacity-0 solid draws nothing itself. `material.visible` rather than
+    // `object.visible`, because the latter hides the whole subtree -- including
+    // the edge overlay that is the entire reason the mesh is still here.
+    if (entry.invisible) { mat.visible = false; mat.depthWrite = false; }
     const mesh = new THREE.Mesh(geo, mat);
     mesh.userData.isFeature = isFeature;
+    mesh.userData.isOpen = !!entry.invisible;
     // Keep both looks on the mesh so a Textures toggle is a material swap
     // rather than a rebuild: the UV attribute is always there.
     mesh.userData.tex = mat.map || null;
@@ -173,7 +184,13 @@ export function buildGroup(meshes, { flatShading = true } = {}) {
   for (const e of solids.values()) mk(e, false);
   for (const e of feats.values()) mk(e, true);
 
-  const box = new THREE.Box3().setFromObject(g);
+  // The bounding box counts only what is actually painted. Invisible geometry
+  // is often a construction aid an order of magnitude bigger than the model --
+  // letting it into the box would resize the object in the packed grid and
+  // spawn the camera somewhere strange.
+  const box = new THREE.Box3();
+  g.children.forEach((o) => { if (!o.userData.isOpen) box.expandByObject(o); });
+  if (box.isEmpty()) box.setFromObject(g);
   return { group: g, box, triangles: tris, meshCount: meshes.length };
 }
 

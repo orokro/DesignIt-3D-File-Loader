@@ -69,20 +69,36 @@ def _h(*parts):
 
 
 def _texkey(tex, cache):
-    """A texture's identity, comparable across files.
+    """A texture's identity, comparable across products.
 
-    The TXID is a per-file index and says nothing between files, so the key is
-    the name plus a hash of the decoded pixels. Two files sharing a bitmap
-    agree; an untextured copy of the same geometry never does, which is what
-    keeps the Design-It!/Kesign3D pairs apart.
+    Not the TXID -- that is a per-file index. Not the raw pixels either: the
+    same bitmap is stored with different palettes by different products.
+    OCEANFLR's `Tile 3.0` is quantised to six channel levels (0, 64, 128, 192,
+    224, 255) in the Kesign3D copy and to sixteen (multiples of 17) in the
+    VirVRML one -- the same picture, correlation 0.976, but not one byte alike.
+    And VirVRML renames as it goes: `Water-Pool 1.0` becomes
+    `Water-Pool 1.0\xa58+\xa5 128x64`, the suffix encoding depth and size.
+
+    So: the name with that suffix stripped, the pixel dimensions, and a mean
+    colour rounded to 32 levels -- coarse enough to survive a re-quantised
+    palette, fine enough that two different bitmaps of the same name and size
+    still separate.
     """
     if not tex:
         return ''
-    k = id(tex.get('rgb'))
+    name = (tex.get('name') or '').split('\xa5')[0].strip()
+    rgb = tex.get('rgb')
+    k = id(rgb)
     if k not in cache:
-        rgb = tex.get('rgb')
-        cache[k] = _h(bytes(rgb) if rgb is not None else b'')
-    return f'{tex.get("name")}|{tex.get("w")}x{tex.get("h")}|{cache[k]}'
+        sig = '-'
+        if rgb is not None:
+            a = np.frombuffer(bytes(rgb), dtype=np.uint8).astype(np.int32)
+            n = (a.size // 3) * 3
+            if n:
+                m = a[:n].reshape(-1, 3).mean(0)
+                sig = 'x'.join(str(int(round(v / 32))) for v in m)
+        cache[k] = sig
+    return f'{name}|{tex.get("w")}x{tex.get("h")}|{cache[k]}'
 
 
 def fingerprint(meshes):
