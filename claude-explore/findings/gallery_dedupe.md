@@ -271,8 +271,12 @@ hash had correctly separated.
 
 Fourteen marks, checked one by one. Three classes.
 
-**Textured vs untextured — keep both** (your own rule, and the marks go against
-it here; the textured copy is the one marked):
+**Textured vs untextured — SUPERSEDED, see "Levels of finish" below.** These
+were kept at first on the grounds that a texture makes a different object. In
+the explorer that just puts two identical-looking models side by side, so the
+plain copy is now hidden and the painted one shown. Nothing is deleted; `Show
+all` brings the plain copy back. The marks named the textured copy in five of
+six cases, which is the opposite of what a browser wants:
 
 ```
 LUNARMOD__kesign3d [2 tex]   vs  LUNARMOD.VVR  [0]
@@ -348,3 +352,59 @@ the model, so letting them into the box would resize objects in the packed grid.
 They are drawn only when Edges is on, which is what you were expecting. Making
 them always-on would be more faithful to the original, but `STUDIOHS` would then
 show 165 wireframe boxes indoors.
+
+
+## Levels of finish
+
+Design-It! and Kesign3D ship the same model where only the Kesign3D copy carries
+bitmaps, and VirVRML does it again. Both copies were kept at first -- a texture
+is a real difference -- but in the explorer that means two identical-looking
+parachutes standing next to each other, which is the thing this pass exists to
+stop. They are now treated as one object at two levels of finish: the painted
+copy is shown, the plain one hidden.
+
+The fingerprint for that is `body` -- geometry and opacity, no colour and no
+texture. Colour has to come out too, because **painting a face changes the
+colour underneath it**: APOLLO's sky face is `(99, 99, 255)` plain and
+`(255, 255, 255)` once `CloudScape 1.0` goes on, and SPLASHDN's sea goes blue to
+grey under `Water-Pool 1.0`. Checked mesh by mesh on both: the ONLY meshes that
+differ between the two copies are the ones that gained a bitmap -- 1 of 39 in
+SPLASHDN, 3 of 88 in APOLLO. Colour is an effect of the finish, not a
+distinction from it.
+
+The rule fires only when one copy's texture set is a strict SUBSET of the
+other's, so a copy that is textured *differently* is never touched --
+`OCEANFLR__kesign3d` and `OCEANFLR__virvrml` both carry seven bitmaps and differ
+by which water goes on one face, and both still show.
+
+```
+models   APOLLO.VVR   -> APOLLO__kesign3d.VVR [3 tex]    SPLASHDN -> SPLASHDN__kesign3d [1]
+         HUBBLE.VVR   -> HUBBLE__kesign3d [1]            SPUTNIK  -> SPUTNIK__kesign3d [1]
+         LUNARMOD.VVR -> LUNARMOD__kesign3d [2]          VOYAGER  -> VOYAGER__kesign3d [1]
+         SPACSTAT.VVR -> SPACESTA.VVR [1]
+scenes   BATHA.VVR    -> BATHRMA.VVR [3]                 BATHRMA__virvrml -> BATHRMA.VVR
+         BEDROOMA.VVR -> BEDRMTIL.VVR [6]                BEDROOMA__virvrml -> BEDROOMA__kesign3d [6]
+         WHTHOUSE.VVR -> WHTHOUS.VVR [4]
+```
+
+Twelve copies, and the corpus is untouched.
+
+## Why the models grid hides things
+
+`shelfPack` sets its row width from the TOTAL area of everything in the bucket,
+so a handful of giants stretches every row to fit them. In `models`:
+
+```
+126 models, 7 rows, field 51,698 x 71,797 in (0.82 x 1.13 miles)
+  rows 0-2:   8 models   (Katzport 24,000 in, Picabia 22,800, mirror 20,400, Tzara 18,000)
+  row  5:    63 models   -- half the bucket, strung along the full 0.82-mile width
+```
+
+You spawn beside the median item, which is also in row 5. `sonic.wsb` is in that
+same row, 25,055 inches away -- 0.4 miles -- and is 147 inches wide, so it
+subtends 0.34 degrees: about **7 pixels** on a 1080-tall viewport. Fully lit,
+inside the fog, never culled, never hidden, and effectively invisible.
+
+Worth fixing by taking the row width from the median footprint rather than the
+total area, so the giants get their own overflow rows and the small models pack
+into a block you can actually read. The same applies to `scenes`.

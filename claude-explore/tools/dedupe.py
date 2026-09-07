@@ -68,56 +68,49 @@ def _h(*parts):
     return x.hexdigest()[:16]
 
 
-def _texkey(tex, cache):
-    """A texture's identity, comparable across products.
+def _texkey(tex, cache=None):
+    """A texture's identity: WHICH bitmap, and HOW it is laid down.
 
-    Not the TXID -- that is a per-file index. Not the raw pixels either: the
-    same bitmap is stored with different palettes by different products.
-    OCEANFLR's `Tile 3.0` is quantised to six channel levels (0, 64, 128, 192,
-    224, 255) in the Kesign3D copy and to sixteen (multiples of 17) in the
-    VirVRML one -- the same picture, correlation 0.976, but not one byte alike.
-    And VirVRML renames as it goes: `Water-Pool 1.0` becomes
-    `Water-Pool 1.0\xa58+\xa5 128x64`, the suffix encoding depth and size.
+    Not the TXID -- that is a per-file index. Not the pixels either, and this
+    took two tries to get right. The products re-encode: OCEANFLR's `Tile 3.0`
+    is quantised to six channel levels in the Kesign3D copy (0, 64, 128, 192,
+    224, 255) and sixteen in the VirVRML one, the same picture at correlation
+    0.976 without a byte in common. A mean-colour signature survived that but
+    was brittle at its own bucket edges -- `Grasses 1.0` in the two White House
+    copies landed either side of one, which kept two identical scenes apart.
 
-    So: the name with that suffix stripped, the pixel dimensions, and a mean
-    colour rounded to 32 levels -- coarse enough to survive a re-quantised
-    palette, fine enough that two different bitmaps of the same name and size
-    still separate.
+    So: the name with VirVRML's `\xa58+\xa5128x64` suffix stripped, the pixel
+    dimensions, and the TXST tile size. Tile size belongs in the identity
+    because it is visible: OCEANFLR's two `Water-Pool 1.0` entries are the same
+    128x64 bitmap at 60" and 32" per tile, and the two copies of that scene use
+    them differently on the same face. That is a real difference, and it is the
+    only thing keeping those two apart.
     """
     if not tex:
         return ''
     name = (tex.get('name') or '').split('\xa5')[0].strip()
-    rgb = tex.get('rgb')
-    k = id(rgb)
-    if k not in cache:
-        sig = '-'
-        if rgb is not None:
-            a = np.frombuffer(bytes(rgb), dtype=np.uint8).astype(np.int32)
-            n = (a.size // 3) * 3
-            if n:
-                m = a[:n].reshape(-1, 3).mean(0)
-                sig = 'x'.join(str(int(round(v / 32))) for v in m)
-        cache[k] = sig
-    return f'{name}|{tex.get("w")}x{tex.get("h")}|{cache[k]}'
+    tile = tex.get('tile') or (0, 0)
+    return (f'{name}|{tex.get("w")}x{tex.get("h")}'
+            f'|{round(float(tile[0]), 2)}x{round(float(tile[1]), 2)}')
 
 
 def fingerprint(meshes):
     allv = np.vstack([np.asarray(m[0], float) for m in meshes])
     lo, hi = allv.min(0), allv.max(0)
-    exact, shape = [], []
+    exact, shape, body = [], [], []
     tris = 0
     area = 0.0
-    tcache = {}
     texs = []
     textured = 0
     for m in meshes:
         V = np.round(np.asarray(m[0], float) - lo, 2)
         F = np.asarray(m[1], dtype=np.int32)
         col = tuple(int(c) for c in m[2])
-        tex = _texkey(m[4] if len(m) > 4 else None, tcache)
+        tex = _texkey(m[4] if len(m) > 4 else None)
         alpha = int(m[5]) if len(m) > 5 and m[5] is not None else 255
         vb, fb = V.tobytes(), F.tobytes()
         shape.append(_h(vb, fb))
+        body.append(_h(vb, fb, alpha))
         exact.append(_h(vb, fb, col, alpha, tex))
         if tex:
             textured += 1
@@ -128,6 +121,16 @@ def fingerprint(meshes):
         area += float(a.sum())
     return {'exact': _h(json.dumps(sorted(exact))),
             'shape': _h(json.dumps(sorted(shape))),
+            # `body` is geometry and opacity only -- no colour, no texture. It
+            # has to drop colour as well, because painting a face changes the
+            # colour UNDER the paint: APOLLO's sky face is (99,99,255) plain and
+            # (255,255,255) once `CloudScape 1.0` goes on it, and SPLASHDN's sea
+            # goes blue -> grey under `Water-Pool 1.0`. In every observed case
+            # the ONLY meshes that differ between two copies are the ones that
+            # gained a bitmap, so colour is an effect of the finish, not a
+            # distinction from it.
+            'body': _h(json.dumps(sorted(body))),
+            'texs': sorted(texs),
             'tris': tris, 'meshes': len(meshes), 'area': round(area, 1),
             'textured': textured, 'texset': _h(json.dumps(sorted(texs))),
             'size': [round(float(x), 2) for x in (hi - lo)]}
@@ -376,12 +379,83 @@ def _redundant_files(good, obj, prefer_original=True):
     return set(dropped)
 
 
-def survivors(recs, obj, prefer_original=True):
+def _finish_pairs(good, obj):
+    """Copies of one object that differ ONLY in how much of it is textured.
+
+    Design-It! and Kesign3D ship the same model where only the Kesign3D copy
+    carries bitmaps; VirVRML does it again. Geometry, colours and opacity are
+    identical -- `body` is the fingerprint with the textures taken back out --
+    and one side's texture set is a strict subset of the other's. That is not
+    two objects, it is one object at two levels of finish, and the gallery only
+    needs to show the finished one.
+
+    A DIFFERENT texture set is not a subset and never matches: OCEANFLR's two
+    copies both carry seven bitmaps and differ by which water goes on one face,
+    so both stay.
+
+    Returns {path to hide: path that supersedes it}.
+    """
+    by = collections.defaultdict(list)
+    for r in good:
+        by[r['body']].append(r)
+    out = {}
+    for v in by.values():
+        if len(v) < 2:
+            continue
+        for a in v:
+            sa = collections.Counter(a.get('texs') or [])
+            for b in v:
+                if a is b or obj[a['path']] == obj[b['path']]:
+                    continue
+                sb = collections.Counter(b.get('texs') or [])
+                if sa != sb and not (sa - sb):          # a's textures ⊂ b's
+                    out[a['path']] = b['path']
+                    break
+    return out
+
+
+def _redundant_files(good, obj, prefer_original=True):
+    """Whole files every one of whose objects also lives somewhere else.
+
+    Hiding a library outright beats hiding 21 of its 27 clips: the gallery keeps
+    coherent sets instead of swiss cheese, and the reason is one sentence rather
+    than twenty-one. Greedy, worst offender first, re-checking each round so the
+    last copy of an object is never hidden.
+    """
+    by = collections.defaultdict(list)
+    for r in good:
+        by[r['file']].append(r)
+    S = {f: set(obj[r['path']] for r in v) for f, v in by.items()}
+    apps = {f: v[0]['apps'] for f, v in by.items()}
+    alive, dropped = set(by), []
+    while True:
+        cnt = collections.Counter()
+        for f in alive:
+            cnt.update(S[f])
+        cand = [f for f in alive if S[f] and all(cnt[o] > 1 for o in S[f])]
+        if not cand:
+            break
+
+        def score(f):
+            base = f.split('/')[-1]
+            reissue = apps[f] == ['3dwebbld']
+            w = reissue if prefer_original else not reissue
+            return (-int('__' in base), -int(w), len(apps[f]), -len(by[f]), base)
+
+        cand.sort(key=score)
+        f = cand[0]
+        alive.discard(f)
+        dropped.append(f)
+    return set(dropped)
+
+
+def survivors(recs, obj, prefer_original=True, finish=True):
     """One keeper per object; everything else is hidden. Nothing is deleted.
 
-    Two stages, because a library that is redundant end to end should disappear
-    as a library: first hide whole files whose every object survives elsewhere,
-    then pick one keeper per object among what is left.
+    Three stages. First the unfinished copies -- same geometry, fewer textures
+    -- give way to the finished one. Then whole files whose every object
+    survives elsewhere disappear as files, so the galleries keep coherent sets.
+    Then one keeper per object among what is left.
 
     Within a stage the preference is: the product this project is about
     (Design-It!/Kesign3D) over 3DWebBld's re-release, then the file that is NOT
@@ -390,9 +464,11 @@ def survivors(recs, obj, prefer_original=True):
     for stability.
     """
     good = [r for r in recs if 'path' in r and 'exact' in r]
-    dead = _redundant_files(good, obj, prefer_original)
-    hide = [r['path'] for r in good if r['file'] in dead]
-    rest = [r for r in good if r['file'] not in dead]
+    unfinished = _finish_pairs(good, obj) if finish else {}
+    good2 = [r for r in good if r['path'] not in unfinished]
+    dead = _redundant_files(good2, obj, prefer_original)
+    hide = list(unfinished) + [r['path'] for r in good2 if r['file'] in dead]
+    rest = [r for r in good2 if r['file'] not in dead]
 
     def rank(r):
         base = r['file'].split('/')[-1]
@@ -411,7 +487,7 @@ def survivors(recs, obj, prefer_original=True):
         v = sorted(v, key=rank)
         keep[o] = v[0]['path']
         hide.extend(x['path'] for x in v[1:])
-    return keep, sorted(hide), sorted(dead)
+    return keep, sorted(set(hide)), sorted(dead), unfinished
 
 
 def load(bucket, rebuild=False):
@@ -435,10 +511,11 @@ def main():
             recs, verts = load(b)
             dup, _, _ = pairs(recs, verts)
             obj = objects(recs, dup)
-            _, hide, dead = survivors(recs, obj)
+            _, hide, dead, unf = survivors(recs, obj)
             out['hide'].extend(hide)
             out.setdefault('hiddenFiles', []).extend(dead)
-            print(f'{b}: hiding {len(hide)} paths, {len(dead)} whole files')
+            print(f'{b}: hiding {len(hide)} paths, {len(dead)} whole files, '
+                  f'{len(unf)} unfinished copies')
         out['hide'].sort()
         p = os.path.join(ROOT, 'data', 'dedupe.json')
         json.dump(out, open(p, 'w'), indent=1)
@@ -464,7 +541,7 @@ def main():
             for a, b, d in rows:
                 print(f'  {tag}  {a}  |  {b}   d={d}"')
         return
-    keep, hide, dead = survivors(recs, obj)
+    keep, hide, dead, unf = survivors(recs, obj)
     byfile = collections.Counter(p.split('::')[0] for p in hide)
     print(f'\n{len(hide)} copies hidden: {len(dead)} whole files + '
           f'{len(hide) - sum(1 for r in good if r["file"] in dead)} individual clips')
