@@ -408,3 +408,43 @@ inside the fog, never culled, never hidden, and effectively invisible.
 Worth fixing by taking the row width from the median footprint rather than the
 total area, so the giants get their own overflow rows and the small models pack
 into a block you can actually read. The same applies to `scenes`.
+
+
+## Fingerprint the geometry the VIEWER shows, not the file
+
+Three near-identical red rockets stayed on screen after every rule above, and
+the reason was that `dedupe.py` was measuring a different model from the one
+`explore.html` draws. The explorer culls backdrop slabs -- a median-anchored
+largest-gap rule on mesh footprints -- and the fingerprint was not.
+
+```
+                            file as stored          after the pad cull
+SHUTTLE.VVR            134 meshes  29280 in       131 meshes  1104 x 1236 x 2472
+SHUTTLE__kesign3d.VVR  132 meshes  29280 in  3tex 128 meshes  same, 0 tex
+launch__3dwebbld.wsb   132 meshes  17160 in  3tex 128 meshes  same, 0 tex   <- identical
+```
+
+With the slabs on, `SHUTTLE__kesign3d` and `launch__3dwebbld` look 2.4x apart in
+extent and carry three textures each. With the slabs off they are the same 128
+meshes and 2,428 triangles, byte for byte -- and **all three of those textures
+were painted on the slabs**, so the model itself is untextured and the "levels
+of finish" rule had been reasoning about a backdrop.
+
+`cull_pads()` is now part of `dedupe.py` and runs for `scenes` and `models`
+before fingerprinting (galleries are not culled, matching the viewer). Seven of
+the space pairs that the finish rule had been catching turn out to be plain
+duplicates once their painted backdrops come off, so they are merged rather than
+ranked.
+
+`SHUTTLE.VVR` remains distinct from `SHUTTLE__kesign3d.VVR`: it carries three
+meshes the Kesign3D copy does not -- a second 288 x 84 grey/white panel where
+the other has only the 288 x 72, plus a 60-triangle black element 144 inches
+across -- 72 triangles in all. A revision, not a copy, so both still show.
+
+## Cache
+
+`data/dedupe.json` is regenerated far more often than the page is deployed, so
+`explore.html` re-reads it on every mode switch with `cache: 'no-store'` and a
+timestamp. A cached copy silently shows duplicates that were supposed to be
+gone, which is exactly what happened. The HUD now prints `N duplicates hidden of
+M listed` so a stale list is visible at a glance.

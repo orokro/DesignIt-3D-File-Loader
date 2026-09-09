@@ -136,6 +136,50 @@ def fingerprint(meshes):
             'size': [round(float(x), 2) for x in (hi - lo)]}
 
 
+# explore.html's ground-pad cull, ported. The fingerprint has to be taken on
+# the geometry the VIEWER shows, not on what the file contains: `SHUTTLE__kesign3d`
+# and `launch__3dwebbld` are the same 128-mesh model under differently-sized
+# backdrop slabs, and comparing them with the slabs on says they are 2.4x
+# different in extent. It also matters for textures -- all three bitmaps in
+# SHUTTLE__kesign3d are ON the slabs, so the model itself is untextured.
+CULL_FACTOR, CULL_FLOOR, CULL_GAP = 3, 1000, 4
+
+
+def _foot(m):
+    V = np.asarray(m[0], float)
+    return float(max(np.ptp(V[:, 0]), np.ptp(V[:, 1]))) if len(V) else 0.0
+
+
+def cull_pads(meshes):
+    """Drop backdrop slabs: candidates are over CULL_FACTOR x the median (and
+    over CULL_FLOOR inches); the cut goes at the largest ratio gap of at least
+    CULL_GAP. Median-anchored so a file with no pad at all loses nothing."""
+    idx = [i for i, m in enumerate(meshes) if len(m[0])]
+    if len(idx) < 2:
+        return meshes, 0
+    foot = [_foot(meshes[i]) for i in idx]
+    order = sorted(range(len(idx)), key=lambda k: -foot[k])
+    desc = [foot[k] for k in order]
+    limit = max(CULL_FLOOR, CULL_FACTOR * (desc[len(desc) >> 1] or 1))
+    n = 0
+    while n < len(desc) and desc[n] > limit:
+        n += 1
+    drop = set()
+    if n and n < len(desc):
+        cut, best = 0, 0.0
+        for k in range(1, n + 1):
+            r = desc[k - 1] / desc[k]
+            if r > best and r >= CULL_GAP:
+                best, cut = r, k
+        for t in range(cut):
+            drop.add(idx[order[t]])
+    if not drop:
+        return meshes, 0
+    kept = [m for i, m in enumerate(meshes)
+            if i not in drop and not (len(m) > 7 and m[7] and _foot(m) > CULL_FLOOR)]
+    return kept, len(drop)
+
+
 def _record(rec, meshes, verts, max_span=None):
     """max_span mirrors explore.html's gallery-grid guard against stray oversize
     CLIPS; a scene or a model is meant to be huge, so it is not applied there."""
@@ -201,6 +245,7 @@ def scan(bucket):
                 rec['error'] = str(e)[:120]
                 out.append(rec)
                 continue
+            ms, rec['culled'] = cull_pads(ms)
             if not _record(rec, ms, verts):
                 rec.pop('path', None)
             out.append(rec)
